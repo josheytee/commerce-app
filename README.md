@@ -43,6 +43,13 @@ $ npm run start:dev
 
 # production mode
 $ npm run start:prod
+
+# generate sequlize migration 
+$ npx sequelize-cli migration:generate --name create-user
+
+npx sequelize-cli db:migrate
+
+
 ```
 
 ## Test
