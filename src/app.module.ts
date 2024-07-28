@@ -5,9 +5,10 @@ import { CatsModule } from './cats/cats.module';
 import { AccountModule } from './account/account.module';
 import { StoreModule } from './store/store.module';
 import { DatabaseModule } from './database/database.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
-  imports: [DatabaseModule, CatsModule, AccountModule, StoreModule],
+  imports: [DatabaseModule, CatsModule, AccountModule, StoreModule, ProductModule],
   controllers: [AppController],
   providers: [AppService],
 })
