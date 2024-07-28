@@ -7,8 +7,10 @@ import { DatabaseModule } from './database/database.module';
 import { ProductModule } from './product/product.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { OrderModule } from './order/order.module';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AllExceptionsFilter } from './all-exceptions.filter';
+import { ResponseInterceptor } from './response.interceptor';
+
 @Module({
   imports: [
     DatabaseModule,
@@ -20,6 +22,10 @@ import { AllExceptionsFilter } from './all-exceptions.filter';
   ],
   controllers: [AppController],
   providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
