@@ -14,7 +14,12 @@ import { Vendor } from '../vendor/vendor.model';
 import { Section } from '../section/section.model';
 import { Inventory } from 'src/inventory/inventory.model';
 
-@Table({ tableName: 'stores' })
+@Table({
+  timestamps: true,
+  underscored: true,
+  // paranoid: true,
+  tableName: 'stores',
+})
 export class Store extends Model<Store> {
   @PrimaryKey
   @AutoIncrement
@@ -39,12 +44,4 @@ export class Store extends Model<Store> {
 
   @HasMany(() => Inventory)
   inventories: Inventory[];
-
-  @CreatedAt
-  @Column({ field: 'created_at' })
-  createdAt: Date;
-
-  @UpdatedAt
-  @Column({ field: 'updated_at' })
-  updatedAt: Date;
 }

@@ -4,15 +4,18 @@ import {
   Model,
   ForeignKey,
   BelongsTo,
-  CreatedAt,
-  UpdatedAt,
   PrimaryKey,
   AutoIncrement,
 } from 'sequelize-typescript';
 import { Product } from 'src/product/product.model';
 import { Store } from 'src/store/models/store.model';
 
-@Table({ tableName: 'inventories' })
+@Table({
+  timestamps: true,
+  underscored: true,
+  // paranoid: true,
+  tableName: 'inventories',
+})
 export class Inventory extends Model<Inventory> {
   @PrimaryKey
   @AutoIncrement
@@ -35,12 +38,4 @@ export class Inventory extends Model<Inventory> {
 
   @Column
   quantity: number;
-
-  @CreatedAt
-  @Column({ field: 'created_at' })
-  createdAt: Date;
-
-  @UpdatedAt
-  @Column({ field: 'updated_at' })
-  updatedAt: Date;
 }

@@ -26,8 +26,15 @@ export class VendorService {
   }
 
   async update(id: number, data: Partial<Vendor>): Promise<Vendor> {
-    const vendor = await this.findOne(id);
-    return vendor.update(data);
+    const [numberOfAffectedRows] = await this.vendorModel.update(data, {
+      where: { id },
+    });
+
+    if (numberOfAffectedRows === 0) {
+      return null; // No rows affected
+    }
+
+    return this.vendorModel.findByPk(id);
   }
 
   async remove(id: number): Promise<void> {

@@ -15,6 +15,8 @@ import { Store } from 'src/store/models/store.model';
 import { Section } from 'src/store/section/section.model';
 import { Inventory } from 'src/inventory/inventory.model';
 import { Product } from 'src/product/product.model';
+import { OrderItem } from 'src/order/models/order-item.model';
+import { Order } from 'src/order/models/order.model';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { Product } from 'src/product/product.model';
         Vendor,
         Inventory,
         Product,
+        Order,
+        OrderItem,
       ],
     }),
   ],

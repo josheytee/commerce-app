@@ -13,7 +13,12 @@ import {
 import { Store } from '../models/store.model';
 import { Product } from '../../product/product.model';
 
-@Table({ tableName: 'sections' })
+@Table({
+  timestamps: true,
+  underscored: true,
+  // paranoid: true,
+  tableName: 'sections',
+})
 export class Section extends Model<Section> {
   @PrimaryKey
   @AutoIncrement
@@ -35,12 +40,4 @@ export class Section extends Model<Section> {
 
   @HasMany(() => Product)
   products: Product[];
-
-  @CreatedAt
-  @Column({ field: 'created_at' })
-  createdAt: Date;
-
-  @UpdatedAt
-  @Column({ field: 'updated_at' })
-  updatedAt: Date;
 }

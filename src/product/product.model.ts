@@ -13,7 +13,12 @@ import {
 import { Inventory } from 'src/inventory/inventory.model';
 import { Section } from 'src/store/section/section.model';
 
-@Table({ tableName: 'products' })
+@Table({
+  timestamps: true,
+  underscored: true,
+  paranoid: true,
+  tableName: 'products',
+})
 export class Product extends Model<Product> {
   @PrimaryKey
   @AutoIncrement

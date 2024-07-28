@@ -11,7 +11,12 @@ import {
 import { Store } from '../models/store.model';
 import { User } from 'src/account/user/models/user.model';
 
-@Table({ tableName: 'vendors' })
+@Table({
+  timestamps: true,
+  underscored: true,
+  // paranoid: true,
+  tableName: 'vendors',
+})
 export class Vendor extends Model<Vendor> {
   @PrimaryKey
   @AutoIncrement
