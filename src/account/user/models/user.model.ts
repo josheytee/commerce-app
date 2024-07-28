@@ -16,6 +16,7 @@ import { TwoFactorAuth } from '../../two-factor-auth/two-factor-auth.model';
 import { AuditLog } from '../../audit-log/audit-log.model';
 import { UserRole } from '../../role/models/user-role.model';
 import { User as IUser } from '../interfaces/user.interface';
+import { Vendor } from 'src/store/vendor/vendor.model';
 
 @Table({
   timestamps: true,
@@ -82,6 +83,9 @@ export class User extends Model<IUser> implements IUser {
 
   @HasMany(() => AuditLog)
   auditLogs!: AuditLog[];
+
+  @HasMany(() => Vendor)
+  vendors: Vendor[];
 
   toJSON() {
     const values = { ...this.get() };

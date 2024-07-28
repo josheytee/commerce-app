@@ -10,6 +10,11 @@ import { Session } from '../account/session/session.model';
 import { PasswordReset } from '../account/password-reset/password-reset.model';
 import { TwoFactorAuth } from '../account/two-factor-auth/two-factor-auth.model';
 import { AuditLog } from '../account/audit-log/audit-log.model';
+import { Vendor } from 'src/store/vendor/vendor.model';
+import { Store } from 'src/store/models/store.model';
+import { Section } from 'src/store/section/section.model';
+import { Inventory } from 'src/inventory/inventory.model';
+import { Product } from 'src/product/product.model';
 
 @Module({
   imports: [
@@ -32,6 +37,11 @@ import { AuditLog } from '../account/audit-log/audit-log.model';
         PasswordReset,
         TwoFactorAuth,
         AuditLog,
+        Store,
+        Section,
+        Vendor,
+        Inventory,
+        Product,
       ],
     }),
   ],

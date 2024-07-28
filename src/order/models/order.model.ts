@@ -1,0 +1,51 @@
+import {
+  Table,
+  Column,
+  Model,
+  ForeignKey,
+  BelongsTo,
+  HasMany,
+  CreatedAt,
+  UpdatedAt,
+  PrimaryKey,
+  AutoIncrement,
+} from 'sequelize-typescript';
+import { OrderItem } from './order-item.model';
+import { User } from 'src/account/user/models/user.model';
+
+@Table({
+  timestamps: true,
+  underscored: true,
+  paranoid: true,
+  tableName: 'orders',
+})
+export class Order extends Model<Order> {
+  @PrimaryKey
+  @AutoIncrement
+  @Column
+  id: number;
+
+  @ForeignKey(() => User)
+  @Column
+  user_id: number;
+
+  @BelongsTo(() => User)
+  user: User;
+
+  @Column
+  total_price: number;
+
+  @Column
+  status: string;
+
+  @HasMany(() => OrderItem)
+  orderItems: OrderItem[];
+
+  @CreatedAt
+  @Column({ field: 'created_at' })
+  createdAt: Date;
+
+  @UpdatedAt
+  @Column({ field: 'updated_at' })
+  updatedAt: Date;
+}
