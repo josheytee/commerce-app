@@ -7,6 +7,7 @@ import {
   Delete,
   Body,
   Param,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './models/user.model';
@@ -31,8 +32,12 @@ export class UserController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: number, @Body() user: Partial<User>) {
-    return this.userService.update(id, user);
+  async updateUser(@Param('id') id: number, @Body() updateData: Partial<User>) {
+    const updatedUser = await this.userService.update(id, updateData);
+    if (!updatedUser) {
+      throw new NotFoundException('User not found or no changes made');
+    }
+    return updatedUser;
   }
 
   @Delete(':id')

@@ -82,4 +82,10 @@ export class User extends Model<IUser> implements IUser {
 
   @HasMany(() => AuditLog)
   auditLogs!: AuditLog[];
+
+  toJSON() {
+    const values = { ...this.get() };
+    delete values.password_hash;
+    return values;
+  }
 }

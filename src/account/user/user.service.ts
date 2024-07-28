@@ -1,4 +1,3 @@
-// src/services/userService.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './models/user.model';
@@ -23,12 +22,16 @@ export class UserService {
     return this.userModel.create(user);
   }
 
-  async update(id: number, user: Partial<User>) {
-    // console.log(user, id, await this.userModel.update(user, { where: { id } }));
-    return await this.userModel.update(user, {
-      returning: true,
+  async update(id: number, updateData: Partial<User>): Promise<User | null> {
+    const [numberOfAffectedRows] = await this.userModel.update(updateData, {
       where: { id },
     });
+
+    if (numberOfAffectedRows === 0) {
+      return null; // No rows affected
+    }
+
+    return this.userModel.findByPk(id); // Fetch the updated user
   }
 
   async remove(id: number): Promise<void> {

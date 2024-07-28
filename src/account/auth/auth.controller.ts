@@ -1,4 +1,3 @@
-// src/auth/auth.controller.ts
 import {
   Controller,
   Request,
@@ -23,7 +22,6 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() body: any) {
-    console.log(body);
     if (
       !body.username ||
       !body.password ||
