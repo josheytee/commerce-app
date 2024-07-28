@@ -44,12 +44,18 @@ $ npm run start:dev
 # production mode
 $ npm run start:prod
 
-# generate sequlize migration 
+# generate sequlize migration
 $ npx sequelize-cli migration:generate --name create-user
 
 npx sequelize-cli db:migrate
 
 
+```
+
+## Todos
+
+```
+use redis to store user sessions instead of mysql
 ```
 
 ## Test

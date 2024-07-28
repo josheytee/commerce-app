@@ -2,6 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './models/user.model';
+import { UserSearchCriteria } from './interfaces/user-search-criteria.interface';
 
 @Injectable()
 export class UserService {
@@ -14,8 +15,8 @@ export class UserService {
     return this.userModel.findAll();
   }
 
-  async findOne(id: number): Promise<User> {
-    return await this.userModel.findByPk(id);
+  async findOne(criteria: UserSearchCriteria): Promise<User | null> {
+    return this.userModel.findOne({ where: criteria as any });
   }
 
   async create(user: Partial<User>): Promise<User> {

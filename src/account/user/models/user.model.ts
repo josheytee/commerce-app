@@ -15,6 +15,7 @@ import { PasswordReset } from '../../password-reset/password-reset.model';
 import { TwoFactorAuth } from '../../two-factor-auth/two-factor-auth.model';
 import { AuditLog } from '../../audit-log/audit-log.model';
 import { UserRole } from '../../role/models/user-role.model';
+import { User as IUser } from '../interfaces/user.interface';
 
 @Table({
   timestamps: true,
@@ -22,7 +23,7 @@ import { UserRole } from '../../role/models/user-role.model';
   paranoid: true,
   tableName: 'users',
 })
-export class User extends Model<User> {
+export class User extends Model<IUser> implements IUser {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
@@ -66,8 +67,6 @@ export class User extends Model<User> {
 
   @Column(DataType.DATE)
   last_login?: string;
-
-
 
   @HasMany(() => UserRole)
   userRoles!: UserRole[];

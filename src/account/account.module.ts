@@ -7,6 +7,7 @@ import { SessionModule } from './session/session.module';
 import { PasswordResetModule } from './password-reset/password-reset.module';
 import { TwoFactorAuthModule } from './two-factor-auth/two-factor-auth.module';
 import { AuditLogModule } from './audit-log/audit-log.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
     PasswordResetModule,
     TwoFactorAuthModule,
     AuditLogModule,
+    AuthModule,
   ],
 })
 export class AccountModule {}
