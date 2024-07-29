@@ -10,6 +10,7 @@ import {
 } from 'sequelize-typescript';
 import { Store } from '../models/store.model';
 import { User } from 'src/account/user/models/user.model';
+import { VendorRole } from './../../account/role/models/vendor-role.model';
 
 @Table({
   timestamps: true,
@@ -32,6 +33,9 @@ export class Vendor extends Model<Vendor> {
 
   @BelongsTo(() => User)
   user: User;
+
+  @HasMany(() => VendorRole)
+  vendorRoles!: VendorRole[];
 
   @HasMany(() => Store)
   stores: Store[];

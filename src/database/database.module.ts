@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { User } from '../account/user/models/user.model';
 import { Role } from '../account/role/models/role.model';
-import { UserRole } from '../account/role/models/user-role.model';
 import { Permission } from '../account/role/models/permission.model';
 import { RolePermission } from '../account/role/models/role-permission.model';
 import { Session } from '../account/session/session.model';
@@ -17,6 +16,9 @@ import { Inventory } from 'src/inventory/inventory.model';
 import { Product } from 'src/product/product.model';
 import { OrderItem } from 'src/order/models/order-item.model';
 import { Order } from 'src/order/models/order.model';
+import { VendorRole } from 'src/account/role/models/vendor-role.model';
+import { StoreCustomer } from 'src/store/models/store-customer.model';
+import { Customer } from 'src/store/customer/customer.model';
 
 @Module({
   imports: [
@@ -32,7 +34,7 @@ import { Order } from 'src/order/models/order.model';
       models: [
         User,
         Role,
-        UserRole,
+        VendorRole,
         Permission,
         RolePermission,
         Session,
@@ -40,6 +42,8 @@ import { Order } from 'src/order/models/order.model';
         TwoFactorAuth,
         AuditLog,
         Store,
+        StoreCustomer,
+        Customer,
         Section,
         Vendor,
         Inventory,

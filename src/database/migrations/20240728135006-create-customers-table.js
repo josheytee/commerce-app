@@ -7,18 +7,20 @@ module.exports = {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        allowNull: false,
       },
-      name: {
-        type: Sequelize.STRING,
+      user_id: {
+        type: Sequelize.INTEGER,
         allowNull: false,
-      },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
       },
       address: {
+        type: Sequelize.STRING,
+      },
+      address_2: {
         type: Sequelize.STRING,
       },
       deleted_at: {

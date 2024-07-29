@@ -18,9 +18,13 @@ module.exports = {
           key: 'id',
         },
       },
-      business_name: {
-        type: Sequelize.STRING,
-        allowNull: false,
+      role_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'roles',
+          key: 'id',
+        },
       },
       created_at: {
         type: Sequelize.DATE,

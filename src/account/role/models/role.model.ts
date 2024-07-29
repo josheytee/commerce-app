@@ -10,7 +10,7 @@ import {
   Unique,
   HasMany,
 } from 'sequelize-typescript';
-import { UserRole } from './user-role.model';
+import { VendorRole } from './vendor-role.model';
 import { RolePermission } from './role-permission.model';
 
 @Table({
@@ -32,8 +32,8 @@ export class Role extends Model<Role> {
   @Column(DataType.TEXT)
   description?: string;
 
-  @HasMany(() => UserRole)
-  userRoles!: UserRole[];
+  @HasMany(() => VendorRole)
+  vendorRoles!: VendorRole[];
 
   @HasMany(() => RolePermission)
   rolePermissions!: RolePermission[];

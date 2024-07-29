@@ -5,14 +5,15 @@ import {
   ForeignKey,
   BelongsTo,
   HasMany,
-  CreatedAt,
-  UpdatedAt,
   PrimaryKey,
   AutoIncrement,
+  BelongsToMany,
 } from 'sequelize-typescript';
 import { Vendor } from '../vendor/vendor.model';
 import { Section } from '../section/section.model';
 import { Inventory } from 'src/inventory/inventory.model';
+import { Customer } from '../customer/customer.model';
+import { StoreCustomer } from './store-customer.model';
 
 @Table({
   timestamps: true,
@@ -38,6 +39,9 @@ export class Store extends Model<Store> {
 
   @BelongsTo(() => Vendor)
   vendor: Vendor;
+
+  @BelongsToMany(() => Customer, () => StoreCustomer)
+  customers: Customer[];
 
   @HasMany(() => Section)
   sections: Section[];

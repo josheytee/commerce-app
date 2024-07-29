@@ -23,6 +23,11 @@ module.exports = {
           model: 'vendors',
           key: 'id',
         },
+        onDelete: 'CASCADE',
+      },
+      location: {
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       created_at: {
         type: Sequelize.DATE,

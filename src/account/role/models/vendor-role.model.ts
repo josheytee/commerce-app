@@ -9,24 +9,24 @@ import {
   AllowNull,
   ForeignKey,
 } from 'sequelize-typescript';
-import { User } from '../../user/models/user.model';
 import { Role } from './role.model';
+import { Vendor } from 'src/store/vendor/vendor.model';
 
 @Table({
   timestamps: true,
   underscored: true,
   tableName: 'user_roles',
 })
-export class UserRole extends Model<UserRole> {
+export class VendorRole extends Model<VendorRole> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.INTEGER)
   id!: number;
 
   @AllowNull(false)
-  @ForeignKey(() => User)
+  @ForeignKey(() => Vendor)
   @Column(DataType.INTEGER)
-  user_id!: number;
+  vendor_id!: number;
 
   @AllowNull(false)
   @ForeignKey(() => Role)
