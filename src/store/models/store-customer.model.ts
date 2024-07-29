@@ -6,7 +6,7 @@ import {
   DataType,
 } from 'sequelize-typescript';
 import { Store } from './store.model';
-import { Customer } from '../customer/customer.model';
+import { Customer } from '../../account/customer/customer.model';
 
 @Table
 export class StoreCustomer extends Model<StoreCustomer> {

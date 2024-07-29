@@ -10,7 +10,7 @@ import {
   ForeignKey,
 } from 'sequelize-typescript';
 import { Role } from './role.model';
-import { Vendor } from 'src/store/vendor/vendor.model';
+import { Vendor } from 'src/account/vendor/vendor.model';
 
 @Table({
   timestamps: true,

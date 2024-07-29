@@ -7,10 +7,12 @@ import {
   BelongsTo,
   ForeignKey,
   HasMany,
+  BelongsToMany,
 } from 'sequelize-typescript';
-import { Store } from '../models/store.model';
 import { User } from 'src/account/user/models/user.model';
 import { VendorRole } from './../../account/role/models/vendor-role.model';
+import { Role } from 'src/account/role/models/role.model';
+import { Store } from 'src/store/models/store.model';
 
 @Table({
   timestamps: true,
@@ -34,8 +36,11 @@ export class Vendor extends Model<Vendor> {
   @BelongsTo(() => User)
   user: User;
 
-  @HasMany(() => VendorRole)
-  vendorRoles!: VendorRole[];
+  // @HasMany(() => VendorRole)
+  // vendorRoles!: VendorRole[];
+
+  @BelongsToMany(() => Role, () => VendorRole)
+  roles: Role[];
 
   @HasMany(() => Store)
   stores: Store[];

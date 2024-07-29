@@ -6,11 +6,15 @@ import {
   Param,
   Patch,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { Store } from './models/store.model';
+import { RolesGuard } from 'src/account/role/roles.guard';
+import { Roles } from 'src/account/role/roles.decorator';
 
 @Controller('stores')
+@UseGuards(RolesGuard)
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
@@ -20,6 +24,7 @@ export class StoreController {
   }
 
   @Get()
+  @Roles('Admin', 'Vendor')
   findAll(): Promise<Store[]> {
     return this.storeService.findAll();
   }

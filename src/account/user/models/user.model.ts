@@ -15,7 +15,7 @@ import { PasswordReset } from '../../password-reset/password-reset.model';
 import { TwoFactorAuth } from '../../two-factor-auth/two-factor-auth.model';
 import { AuditLog } from '../../audit-log/audit-log.model';
 import { User as IUser } from '../interfaces/user.interface';
-import { Vendor } from 'src/store/vendor/vendor.model';
+import { Vendor } from 'src/account/vendor/vendor.model';
 
 @Table({
   timestamps: true,

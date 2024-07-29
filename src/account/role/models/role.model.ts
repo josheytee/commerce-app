@@ -27,7 +27,7 @@ export class Role extends Model<Role> {
   @AllowNull(false)
   @Unique
   @Column(DataType.STRING)
-  role_name!: string;
+  name!: string;
 
   @Column(DataType.TEXT)
   description?: string;

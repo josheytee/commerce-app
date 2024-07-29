@@ -9,7 +9,6 @@ import { Session } from '../account/session/session.model';
 import { PasswordReset } from '../account/password-reset/password-reset.model';
 import { TwoFactorAuth } from '../account/two-factor-auth/two-factor-auth.model';
 import { AuditLog } from '../account/audit-log/audit-log.model';
-import { Vendor } from 'src/store/vendor/vendor.model';
 import { Store } from 'src/store/models/store.model';
 import { Section } from 'src/store/section/section.model';
 import { Inventory } from 'src/inventory/inventory.model';
@@ -18,7 +17,8 @@ import { OrderItem } from 'src/order/models/order-item.model';
 import { Order } from 'src/order/models/order.model';
 import { VendorRole } from 'src/account/role/models/vendor-role.model';
 import { StoreCustomer } from 'src/store/models/store-customer.model';
-import { Customer } from 'src/store/customer/customer.model';
+import { Customer } from 'src/account/customer/customer.model';
+import { Vendor } from 'src/account/vendor/vendor.model';
 
 @Module({
   imports: [

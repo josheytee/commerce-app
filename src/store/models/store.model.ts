@@ -9,11 +9,11 @@ import {
   AutoIncrement,
   BelongsToMany,
 } from 'sequelize-typescript';
-import { Vendor } from '../vendor/vendor.model';
 import { Section } from '../section/section.model';
 import { Inventory } from 'src/inventory/inventory.model';
-import { Customer } from '../customer/customer.model';
+import { Customer } from '../../account/customer/customer.model';
 import { StoreCustomer } from './store-customer.model';
+import { Vendor } from 'src/account/vendor/vendor.model';
 
 @Table({
   timestamps: true,
