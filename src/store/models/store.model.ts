@@ -9,11 +9,13 @@ import {
   AutoIncrement,
   BelongsToMany,
 } from 'sequelize-typescript';
-import { Section } from '../section/section.model';
 import { Inventory } from 'src/inventory/inventory.model';
 import { Customer } from '../../account/customer/customer.model';
 import { StoreCustomer } from './store-customer.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
+import { Section } from 'src/section/section.model';
+import { Store as IStore } from '../interfaces/store.interface';
+import { Category } from './category.model';
 
 @Table({
   timestamps: true,
@@ -21,7 +23,7 @@ import { Vendor } from 'src/account/vendor/vendor.model';
   // paranoid: true,
   tableName: 'stores',
 })
-export class Store extends Model<Store> {
+export class Store extends Model<Store> implements IStore {
   @PrimaryKey
   @AutoIncrement
   @Column
@@ -32,6 +34,13 @@ export class Store extends Model<Store> {
 
   @Column
   description: string;
+
+  @ForeignKey(() => Category)
+  @Column
+  category_id: number;
+
+  @BelongsTo(() => Category)
+  category: Category;
 
   @ForeignKey(() => Vendor)
   @Column

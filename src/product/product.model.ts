@@ -3,15 +3,14 @@ import {
   Column,
   Model,
   HasMany,
-  CreatedAt,
-  UpdatedAt,
   PrimaryKey,
   AutoIncrement,
   BelongsTo,
   ForeignKey,
 } from 'sequelize-typescript';
 import { Inventory } from 'src/inventory/inventory.model';
-import { Section } from 'src/store/section/section.model';
+import { Section } from 'src/section/section.model';
+import { Store } from 'src/store/models/store.model';
 
 @Table({
   timestamps: true,
@@ -41,14 +40,13 @@ export class Product extends Model<Product> {
   @BelongsTo(() => Section)
   section: Section;
 
+  @ForeignKey(() => Store)
+  @Column
+  store_id: number;
+
+  @BelongsTo(() => Store)
+  store: Store;
+
   @HasMany(() => Inventory)
   inventories: Inventory[];
-
-  @CreatedAt
-  @Column({ field: 'created_at' })
-  createdAt: Date;
-
-  @UpdatedAt
-  @Column({ field: 'updated_at' })
-  updatedAt: Date;
 }

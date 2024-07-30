@@ -15,7 +15,7 @@ import { Vendor } from 'src/account/vendor/vendor.model';
 @Table({
   timestamps: true,
   underscored: true,
-  tableName: 'user_roles',
+  tableName: 'vendor_roles',
 })
 export class VendorRole extends Model<VendorRole> {
   @PrimaryKey

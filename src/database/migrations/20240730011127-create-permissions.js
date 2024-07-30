@@ -1,14 +1,13 @@
-// migrations/YYYYMMDDHHMMSS-create-roles-table.js
 'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('roles', {
+    await queryInterface.createTable('permissions', {
       id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER,
       },
       name: {
         type: Sequelize.STRING,
@@ -17,23 +16,22 @@ module.exports = {
       },
       description: {
         type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
+        allowNull: true,
       },
       created_at: {
-        type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
       },
       updated_at: {
-        type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
       },
     });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('roles');
+    await queryInterface.dropTable('permissions');
   },
 };

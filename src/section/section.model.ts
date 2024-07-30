@@ -5,13 +5,12 @@ import {
   ForeignKey,
   BelongsTo,
   HasMany,
-  CreatedAt,
-  UpdatedAt,
   PrimaryKey,
   AutoIncrement,
+  DataType,
 } from 'sequelize-typescript';
-import { Store } from '../models/store.model';
-import { Product } from '../../product/product.model';
+import { Product } from '../product/product.model';
+import { Store } from 'src/store/models/store.model';
 
 @Table({
   timestamps: true,
@@ -37,6 +36,19 @@ export class Section extends Model<Section> {
 
   @Column
   description: string;
+
+  @ForeignKey(() => Section)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  parent_id: number;
+
+  @BelongsTo(() => Section, { onDelete: 'CASCADE' })
+  parent: Section;
+
+  @HasMany(() => Section)
+  children: Section[];
 
   @HasMany(() => Product)
   products: Product[];

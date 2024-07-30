@@ -36,6 +36,7 @@
     "joi": "^17.13.3",
     "mysql2": "^3.11.0",
     "nanoid": "^5.0.7",
+    "nest-winston": "^1.9.7",
     "nunjucks": "^3.2.4",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -43,7 +44,8 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "sequelize": "^6.37.3",
-    "sequelize-typescript": "^2.1.6"
+    "sequelize-typescript": "^2.1.6",
+    "winston": "^3.13.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

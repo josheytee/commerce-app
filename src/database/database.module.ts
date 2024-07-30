@@ -10,7 +10,6 @@ import { PasswordReset } from '../account/password-reset/password-reset.model';
 import { TwoFactorAuth } from '../account/two-factor-auth/two-factor-auth.model';
 import { AuditLog } from '../account/audit-log/audit-log.model';
 import { Store } from 'src/store/models/store.model';
-import { Section } from 'src/store/section/section.model';
 import { Inventory } from 'src/inventory/inventory.model';
 import { Product } from 'src/product/product.model';
 import { OrderItem } from 'src/order/models/order-item.model';
@@ -19,6 +18,8 @@ import { VendorRole } from 'src/account/role/models/vendor-role.model';
 import { StoreCustomer } from 'src/store/models/store-customer.model';
 import { Customer } from 'src/account/customer/customer.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
+import { Section } from 'src/section/section.model';
+import { Category } from 'src/store/models/category.model';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { Vendor } from 'src/account/vendor/vendor.model';
         PasswordReset,
         TwoFactorAuth,
         AuditLog,
+        Category,
         Store,
         StoreCustomer,
         Customer,

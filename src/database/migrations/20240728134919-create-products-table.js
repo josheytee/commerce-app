@@ -20,14 +20,6 @@ module.exports = {
         type: Sequelize.FLOAT,
         allowNull: false,
       },
-      category_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'categories',
-          key: 'id',
-        },
-      },
       store_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -35,6 +27,16 @@ module.exports = {
           model: 'stores',
           key: 'id',
         },
+        onDelete: 'CASCADE',
+      },
+      section_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'sections',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
       },
       deleted_at: {
         type: Sequelize.DATE,

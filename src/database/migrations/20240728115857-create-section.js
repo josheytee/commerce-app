@@ -16,6 +16,15 @@ module.exports = {
       description: {
         type: Sequelize.STRING,
       },
+      parent_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'sections',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+      },
       store_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -23,6 +32,11 @@ module.exports = {
           model: 'stores',
           key: 'id',
         },
+      },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       created_at: {
         type: Sequelize.DATE,

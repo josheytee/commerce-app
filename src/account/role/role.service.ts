@@ -21,6 +21,10 @@ export class RoleService {
     return this.roleModel.findAll({ include: { all: true } });
   }
 
+  async findByName(name: string): Promise<Role | null> {
+    return this.roleModel.findOne({ where: { name } });
+  }
+
   async findOne(id: number): Promise<Role> {
     const role = await this.roleModel.findByPk(id, { include: { all: true } });
     if (!role) {

@@ -1,26 +1,47 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RoleService } from './role.service';
+import { VendorService } from '../vendor/vendor.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private roleService: RoleService,
+    private vendorService: VendorService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const roles = this.reflector.get<string[]>('roles', context.getHandler());
-    if (!roles) {
+    const requiredRoles = this.reflector.get<string[]>(
+      'roles',
+      context.getHandler(),
+    );
+    if (!requiredRoles) {
       return true;
     }
+
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    // Fetch the roles and permissions for the user
-    const userRoles = await this.roleService.findRolesForUser(user.id);
+    if (!user) {
+      throw new ForbiddenException('No user found');
+    }
 
-    // Check if any of the user's roles have the required permissions
-    return userRoles.some((role) => roles.includes(role.name));
+    const vendor = await this.vendorService.findByUserId(user.id);
+    if (!vendor) {
+      throw new ForbiddenException('No vendor associated with this user');
+    }
+
+    const hasRole = requiredRoles.some((role) =>
+      vendor.roles.some((vendorRole) => vendorRole.name === role),
+    );
+    if (!hasRole) {
+      throw new ForbiddenException('You do not have the required role');
+    }
+
+    return true;
   }
 }

@@ -12,19 +12,23 @@ import { StoreService } from './store.service';
 import { Store } from './models/store.model';
 import { RolesGuard } from 'src/account/role/roles.guard';
 import { Roles } from 'src/account/role/roles.decorator';
+import { JwtAuthGuard } from 'src/account/auth/jwt-auth.guard';
+import { VendorRoles } from 'src/account/role/vendor-roles.decorator';
 
 @Controller('stores')
-@UseGuards(RolesGuard)
+// @UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
   @Post()
+  @VendorRoles('vendor')
   create(@Body() data: Partial<Store>): Promise<Store> {
     return this.storeService.create(data);
   }
 
   @Get()
-  @Roles('Admin', 'Vendor')
+  // @Roles('Admin', 'Vendor')
   findAll(): Promise<Store[]> {
     return this.storeService.findAll();
   }

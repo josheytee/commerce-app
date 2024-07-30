@@ -1,45 +1,48 @@
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('store_customers', {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('role_permissions', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      store_id: {
+      role_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Stores',
+          model: 'roles', // Table name for roles
           key: 'id',
         },
+        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
-        primaryKey: true,
       },
-      customer_id: {
+      permission_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Customers',
+          model: 'permissions', // Table name for permissions
           key: 'id',
         },
+        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
-        primaryKey: true,
       },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
       },
       updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
       },
     });
   },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('store_customers');
+
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('role_permissions');
   },
 };

@@ -9,12 +9,14 @@ import { AuditLogModule } from './audit-log/audit-log.module';
 import { AuthModule } from './auth/auth.module';
 import { VendorModule } from './vendor/vendor.module';
 import { CustomerModule } from './customer/customer.module';
+import { VendorRoleModule } from './vendor-role/vendor-role.module';
 
 @Module({
   imports: [
     UserModule,
     RoleModule,
     VendorModule,
+    VendorRoleModule,
     CustomerModule,
     SessionModule,
     PasswordResetModule,
