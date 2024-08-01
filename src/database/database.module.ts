@@ -20,6 +20,7 @@ import { Customer } from 'src/account/customer/customer.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
 import { Section } from 'src/section/section.model';
 import { Category } from 'src/store/models/category.model';
+import { UserStoreRole } from 'src/account/user/models/user-store-role.model';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { Category } from 'src/store/models/category.model';
         Product,
         Order,
         OrderItem,
+        UserStoreRole,
       ],
     }),
   ],

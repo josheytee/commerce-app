@@ -42,6 +42,6 @@ export class Vendor extends Model<Vendor> {
   @BelongsToMany(() => Role, () => VendorRole)
   roles: Role[];
 
-  @HasMany(() => Store)
+  @BelongsToMany(() => Store, () => StoreVendor)
   stores: Store[];
 }

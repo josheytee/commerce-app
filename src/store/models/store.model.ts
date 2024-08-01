@@ -16,6 +16,9 @@ import { Vendor } from 'src/account/vendor/vendor.model';
 import { Section } from 'src/section/section.model';
 import { Store as IStore } from '../interfaces/store.interface';
 import { Category } from './category.model';
+import { User } from 'src/account/user/models/user.model';
+import { Role } from 'src/account/role/models/role.model';
+import { UserStoreRole } from 'src/account/user/models/user-store-role.model';
 
 @Table({
   timestamps: true,
@@ -46,8 +49,8 @@ export class Store extends Model<Store> implements IStore {
   @Column
   vendor_id: number;
 
-  @BelongsTo(() => Vendor)
-  vendor: Vendor;
+  @BelongsToMany(() => Vendor, () => StoreVendor)
+  vendors: Vendor[];
 
   @BelongsToMany(() => Customer, () => StoreCustomer)
   customers: Customer[];
@@ -57,4 +60,10 @@ export class Store extends Model<Store> implements IStore {
 
   @HasMany(() => Inventory)
   inventories: Inventory[];
+
+  @BelongsToMany(() => User, () => UserStoreRole)
+  users: User[];
+
+  @BelongsToMany(() => Role, () => UserStoreRole)
+  roles: Role[];
 }

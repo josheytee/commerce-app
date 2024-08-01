@@ -27,7 +27,7 @@ export class Customer extends Model<Customer> {
     type: DataType.INTEGER,
     allowNull: false,
   })
-  userId: number;
+  user_id: number;
 
   @BelongsTo(() => User)
   user: User;

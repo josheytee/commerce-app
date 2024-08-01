@@ -10,30 +10,32 @@ import {
 } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { Store } from './models/store.model';
-import { RolesGuard } from 'src/account/role/roles.guard';
-import { Roles } from 'src/account/role/roles.decorator';
+
 import { JwtAuthGuard } from 'src/account/auth/jwt-auth.guard';
+import { Roles } from 'src/account/role/role.decorator';
+import { VendorRolesGuard } from 'src/account/role/vendor-roles.guard';
 import { VendorRoles } from 'src/account/role/vendor-roles.decorator';
+// import { VendorRoles } from 'src/account/role/vendor-roles.decorator';
 
 @Controller('stores')
-// @UseGuards(RolesGuard)
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, VendorRolesGuard)
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
   @Post()
-  @VendorRoles('vendor')
+  @VendorRoles('create_store')
   create(@Body() data: Partial<Store>): Promise<Store> {
     return this.storeService.create(data);
   }
 
   @Get()
-  // @Roles('Admin', 'Vendor')
+  @VendorRoles('view_store')
   findAll(): Promise<Store[]> {
     return this.storeService.findAll();
   }
 
   @Get(':id')
+  @Roles('view_store')
   findOne(@Param('id') id: number): Promise<Store> {
     return this.storeService.findOne(id);
   }

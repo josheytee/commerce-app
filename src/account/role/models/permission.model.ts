@@ -28,7 +28,7 @@ export class Permission extends Model<Permission> {
   @AllowNull(false)
   @Unique
   @Column(DataType.STRING)
-  permission_name!: string;
+  name!: string;
 
   @Column(DataType.TEXT)
   description?: string;

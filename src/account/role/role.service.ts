@@ -3,6 +3,9 @@ import { InjectModel } from '@nestjs/sequelize';
 import { CreateRoleDto } from './create-role.dto';
 import { Role } from './models/role.model';
 import { Vendor } from '../vendor/vendor.model';
+import { Permission } from './models/permission.model';
+import { RolePermission } from './models/role-permission.model';
+import { VendorRole } from './models/vendor-role.model';
 
 @Injectable()
 export class RoleService {
@@ -11,10 +14,29 @@ export class RoleService {
     private readonly roleModel: typeof Role,
     @InjectModel(Vendor)
     private readonly vendorModel: typeof Vendor,
+    @InjectModel(Permission) private permissionModel: typeof Permission,
+    @InjectModel(RolePermission)
+    private rolePermissionModel: typeof RolePermission,
   ) {}
 
   async create(createRoleDto: Partial<CreateRoleDto>): Promise<Role> {
     return this.roleModel.create(createRoleDto);
+  }
+
+  async findPermissionsByRole(role_id: number): Promise<Permission[]> {
+    const rolePermissions = await this.rolePermissionModel.findAll({
+      where: { role_id },
+    });
+    const permission_ids = rolePermissions.map((rp) => rp.permission_id);
+    return this.permissionModel.findAll({ where: { id: permission_ids } });
+  }
+
+  async findPermissionsByVendorRole(role_id: number): Promise<Permission[]> {
+    const vendorRolePermissions = await this.rolePermissionModel.findAll({
+      where: { role_id },
+    });
+    const permission_ids = vendorRolePermissions.map((vr) => vr.permission_id);
+    return this.permissionModel.findAll({ where: { id: permission_ids } });
   }
 
   async findAll(): Promise<Role[]> {
@@ -46,9 +68,9 @@ export class RoleService {
     await role.destroy();
   }
 
-  async findRolesForUser(userId: number): Promise<Role[]> {
+  async findRolesForUser(user_id: number): Promise<Role[]> {
     const vendor = await this.vendorModel.findOne({
-      where: { user_id: userId },
+      where: { user_id: user_id },
       include: [Role],
     });
 

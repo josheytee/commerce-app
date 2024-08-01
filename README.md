@@ -52,6 +52,18 @@ npx sequelize-cli db:migrate
 
 ```
 
+## Relationships
+
+```
+Users and Vendors: One-to-One relationship. A vendor is a specific type of user.
+
+Users and Customers: One-to-One relationship. A customer is a specific type of user.
+
+Vendors and Stores: One-to-Many relationship. A vendor can have multiple stores.
+
+Stores and Customers: Many-to-Many relationship. Customers can purchase from multiple stores, and stores can have multiple customers.
+```
+
 ## Todos
 
 ```

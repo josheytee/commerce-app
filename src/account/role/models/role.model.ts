@@ -9,9 +9,14 @@ import {
   AllowNull,
   Unique,
   HasMany,
+  BelongsToMany,
 } from 'sequelize-typescript';
 import { VendorRole } from './vendor-role.model';
 import { RolePermission } from './role-permission.model';
+import { User } from 'src/account/user/models/user.model';
+import { Store } from 'src/store/models/store.model';
+import { UserStoreRole } from 'src/account/user/models/user-store-role.model';
+import { Permission } from './permission.model';
 
 @Table({
   timestamps: true,
@@ -35,6 +40,12 @@ export class Role extends Model<Role> {
   @HasMany(() => VendorRole)
   vendorRoles!: VendorRole[];
 
-  @HasMany(() => RolePermission)
-  rolePermissions!: RolePermission[];
+  @BelongsToMany(() => User, () => UserStoreRole)
+  users: User[];
+
+  @BelongsToMany(() => Store, () => UserStoreRole)
+  stores: Store[];
+
+  @BelongsToMany(() => Permission, () => RolePermission)
+  permissions: Permission[];
 }
