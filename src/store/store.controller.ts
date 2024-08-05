@@ -12,30 +12,28 @@ import { StoreService } from './store.service';
 import { Store } from './models/store.model';
 
 import { JwtAuthGuard } from 'src/account/auth/jwt-auth.guard';
-import { Roles } from 'src/account/role/role.decorator';
-import { VendorRolesGuard } from 'src/account/role/vendor-roles.guard';
-import { VendorRoles } from 'src/account/role/vendor-roles.decorator';
-// import { VendorRoles } from 'src/account/role/vendor-roles.decorator';
+import { Permissions } from 'src/account/permission/permissions.decorator';
+import { PermissionsGuard } from 'src/account/permission/permissions.guard';
 
 @Controller('stores')
-@UseGuards(JwtAuthGuard, VendorRolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
   @Post()
-  @VendorRoles('create_store')
+  @Permissions('create-role')
   create(@Body() data: Partial<Store>): Promise<Store> {
     return this.storeService.create(data);
   }
 
   @Get()
-  @VendorRoles('view_store')
+  @Permissions('view_store')
   findAll(): Promise<Store[]> {
     return this.storeService.findAll();
   }
 
   @Get(':id')
-  @Roles('view_store')
+  @Permissions('view_store')
   findOne(@Param('id') id: number): Promise<Store> {
     return this.storeService.findOne(id);
   }

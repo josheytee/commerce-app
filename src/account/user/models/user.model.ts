@@ -16,10 +16,11 @@ import { PasswordReset } from '../../password-reset/password-reset.model';
 import { TwoFactorAuth } from '../../two-factor-auth/two-factor-auth.model';
 import { AuditLog } from '../../audit-log/audit-log.model';
 import { User as IUser } from '../interfaces/user.interface';
+import { Store } from 'src/store/models/store.model';
+import { UserStoreRole } from '../../../store/models/user-store-role.model';
+import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
 import { Role } from 'src/account/role/models/role.model';
-import { Store } from 'src/store/models/store.model';
-import { UserStoreRole } from './user-store-role.model';
 
 @Table({
   timestamps: true,
@@ -84,14 +85,14 @@ export class User extends Model<IUser> implements IUser {
   @HasMany(() => AuditLog)
   auditLogs!: AuditLog[];
 
-  @HasMany(() => Vendor)
+  @BelongsToMany(() => Vendor, () => UserVendorRole)
   vendors: Vendor[];
+
+  @BelongsToMany(() => Role, () => UserVendorRole)
+  roles: Role[];
 
   @BelongsToMany(() => Store, () => UserStoreRole)
   stores: Store[];
-
-  @BelongsToMany(() => Role, () => UserStoreRole)
-  roles: Role[];
 
   toJSON() {
     const values = { ...this.get() };

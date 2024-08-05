@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from './../account/auth/jwt-auth.guard';
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Store } from './models/store.model';
@@ -8,28 +9,31 @@ import { Role } from 'src/account/role/models/role.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
 import { VendorService } from 'src/account/vendor/vendor.service';
 import { Category } from './models/category.model';
-import { Permission } from 'src/account/role/models/permission.model';
-import { RolePermission } from 'src/account/role/models/role-permission.model';
-import { UserRolesGuard } from 'src/account/role/user-roles.guard';
-import { VendorRolesGuard } from 'src/account/role/vendor-roles.guard';
+import { JwtService } from '@nestjs/jwt';
+import { PermissionsGuard } from 'src/account/permission/permissions.guard';
+import { UserVendorRoleService } from 'src/account/user-vendor-role/user-vendor-role.service';
+import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';
+import { Permission } from 'src/account/permission/permission.model';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([
       Role,
-      Vendor,
       Store,
+      Vendor,
       Category,
       Permission,
-      RolePermission,
+      UserVendorRole,
     ]),
   ],
   providers: [
+    JwtService,
     StoreService,
-    UserRolesGuard,
-    VendorRolesGuard,
+    JwtAuthGuard,
+    PermissionsGuard,
     RoleService,
     VendorService,
+    UserVendorRoleService,
   ],
   controllers: [StoreController],
 })

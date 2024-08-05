@@ -5,21 +5,22 @@ import { RoleController } from './role.controller';
 import { RoleService } from './role.service';
 import { Role } from './models/role.model';
 import { Vendor } from '../vendor/vendor.model';
-import { VendorRole } from './models/vendor-role.model';
-import { Permission } from './models/permission.model';
-import { RolePermission } from './models/role-permission.model';
+import { Permission } from '../permission/permission.model';
+import { VendorService } from '../vendor/vendor.service';
+import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
+import { PermissionsGuard } from '../permission/permissions.guard';
+import { UserVendorRoleService } from '../user-vendor-role/user-vendor-role.service';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([
-      Role,
-      Vendor,
-      VendorRole,
-      Permission,
-      RolePermission,
-    ]),
+    SequelizeModule.forFeature([Role, Vendor, Permission, UserVendorRole]),
   ],
   controllers: [RoleController],
-  providers: [RoleService],
+  providers: [
+    RoleService,
+    VendorService,
+    PermissionsGuard,
+    UserVendorRoleService,
+  ],
 })
 export class RoleModule {}

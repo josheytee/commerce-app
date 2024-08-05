@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateCustomRoleDto } from './dtos/create-custom-role.dto';
+import { Body, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { CreateRoleDto } from './create-role.dto';
+import { CreateRoleDto } from './dtos/create-role.dto';
 import { Role } from './models/role.model';
 import { Vendor } from '../vendor/vendor.model';
-import { Permission } from './models/permission.model';
-import { RolePermission } from './models/role-permission.model';
-import { VendorRole } from './models/vendor-role.model';
+import { Permission } from '../permission/permission.model';
+import { UserVendorRolePermission } from '../permission/user-vendor-role-permission.model';
 
 @Injectable()
 export class RoleService {
@@ -13,30 +13,12 @@ export class RoleService {
     @InjectModel(Role)
     private readonly roleModel: typeof Role,
     @InjectModel(Vendor)
-    private readonly vendorModel: typeof Vendor,
+    private readonly userVendorRolePermission: typeof UserVendorRolePermission,
     @InjectModel(Permission) private permissionModel: typeof Permission,
-    @InjectModel(RolePermission)
-    private rolePermissionModel: typeof RolePermission,
   ) {}
 
   async create(createRoleDto: Partial<CreateRoleDto>): Promise<Role> {
     return this.roleModel.create(createRoleDto);
-  }
-
-  async findPermissionsByRole(role_id: number): Promise<Permission[]> {
-    const rolePermissions = await this.rolePermissionModel.findAll({
-      where: { role_id },
-    });
-    const permission_ids = rolePermissions.map((rp) => rp.permission_id);
-    return this.permissionModel.findAll({ where: { id: permission_ids } });
-  }
-
-  async findPermissionsByVendorRole(role_id: number): Promise<Permission[]> {
-    const vendorRolePermissions = await this.rolePermissionModel.findAll({
-      where: { role_id },
-    });
-    const permission_ids = vendorRolePermissions.map((vr) => vr.permission_id);
-    return this.permissionModel.findAll({ where: { id: permission_ids } });
   }
 
   async findAll(): Promise<Role[]> {
@@ -68,16 +50,17 @@ export class RoleService {
     await role.destroy();
   }
 
-  async findRolesForUser(user_id: number): Promise<Role[]> {
-    const vendor = await this.vendorModel.findOne({
-      where: { user_id: user_id },
-      include: [Role],
-    });
-
-    if (!vendor) {
-      throw new NotFoundException('Vendor not found for this user');
-    }
-
-    return vendor.roles;
-  }
+  // async createRoleWithPermissions(
+  //   @Body() createCustomRoleDto: CreateCustomRoleDto,
+  // ): Promise<Role> {
+  //   const permissions = await this.permissionModel.findAll({
+  //     where: { id: createCustomRoleDto.permissionIds },
+  //   });
+  //   const customRole = await this.userVendorRolePermission.create({
+  //     name: createCustomRoleDto.name,
+  //     created_by_vendor_id: createCustomRoleDto.vendor_id,
+  //   });
+  //   await customRole.$set('permissions', permissions);
+  //   return customRole;
+  // }
 }

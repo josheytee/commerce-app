@@ -8,15 +8,15 @@ import {
   AutoIncrement,
   AllowNull,
   Unique,
-  HasMany,
   BelongsToMany,
+  ForeignKey,
 } from 'sequelize-typescript';
-import { VendorRole } from './vendor-role.model';
-import { RolePermission } from './role-permission.model';
-import { User } from 'src/account/user/models/user.model';
 import { Store } from 'src/store/models/store.model';
-import { UserStoreRole } from 'src/account/user/models/user-store-role.model';
-import { Permission } from './permission.model';
+import { UserStoreRole } from 'src/store/models/user-store-role.model';
+import { Permission } from '../../permission/permission.model';
+import { Vendor } from 'src/account/vendor/vendor.model';
+import { User } from 'src/account/user/models/user.model';
+import { UserVendorRolePermission } from '../../permission/user-vendor-role-permission.model';
 
 @Table({
   timestamps: true,
@@ -37,15 +37,13 @@ export class Role extends Model<Role> {
   @Column(DataType.TEXT)
   description?: string;
 
-  @HasMany(() => VendorRole)
-  vendorRoles!: VendorRole[];
+  @ForeignKey(() => Vendor)
+  @Column
+  created_by_vendor_id: number;
 
   @BelongsToMany(() => User, () => UserStoreRole)
   users: User[];
 
   @BelongsToMany(() => Store, () => UserStoreRole)
   stores: Store[];
-
-  @BelongsToMany(() => Permission, () => RolePermission)
-  permissions: Permission[];
 }

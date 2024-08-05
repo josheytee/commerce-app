@@ -9,14 +9,16 @@ import { AuditLogModule } from './audit-log/audit-log.module';
 import { AuthModule } from './auth/auth.module';
 import { VendorModule } from './vendor/vendor.module';
 import { CustomerModule } from './customer/customer.module';
-import { VendorRoleModule } from './vendor-role/vendor-role.module';
+import { UserVendorRoleModule } from './user-vendor-role/user-vendor-role.module';
+import { PermissionModule } from './permission/permission.module';
 
 @Module({
   imports: [
     UserModule,
     RoleModule,
     VendorModule,
-    VendorRoleModule,
+    PermissionModule,
+    UserVendorRoleModule,
     CustomerModule,
     SessionModule,
     PasswordResetModule,

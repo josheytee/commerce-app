@@ -17,12 +17,12 @@ export class VendorService {
     return this.vendorModel.findAll();
   }
 
-  async findByUserId(userId: number): Promise<Vendor | null> {
-    return this.vendorModel.findOne({
-      where: { user_id: userId },
-      include: ['roles'],
-    });
-  }
+  // async findByUserId(userId: number): Promise<Vendor | null> {
+  //   return this.vendorModel.findOne({
+  //     where: { user_id: userId },
+  //     include: ['roles'],
+  //   });
+  // }
   async findOne(id: number): Promise<Vendor> {
     const vendor = await this.vendorModel.findByPk(id);
     if (!vendor) {

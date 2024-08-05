@@ -9,10 +9,10 @@ import {
   HasMany,
   BelongsToMany,
 } from 'sequelize-typescript';
-import { User } from 'src/account/user/models/user.model';
-import { VendorRole } from './../../account/role/models/vendor-role.model';
-import { Role } from 'src/account/role/models/role.model';
+import { User } from '../user/models/user.model';
 import { Store } from 'src/store/models/store.model';
+import { Role } from 'src/account/role/models/role.model';
+import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
 
 @Table({
   timestamps: true,
@@ -29,19 +29,12 @@ export class Vendor extends Model<Vendor> {
   @Column
   business_name: string;
 
-  @ForeignKey(() => User)
-  @Column
-  user_id: number;
+  @BelongsToMany(() => User, () => UserVendorRole)
+  users: User[];
 
-  @BelongsTo(() => User)
-  user: User;
-
-  // @HasMany(() => VendorRole)
-  // vendorRoles!: VendorRole[];
-
-  @BelongsToMany(() => Role, () => VendorRole)
+  @BelongsToMany(() => Role, () => UserVendorRole)
   roles: Role[];
 
-  @BelongsToMany(() => Store, () => StoreVendor)
+  @HasMany(() => Store)
   stores: Store[];
 }

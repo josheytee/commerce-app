@@ -7,10 +7,14 @@ import {
   Delete,
   Body,
   Param,
+  UseGuards,
 } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { Role } from './models/role.model';
-import { CreateRoleDto } from './create-role.dto';
+import { CreateRoleDto } from './dtos/create-role.dto';
+import { CreateCustomRoleDto } from './dtos/create-custom-role.dto';
+import { Permissions } from 'src/account/permission/permissions.decorator';
+import { PermissionsGuard } from 'src/account/permission/permissions.guard';
 
 @Controller('roles')
 export class RoleController {
@@ -29,6 +33,24 @@ export class RoleController {
   @Post()
   async create(@Body() role: CreateRoleDto): Promise<Role> {
     return this.roleService.create(role);
+  }
+
+  @Post()
+  @Permissions('create-role')
+  @UseGuards(PermissionsGuard)
+  async createRoleWithPermissions(
+    @Body() createCustomRoleDto: CreateCustomRoleDto,
+  ) {
+    // @todo later
+    // const vendorId = req.user.vendorId; // Assuming vendorId is part of the authenticated user's payload
+    // return this.roleService.createCustomRole(createCustomRoleDto);
+  }
+
+  @Get()
+  @Permissions('view-roles')
+  async getAllRoles() {
+    // return this.roleService.getAllRoles();
+    return this.findAll();
   }
 
   @Put(':id')

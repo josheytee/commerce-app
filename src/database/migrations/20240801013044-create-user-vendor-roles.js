@@ -1,27 +1,20 @@
-'use strict';
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('user_store_roles', {
-      id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-      },
+    await queryInterface.createTable('user_vendor_roles', {
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'users',
           key: 'id',
         },
         onDelete: 'CASCADE',
       },
-      store_id: {
+      vendor_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Stores',
+          model: 'vendors',
           key: 'id',
         },
         onDelete: 'CASCADE',
@@ -30,7 +23,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Roles',
+          model: 'roles',
           key: 'id',
         },
         onDelete: 'CASCADE',
@@ -38,16 +31,23 @@ module.exports = {
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.NOW,
+        defaultValue: Sequelize.fn('now'),
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.NOW,
+        defaultValue: Sequelize.fn('now'),
       },
     });
+
+    await queryInterface.addConstraint('user_vendor_roles', {
+      fields: ['user_id', 'vendor_id'],
+      type: 'unique',
+      name: 'unique_user_vendor'
+    });
   },
+
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('user_store_roles');
+    await queryInterface.dropTable('user_vendor_roles');
   },
 };

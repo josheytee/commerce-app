@@ -6,11 +6,16 @@ import {
   Param,
   Patch,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { VendorService } from './vendor.service';
 import { Vendor } from './vendor.model';
+import { PermissionsGuard } from 'src/account/permission/permissions.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Permissions } from 'src/account/permission/permissions.decorator';
 
 @Controller('vendors')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class VendorController {
   constructor(private readonly vendorService: VendorService) {}
 
@@ -20,6 +25,7 @@ export class VendorController {
   }
 
   @Get()
+  @Permissions('view_store')
   findAll(): Promise<Vendor[]> {
     return this.vendorService.findAll();
   }

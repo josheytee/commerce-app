@@ -12,6 +12,7 @@ import {
   DatabaseError,
   ForeignKeyConstraintError,
 } from 'sequelize';
+import { stack } from 'sequelize/types/utils';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -52,6 +53,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       path: request.url,
       method: request.method,
       message: message,
+      stack: (exception as any).stack,
     };
 
     this.logger.error(
