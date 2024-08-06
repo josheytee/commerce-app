@@ -6,10 +6,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RoleService } from '../role/role.service';
-import { VendorService } from '../vendor/vendor.service';
 import { UserVendorRoleService } from '../user-vendor-role/user-vendor-role.service';
 import { PERMISSIONS_KEY } from './permissions.decorator';
+import { OWNER_ROLE } from './constants';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -17,8 +16,6 @@ export class PermissionsGuard implements CanActivate {
 
   constructor(
     private reflector: Reflector,
-    private vendorService: VendorService,
-    private roleService: RoleService,
     private userVendorRoleService: UserVendorRoleService,
   ) {}
 
@@ -50,9 +47,27 @@ export class PermissionsGuard implements CanActivate {
 
     const userRoles = await this.userVendorRoleService.getUserRoles(userId);
 
-    const userPermissions = userRoles.flatMap((role) =>
-      role.permissions.map((permission) => permission.name),
-    );
+    // const userPermissions = userRoles.flatMap((role) =>
+    //   role.permissions.map((permission) => permission.name),
+    // );
+
+    const userPermissions = userRoles.reduce(
+      (acc, role) => {
+        if (acc.isOwner) {
+          return acc;
+        }
+
+        if (role.role_id === 1) {
+          acc.isOwner = true;
+        }
+        const permissions = role.permissions.map(
+          (permission) => permission.name,
+        );
+        acc.permissions = acc.permissions.concat(permissions);
+        return acc;
+      },
+      { permissions: [], isOwner: false },
+    ).permissions;
 
     const hasPermission = () =>
       requiredPermissions.every((permission) =>
@@ -64,7 +79,7 @@ export class PermissionsGuard implements CanActivate {
         `User ${userId} does not have the required permissions: ${requiredPermissions.toString()}`,
       );
       throw new ForbiddenException(
-        'You do not have the required permissions:' +
+        'You do not have the required permissions: ' +
           requiredPermissions.toString(),
       );
     }

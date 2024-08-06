@@ -21,24 +21,25 @@ export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 
   @Post()
-  @Permissions('create-role')
+  @Permissions('store:create')
   create(@Body() data: Partial<Store>): Promise<Store> {
     return this.storeService.create(data);
   }
 
   @Get()
-  @Permissions('view_store')
+  @Permissions('store:view')
   findAll(): Promise<Store[]> {
     return this.storeService.findAll();
   }
 
   @Get(':id')
-  @Permissions('view_store')
+  @Permissions('store:view')
   findOne(@Param('id') id: number): Promise<Store> {
     return this.storeService.findOne(id);
   }
 
   @Patch(':id')
+  @Permissions('store:update')
   update(
     @Param('id') id: number,
     @Body() data: Partial<Store>,
@@ -47,6 +48,7 @@ export class StoreController {
   }
 
   @Delete(':id')
+  @Permissions('store:delete')
   remove(@Param('id') id: number): Promise<void> {
     return this.storeService.remove(id);
   }

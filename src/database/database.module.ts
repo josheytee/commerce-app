@@ -33,7 +33,7 @@ import { UserVendorRolePermission } from 'src/account/permission/user-vendor-rol
       database: 'commerce-app',
       autoLoadModels: true,
       synchronize: true,
-      logging: console.log,
+      // logging: console.log,
       models: [
         User,
         Role,
