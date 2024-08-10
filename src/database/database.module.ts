@@ -21,6 +21,10 @@ import { Category } from 'src/store/models/category.model';
 import { UserStoreRole } from 'src/store/models/user-store-role.model';
 import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';
 import { UserVendorRolePermission } from 'src/account/permission/user-vendor-role-permission.model';
+import { City } from 'src/address/city/city.model';
+import { State } from 'src/address/state/state.model';
+import { Country } from 'src/address/country/country.model';
+import { Address } from 'src/address/address.model';
 
 @Module({
   imports: [
@@ -35,6 +39,10 @@ import { UserVendorRolePermission } from 'src/account/permission/user-vendor-rol
       synchronize: true,
       // logging: console.log,
       models: [
+        City,
+        State,
+        Country,
+        Address,
         User,
         Role,
         Permission,

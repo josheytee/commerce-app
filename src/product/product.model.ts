@@ -28,10 +28,28 @@ export class Product extends Model<Product> {
   name: string;
 
   @Column
+  slug: string;
+
+  @Column
   description: string;
 
   @Column
+  details: string;
+
+  @Column
+  quantity: number;
+
+  @Column
+  featured: boolean;
+
+  @Column
+  review_able: boolean;
+
+  @Column
   price: number;
+
+  @Column
+  status: string;
 
   @ForeignKey(() => Section)
   @Column

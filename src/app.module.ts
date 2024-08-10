@@ -12,6 +12,7 @@ import { AllExceptionsFilter } from './all-exceptions.filter';
 import { ResponseInterceptor } from './response.interceptor';
 import { SectionModule } from './section/section.module';
 import { WinstonModule } from 'nest-winston';
+import { AddressModule } from './address/address.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { WinstonModule } from 'nest-winston';
     InventoryModule,
     OrderModule,
     WinstonModule,
+    AddressModule,
   ],
   controllers: [AppController],
   providers: [

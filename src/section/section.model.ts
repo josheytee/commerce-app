@@ -24,18 +24,20 @@ export class Section extends Model<Section> {
   @Column
   id: number;
 
-  @ForeignKey(() => Store)
-  @Column
-  store_id: number;
-
-  @BelongsTo(() => Store)
-  store: Store;
-
   @Column
   name: string;
 
   @Column
+  slug: string;
+
+  @Column
+  cover: string;
+
+  @Column
   description: string;
+
+  @Column
+  status: string;
 
   @ForeignKey(() => Section)
   @Column({
@@ -46,6 +48,13 @@ export class Section extends Model<Section> {
 
   @BelongsTo(() => Section, { onDelete: 'CASCADE' })
   parent: Section;
+
+  @ForeignKey(() => Store)
+  @Column
+  store_id: number;
+
+  @BelongsTo(() => Store)
+  store: Store;
 
   @HasMany(() => Section)
   children: Section[];
