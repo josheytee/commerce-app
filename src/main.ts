@@ -9,6 +9,15 @@ async function bootstrap() {
       instance: instance,
     }),
   });
+
+  // Ignore HMR and SSE routes
+  app.use((req, res, next) => {
+    if (req.url.includes('__webpack_hmr') || req.url.includes('_loading/sse')) {
+      return res.status(204).send();
+    }
+    next();
+  });
+
   await app.listen(3000);
 }
 bootstrap();
