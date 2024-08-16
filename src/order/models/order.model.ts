@@ -11,7 +11,7 @@ import {
   AutoIncrement,
 } from 'sequelize-typescript';
 import { OrderItem } from './order-item.model';
-import { User } from 'src/account/user/models/user.model';
+import { Customer } from 'src/account/customer/customer.model';
 
 @Table({
   timestamps: true,
@@ -25,12 +25,12 @@ export class Order extends Model<Order> {
   @Column
   id: number;
 
-  @ForeignKey(() => User)
+  @ForeignKey(() => Customer)
   @Column
-  user_id: number;
+  customer_id: number;
 
-  @BelongsTo(() => User)
-  user: User;
+  @BelongsTo(() => Customer)
+  customer: Customer;
 
   @Column
   total_price: number;

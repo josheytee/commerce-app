@@ -5,8 +5,10 @@ import {
   BelongsTo,
   ForeignKey,
   DataType,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from 'src/account/user/models/user.model';
+import { Cart } from 'src/cart/models/cart.model';
 
 @Table({
   timestamps: true,
@@ -31,4 +33,7 @@ export class Customer extends Model<Customer> {
 
   @BelongsTo(() => User)
   user: User;
+
+  @HasMany(() => Cart)
+  carts: Cart[];
 }

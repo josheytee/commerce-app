@@ -25,6 +25,7 @@ import { City } from 'src/address/city/city.model';
 import { State } from 'src/address/state/state.model';
 import { Country } from 'src/address/country/country.model';
 import { Address } from 'src/address/address.model';
+import { Cart } from 'src/cart/models/cart.model';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { Address } from 'src/address/address.model';
         Inventory,
         Product,
         Order,
+        Cart,
         OrderItem,
         UserStoreRole,
         UserVendorRole,

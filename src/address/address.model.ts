@@ -11,7 +11,7 @@ import {
 import { Country } from './country/country.model';
 import { State } from './state/state.model';
 import { City } from './city/city.model';
-import { User } from 'src/account/user/models/user.model';
+import { Customer } from 'src/account/customer/customer.model';
 
 @Table({
   tableName: 'addresses',
@@ -84,8 +84,14 @@ export class Address extends Model<Address> {
   })
   is_default!: boolean;
 
-  @BelongsTo(() => User)
-  user: User;
+  @Column({
+    allowNull: false,
+  })
+  @ForeignKey(() => Customer)
+  customer_id!: number;
+
+  @BelongsTo(() => Customer)
+  customer: Customer;
 
   @Column({
     allowNull: false,

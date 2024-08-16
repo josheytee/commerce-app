@@ -13,6 +13,7 @@ import { ResponseInterceptor } from './response.interceptor';
 import { SectionModule } from './section/section.module';
 import { WinstonModule } from 'nest-winston';
 import { AddressModule } from './address/address.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AddressModule } from './address/address.module';
     OrderModule,
     WinstonModule,
     AddressModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [
