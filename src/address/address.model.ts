@@ -1,4 +1,17 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  AutoIncrement,
+  PrimaryKey,
+  BelongsTo,
+  ForeignKey,
+} from 'sequelize-typescript';
+import { Country } from './country/country.model';
+import { State } from './state/state.model';
+import { City } from './city/city.model';
+import { User } from 'src/account/user/models/user.model';
 
 @Table({
   tableName: 'addresses',
@@ -6,6 +19,11 @@ import { Table, Column, Model, DataType } from 'sequelize-typescript';
   underscored: true,
 })
 export class Address extends Model<Address> {
+  @PrimaryKey
+  @AutoIncrement
+  @Column
+  id: number;
+
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -66,21 +84,33 @@ export class Address extends Model<Address> {
   })
   is_default!: boolean;
 
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
-  city_id!: string;
+  @BelongsTo(() => User)
+  user: User;
 
   @Column({
-    type: DataType.STRING,
     allowNull: false,
   })
-  state_id!: string;
+  @ForeignKey(() => City)
+  city_id!: number;
+
+  @BelongsTo(() => City)
+  city: City;
 
   @Column({
-    type: DataType.STRING,
     allowNull: false,
   })
-  country_id!: string;
+  @ForeignKey(() => State)
+  state_id!: number;
+
+  @BelongsTo(() => State)
+  state: State;
+
+  @Column({
+    allowNull: false,
+  })
+  @ForeignKey(() => Country)
+  country_id!: number;
+
+  @BelongsTo(() => Country)
+  country: Country;
 }
