@@ -9,8 +9,8 @@ import {
   AutoIncrement,
   DataType,
 } from 'sequelize-typescript';
-import { Product } from '../product/product.model';
 import { Store } from 'src/store/models/store.model';
+import { Product } from '../product/product.model';
 
 @Table({
   timestamps: true,

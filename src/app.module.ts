@@ -14,6 +14,7 @@ import { SectionModule } from './section/section.module';
 import { WinstonModule } from 'nest-winston';
 import { AddressModule } from './address/address.module';
 import { CartModule } from './cart/cart.module';
+import { AttributeModule } from './attribute/attribute.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CartModule } from './cart/cart.module';
     WinstonModule,
     AddressModule,
     CartModule,
+    AttributeModule,
   ],
   controllers: [AppController],
   providers: [

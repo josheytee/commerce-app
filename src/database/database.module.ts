@@ -26,6 +26,8 @@ import { State } from 'src/address/state/state.model';
 import { Country } from 'src/address/country/country.model';
 import { Address } from 'src/address/address.model';
 import { Cart } from 'src/cart/models/cart.model';
+import { ProductAttribute } from 'src/attribute/models/product_attribute.model';
+import { Attribute } from 'src/attribute/models/attribute.model';
 
 @Module({
   imports: [
@@ -38,7 +40,7 @@ import { Cart } from 'src/cart/models/cart.model';
       database: 'commerce-app',
       autoLoadModels: true,
       synchronize: true,
-      // logging: console.log,
+      logging: console.log,
       models: [
         City,
         State,
@@ -61,6 +63,8 @@ import { Cart } from 'src/cart/models/cart.model';
         Product,
         Order,
         Cart,
+        Attribute,
+        ProductAttribute,
         OrderItem,
         UserStoreRole,
         UserVendorRole,

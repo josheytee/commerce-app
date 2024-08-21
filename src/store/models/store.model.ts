@@ -14,11 +14,11 @@ import { Inventory } from 'src/inventory/inventory.model';
 import { Customer } from '../../account/customer/customer.model';
 import { StoreCustomer } from './store-customer.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
-import { Section } from 'src/section/section.model';
 import { Store as IStore } from '../interfaces/store.interface';
 import { Category } from './category.model';
 import { Role } from 'src/account/role/models/role.model';
 import { UserStoreRole } from 'src/store/models/user-store-role.model';
+import { Section } from 'src/section/section.model';
 
 @Table({
   timestamps: true,
