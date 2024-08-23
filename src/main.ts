@@ -9,6 +9,8 @@ async function bootstrap() {
       instance: instance,
     }),
   });
+  console.log(app);
+  console.log('name----------------------------------');
 
   // Ignore HMR and SSE routes
   app.use((req, res, next) => {

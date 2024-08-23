@@ -3,9 +3,10 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { Section } from './section.model';
 import { SectionService } from './section.service';
 import { SectionController } from './section.controller';
+import { UserVendorRoleModule } from 'src/account/user-vendor-role/user-vendor-role.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Section])],
+  imports: [UserVendorRoleModule, SequelizeModule.forFeature([Section])],
   providers: [SectionService],
   controllers: [SectionController],
 })

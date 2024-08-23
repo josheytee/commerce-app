@@ -10,5 +10,6 @@ import { UserVendorRoleService } from './user-vendor-role.service';
   imports: [SequelizeModule.forFeature([User, Vendor, UserVendorRole])],
   providers: [UserVendorRoleService],
   controllers: [UserVendorRoleController],
+  exports: [UserVendorRoleService],
 })
 export class UserVendorRoleModule {}

@@ -25,6 +25,9 @@ export class Order extends Model<Order> {
   @Column
   id: number;
 
+  @Column
+  order_reference: string;
+
   @ForeignKey(() => Customer)
   @Column
   customer_id: number;
@@ -33,7 +36,7 @@ export class Order extends Model<Order> {
   customer: Customer;
 
   @Column
-  total_price: number;
+  total_amount: number;
 
   @Column
   status: string;

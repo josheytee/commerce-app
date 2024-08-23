@@ -17,11 +17,20 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
-      address: {
-        type: Sequelize.STRING,
+      default_address_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
       },
-      address_2: {
-        type: Sequelize.STRING,
+
+      preferences: {
+        type: Sequelize.JSONB,
+        allowNull: true,
+      },
+
+      status: {
+        type: Sequelize.DATE,
+        allowNull: true,
+        defaultValue: 'active',
       },
       deleted_at: {
         type: Sequelize.DATE,

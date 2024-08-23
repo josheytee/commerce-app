@@ -22,10 +22,7 @@ export class SessionService {
     return this.sessionModel.create(session);
   }
 
-  async update(
-    id: number,
-    session: Partial<Session>,
-  ): Promise<[number]> {
+  async update(id: number, session: Partial<Session>): Promise<[number]> {
     return this.sessionModel.update(session, { where: { id } });
   }
 

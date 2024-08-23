@@ -15,9 +15,12 @@ import { WinstonModule } from 'nest-winston';
 import { AddressModule } from './address/address.module';
 import { CartModule } from './cart/cart.module';
 import { AttributeModule } from './attribute/attribute.module';
+import { PaymentModule } from './payment/payment.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
     AccountModule,
     StoreModule,
@@ -29,6 +32,7 @@ import { AttributeModule } from './attribute/attribute.module';
     AddressModule,
     CartModule,
     AttributeModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

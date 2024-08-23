@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from './models/order.model';
@@ -16,10 +17,26 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  create(
-    @Body() data: { order: Partial<Order>; items: Partial<OrderItem>[] },
-  ): Promise<Order> {
-    return this.orderService.create(data.order, data.items);
+  async create(@Body() orderDto: any) {
+    const { customer_id, items } = orderDto;
+    return this.orderService.create(customer_id, items);
+  }
+
+  @Post('callback')
+  async handlePaymentCallback(
+    @Query() query: { transaction_id: string; tx_ref: string; status: string },
+  ) {
+    await this.orderService.handlePaymentCallback(query);
+    return { message: 'Callback handled successfully' };
+  }
+
+  @Post('update-status/:orderId')
+  async updateOrderStatus(
+    @Param('orderId') orderId: number,
+    @Body() updateDto: any,
+  ) {
+    const { status } = updateDto;
+    return this.orderService.updateOrderStatus(orderId, status);
   }
 
   @Get()

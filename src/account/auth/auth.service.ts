@@ -25,6 +25,12 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+
+    // const refreshToken = jwt.sign(
+    //   { userId: user.id },
+    //   'your-refresh-secret-key',
+    //   { expiresIn: '30d' } // Refresh token will be valid for 30 days
+    // );
   }
 
   async register(user: any) {

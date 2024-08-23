@@ -39,11 +39,11 @@ export class Product extends Model<Product> {
   @Column
   quantity: number;
 
-  @Column
-  featured: boolean;
+  // @Column
+  // featured: boolean;
 
-  @Column
-  review_able: boolean;
+  // @Column
+  // review_able: boolean;
 
   @Column
   price: number;

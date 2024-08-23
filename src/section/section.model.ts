@@ -30,8 +30,8 @@ export class Section extends Model<Section> {
   @Column
   slug: string;
 
-  @Column
-  cover: string;
+  // @Column
+  // cover: string;
 
   @Column
   description: string;

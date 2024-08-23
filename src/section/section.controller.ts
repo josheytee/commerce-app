@@ -6,15 +6,22 @@ import {
   Param,
   Patch,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { SectionService } from './section.service';
 import { Section } from './section.model';
 
+import { JwtAuthGuard } from 'src/account/auth/jwt-auth.guard';
+import { Permissions } from 'src/account/permission/permissions.decorator';
+import { PermissionsGuard } from 'src/account/permission/permissions.guard';
+
 @Controller('sections')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class SectionController {
   constructor(private readonly sectionService: SectionService) {}
 
   @Post()
+  @Permissions('section:create')
   create(@Body() data: Partial<Section>): Promise<Section> {
     return this.sectionService.create(data);
   }

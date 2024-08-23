@@ -16,7 +16,9 @@ import { stack } from 'sequelize/types/utils';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly logger: Logger) {}
+  constructor(private readonly logger: Logger) {
+    // console.log(',doaspm');
+  }
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
