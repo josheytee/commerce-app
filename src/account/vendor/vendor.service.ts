@@ -13,6 +13,14 @@ export class VendorService {
     return this.vendorModel.create(data);
   }
 
+  async findVendorsByUserId(user_id: number): Promise<Vendor[]> {
+    return this.vendorModel.findAll({
+      where: {
+        user_id,
+      },
+    });
+  }
+
   async findAll(): Promise<Vendor[]> {
     return this.vendorModel.findAll();
   }

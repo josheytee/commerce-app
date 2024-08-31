@@ -14,7 +14,7 @@ export class PaymentService {
     private readonly paymentProvider: FlutterwavePaymentProvider,
     // private readonly configService: ConfigService,
   ) {
-    console.log('PaymentProvider:', this.paymentProvider);
+    // console.log('PaymentProvider:', this.paymentProvider);
     // console.log('ConfigService:', this.configService);
     // this.secretHash = this.configService.get<string>('FLUTTERWAVE_SECRET_HASH');
     // this.callbackHandlers.set('order', this.orderCallbackHandler);

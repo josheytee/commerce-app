@@ -1,3 +1,4 @@
+import { Permission } from './permission.model';
 import {
   Injectable,
   CanActivate,
@@ -9,6 +10,7 @@ import { Reflector } from '@nestjs/core';
 import { UserVendorRoleService } from '../user-vendor-role/user-vendor-role.service';
 import { PERMISSIONS_KEY } from './permissions.decorator';
 import { OWNER_ROLE } from './constants';
+import { AuthenticatedRequest } from '../auth/authenticated-request.interface';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -34,13 +36,13 @@ export class PermissionsGuard implements CanActivate {
     // const request = context.switchToHttp().getRequest();
     // const user = request.user;
 
-    // console.log(request, 'request');
+    // console.log(user, url, 'request');
 
     if (!user) {
       this.logger.error('User not found in the request');
       return false;
     }
-    const userId = user?.userId;
+    const userId = user?.id;
     // this.vendorService.findByUserId(userId);
 
     this.logger.log(`User is trying to access ${url}`);
@@ -50,8 +52,9 @@ export class PermissionsGuard implements CanActivate {
     // const userPermissions = userRoles.flatMap((role) =>
     //   role.permissions.map((permission) => permission.name),
     // );
+    // console.log(userRoles, userRoles[0].permissions, 'user roles');
 
-    const userPermissions = userRoles.reduce(
+    const userRole = userRoles.reduce(
       (acc, role) => {
         if (acc.isOwner) {
           return acc;
@@ -67,11 +70,13 @@ export class PermissionsGuard implements CanActivate {
         return acc;
       },
       { permissions: [], isOwner: false },
-    ).permissions;
+    );
+
+    if (userRole.isOwner) return true;
 
     const hasPermission = () =>
       requiredPermissions.every((permission) =>
-        userPermissions.includes(permission),
+        userRole.permissions.includes(permission),
       );
 
     if (!hasPermission()) {

@@ -26,5 +26,6 @@ import { PermissionModule } from './permission/permission.module';
     AuditLogModule,
     AuthModule,
   ],
+  exports: [SessionModule],
 })
 export class AccountModule {}

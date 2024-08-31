@@ -9,5 +9,6 @@ import { Session } from './session.model';
   imports: [SequelizeModule.forFeature([Session])],
   controllers: [SessionController],
   providers: [SessionService],
+  exports: [SessionService],
 })
 export class SessionModule {}

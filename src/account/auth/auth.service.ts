@@ -1,15 +1,67 @@
 // src/auth/auth.service.ts
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
+import { SessionService } from '../session/session.service';
+import { User } from '../user/interfaces/user.interface';
 
 @Injectable()
 export class AuthService {
+  private readonly JWT_SECRET = 'your-jwt-secret';
+
   constructor(
     private readonly usersService: UserService,
     private readonly jwtService: JwtService,
+    private readonly sessionService: SessionService,
   ) {}
+
+  async validateToken(token: string): Promise<any> {
+    const session = await this.sessionService.findSessionByToken(token);
+
+    // If no session is found, throw an UnauthorizedException
+    if (!session) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    // Check if the token is expired
+    const isExpired = session.expires_at <= new Date();
+    if (isExpired) {
+      // Optionally, you could delete the expired session here
+      await this.sessionService.removeByToken(token);
+
+      // Throw an UnauthorizedException if the token is expired
+      throw new UnauthorizedException('Token has expired');
+    }
+
+    // Return the session data if the token is valid and not expired
+    return session.user;
+  }
+
+  async createToken(user: User): Promise<string> {
+    const token = this.jwtService.sign({
+      username: user.username,
+      sub: user.id,
+    });
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // Set expiration time (1 hour later)
+
+    await this.sessionService.create({
+      user_id: user.id,
+      token,
+      expires_at: expiresAt, //new Date(Date.now() + 3600 * 1000),
+    });
+    return token;
+  }
+
+  async logout(token: string): Promise<void> {
+    await this.sessionService.removeByToken(token);
+  }
 
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.usersService.findOne({ username });
@@ -20,19 +72,24 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user.id };
+  async login(userId: number): Promise<{ access_token: string }> {
+    // Retrieve the user from the database
+    const user = await this.usersService.findOne({ id: userId });
+    if (!user) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    // Create the JWT payload
+    const token = await this.createToken(user);
+
+    // find active sessions and expires them
+    this.sessionService.deleteExpiredSessions(user.id);
+
+    // Return the access token
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: token,
     };
-
-    // const refreshToken = jwt.sign(
-    //   { userId: user.id },
-    //   'your-refresh-secret-key',
-    //   { expiresIn: '30d' } // Refresh token will be valid for 30 days
-    // );
   }
-
   async register(user: any) {
     const hashedPassword = await bcrypt.hash(user.password, 10);
     const newUser = await this.usersService.create({

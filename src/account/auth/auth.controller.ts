@@ -9,15 +9,29 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { AuthenticatedRequest } from './authenticated-request.interface';
+import { TokenAuthGuard } from './token-auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req) {
-    return this.authService.login(req.user);
+  @UseGuards(LocalAuthGuard)
+  async login(@Request() req: AuthenticatedRequest) {
+    // Extract the userId from the request (e.g., after user authentication)
+    // console;
+    const userId = req.user.id;
+
+    // console.log(req, userId, 'user id');
+
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
+    // Call the login method with the required userId
+    return this.authService.login(userId);
+    // return this.authService.login(req.user);
   }
 
   @Post('register')
@@ -36,7 +50,7 @@ export class AuthController {
     return this.authService.register(body);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(TokenAuthGuard)
   @Post('profile')
   getProfile(@Request() req) {
     return req.user;

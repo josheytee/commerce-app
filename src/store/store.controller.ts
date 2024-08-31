@@ -14,9 +14,10 @@ import { Store } from './models/store.model';
 import { JwtAuthGuard } from 'src/account/auth/jwt-auth.guard';
 import { Permissions } from 'src/account/permission/permissions.decorator';
 import { PermissionsGuard } from 'src/account/permission/permissions.guard';
+import { TokenAuthGuard } from 'src/account/auth/token-auth.guard';
 
 @Controller('stores')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(TokenAuthGuard, PermissionsGuard)
 export class StoreController {
   constructor(private readonly storeService: StoreService) {}
 

@@ -29,6 +29,13 @@ export class Vendor extends Model<Vendor> {
   @Column
   business_name: string;
 
+  @ForeignKey(() => User)
+  @Column
+  user_id: number; // Foreign key to the User model
+
+  @BelongsTo(() => User)
+  user: User; // Association with User model
+
   @BelongsToMany(() => User, () => UserVendorRole)
   users: User[];
 
