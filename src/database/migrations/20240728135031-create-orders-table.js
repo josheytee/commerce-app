@@ -18,8 +18,9 @@ module.exports = {
         },
       },
       total_amount: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
+        type: Sequelize.DECIMAL(10, 2),
+        allowNull: true,
+        defaultValue: 0.0,
       },
       status: {
         type: Sequelize.STRING,

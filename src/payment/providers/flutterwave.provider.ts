@@ -28,6 +28,11 @@ export class FlutterwavePaymentProvider implements PaymentProvider {
     currency: string,
     metadata: any,
   ): Promise<any> {
+    console.log('Initializing payment with Flutterwave:', {
+      amount,
+      currency,
+      metadata,
+    });
     const response = await fetch(`${this.baseUrl}/payments`, {
       method: 'POST',
       headers: {
@@ -35,10 +40,10 @@ export class FlutterwavePaymentProvider implements PaymentProvider {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        tx_ref: metadata.reference || `tx-${Date.now()}`,
+        tx_ref: metadata?.reference || `tx-${Date.now()}`,
         amount,
         currency,
-        redirect_url: metadata.redirectUrl || this.redirectUrl,
+        redirect_url: metadata?.redirectUrl || this.redirectUrl,
         customer: {
           email: metadata.customer.email,
           phonenumber: metadata.customer.phone,

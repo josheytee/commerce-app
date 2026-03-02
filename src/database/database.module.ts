@@ -40,7 +40,7 @@ import { Attribute } from 'src/attribute/models/attribute.model';
       database: 'jart',
       autoLoadModels: true,
       synchronize: true,
-      logging: console.log,
+      // logging: console.log,
       models: [
         City,
         State,

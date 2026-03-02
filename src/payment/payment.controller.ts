@@ -4,11 +4,12 @@ import { PaymentService } from './payment.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(private readonly paymentService: PaymentService) { }
 
   @Post('initialize')
   async initializePayment(@Body() paymentDto: any) {
-    const { amount, currency, customerDetails } = paymentDto;
+    console.log('Received payment initialization request:', paymentDto);
+    const { amount, currency, ...customerDetails } = paymentDto;
     return this.paymentService.initializePayment(
       amount,
       currency,

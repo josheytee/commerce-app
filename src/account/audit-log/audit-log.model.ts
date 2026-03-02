@@ -31,9 +31,21 @@ export class AuditLog extends Model<AuditLog> {
   @Column(DataType.STRING)
   action!: string;
 
-  @AllowNull(false)
-  @Column(DataType.DATE)
-  action_time!: Date;
+  @AllowNull(true)
+  @Column(DataType.JSONB)
+  old_value?: string;
+
+  @AllowNull(true)
+  @Column(DataType.JSONB)
+  new_value?: string;
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  record_id?: string;
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  table_name?: string;
 
   @Column(DataType.STRING)
   ip_address?: string;

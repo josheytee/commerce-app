@@ -17,8 +17,9 @@ module.exports = {
         type: Sequelize.STRING,
       },
       price: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
+        type: Sequelize.DECIMAL(10, 2),
+        allowNull: true,
+        defaultValue: 0.0,
       },
       store_id: {
         type: Sequelize.INTEGER,
