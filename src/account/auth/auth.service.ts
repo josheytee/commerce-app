@@ -10,6 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { SessionService } from '../session/session.service';
 import { User } from '../user/interfaces/user.interface';
+import { VendorService } from '../vendor/vendor.service';
 
 @Injectable()
 export class AuthService {
@@ -18,15 +19,23 @@ export class AuthService {
   constructor(
     private readonly usersService: UserService,
     private readonly jwtService: JwtService,
+    private readonly vendorService: VendorService,
     private readonly sessionService: SessionService,
   ) {}
 
   async validateToken(token: string): Promise<any> {
     const session = await this.sessionService.findSessionByToken(token);
 
+    // todo: use secret instead
+    const vendor = await this.vendorService.findByPublicKey(token);
+
     // If no session is found, throw an UnauthorizedException
-    if (!session) {
+    if (!session && !vendor) {
       throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    if (vendor) {
+      return vendor.user;
     }
 
     // Check if the token is expired

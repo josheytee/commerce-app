@@ -32,12 +32,12 @@ import { Attribute } from 'src/attribute/models/attribute.model';
 @Module({
   imports: [
     SequelizeModule.forRoot({
-      dialect: 'mysql',
+      dialect: 'postgres',
       host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '123456',
-      database: 'commerce-app',
+      port: 5432,
+      username: 'macpro',
+      password: '12345678',
+      database: 'jart',
       autoLoadModels: true,
       synchronize: true,
       logging: console.log,
@@ -73,4 +73,4 @@ import { Attribute } from 'src/attribute/models/attribute.model';
     }),
   ],
 })
-export class DatabaseModule {}
+export class DatabaseModule { }

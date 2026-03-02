@@ -26,6 +26,10 @@ module.exports = {
           key: 'id',
         },
       },
+      api_key: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,

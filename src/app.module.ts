@@ -17,7 +17,7 @@ import { CartModule } from './cart/cart.module';
 import { AttributeModule } from './attribute/attribute.module';
 import { PaymentModule } from './payment/payment.module';
 import { ConfigModule } from '@nestjs/config';
-
+import { WebhookModule } from './webhook/webhook.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -33,6 +33,7 @@ import { ConfigModule } from '@nestjs/config';
     CartModule,
     AttributeModule,
     PaymentModule,
+    WebhookModule,
   ],
   controllers: [AppController],
   providers: [

@@ -33,6 +33,9 @@ export class Vendor extends Model<Vendor> {
   @Column
   user_id: number; // Foreign key to the User model
 
+  @Column
+  api_key: string;
+
   @BelongsTo(() => User)
   user: User; // Association with User model
 

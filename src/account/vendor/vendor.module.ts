@@ -15,5 +15,6 @@ import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
   ],
   providers: [VendorService, UserVendorRoleService, RoleService],
   controllers: [VendorController],
+  exports: [VendorService],
 })
 export class VendorModule {}

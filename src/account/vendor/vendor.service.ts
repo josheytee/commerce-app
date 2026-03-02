@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Vendor } from './vendor.model';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class VendorService {
@@ -24,13 +25,17 @@ export class VendorService {
   async findAll(): Promise<Vendor[]> {
     return this.vendorModel.findAll();
   }
+  // Method to find vendor by API key
+  async findByPublicKey(apiKey: string): Promise<Vendor | null> {
+    return Vendor.findOne({ where: { api_key: apiKey } });
+  }
 
-  // async findByUserId(userId: number): Promise<Vendor | null> {
-  //   return this.vendorModel.findOne({
-  //     where: { user_id: userId },
-  //     include: ['roles'],
-  //   });
-  // }
+  // Method to generate a unique API key
+  async generateApiKey(vendorId: number): Promise<string> {
+    const apiKey = crypto.randomBytes(32).toString('hex');
+    await Vendor.update({ api_key: apiKey }, { where: { id: vendorId } });
+    return apiKey;
+  }
   async findOne(id: number): Promise<Vendor> {
     const vendor = await this.vendorModel.findByPk(id);
     if (!vendor) {

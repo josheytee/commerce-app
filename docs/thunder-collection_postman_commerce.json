@@ -1,0 +1,1006 @@
+{
+    "info": {
+        "_postman_id": "ace0941b-db5f-449f-a26b-c4f09026eaf8",
+        "name": "commerce",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": ""
+    },
+    "item": [
+        {
+            "name": "store",
+            "item": [
+                {
+                    "name": "stores",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/stores",
+                            "path": [
+                                "stores"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkZW9sYSIsInN1YiI6MTUsImlhdCI6MTcyNTA1NTAwMywiZXhwIjoxNzI1MDU1MDYzfQ.bm3dlPnv7iCjV4tVJfX6PWFIhvBRoHBN-Ho0czK0RYc",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "create stores",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/stores",
+                            "path": [
+                                "stores"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"name\":\"another store\",\n  \"category_id\": 1,\n  \"vendor_id\": 2\n}"
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkZW9sYSIsInN1YiI6MTUsImlhdCI6MTcyMjMwNjA2MywiZXhwIjoxNzIyMzA2MTIzfQ.B9lV-UL1tH9_9BK_pck2Fvf7PBbsGGJINxxHlTqlDF4",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "update store",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{Base Url}}/stores/3",
+                            "path": [
+                                "stores",
+                                "3"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"name\":\"default store\",\n  \"vendor_id\": 2,\n  \"description\": \"defao;e\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "users",
+            "item": [
+                {
+                    "name": "get users",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/users",
+                            "path": [
+                                "users"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "header": [
+                            {
+                                "key": "User-Agent",
+                                "value": "Thunder Client (https://www.thunderclient.com)",
+                                "disabled": true
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "create user",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/users",
+                            "path": [
+                                "users"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"username\": \"funmi7\",\n  \"first_name\": \"payload.first_namei\",\n  \"last_name\": \" payload.last_name\",\n  \"email\": \"payload.emainl\",\n  \"password\": \" payload.password\",\n  \"gender\": \"male\",\n  \"password_hash\": \"somethjing\",\n  \"phone_number\": \"32424\"\n  // \"role_id\": 1\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "get user",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/users/1",
+                            "path": [
+                                "users",
+                                "1"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "update User",
+                    "request": {
+                        "method": "PUT",
+                        "url": {
+                            "raw": "{{Base Url}}/users/15",
+                            "path": [
+                                "users",
+                                "15"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"username\": \"adeola\"\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "auth",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/auth/register",
+                            "path": [
+                                "auth",
+                                "register"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"username\": \"adeoa\",\n  \"first_name\": \"ade\",\n  \"last_name\": \"ola\",\n  \"email\": \"ade@ola.com\",\n  \"password\": \"123456\",\n  \"gender\": \"female\",\n  \"phone_number\": \"32274\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/auth/login",
+                            "path": [
+                                "auth",
+                                "login"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"username\": \"adeola\",\n  \"password\": \" payload.password\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "profile",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/auth/profile",
+                            "path": [
+                                "auth",
+                                "profile"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{}"
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkZW9sYSIsInN1YiI6MTUsImlhdCI6MTcyNTEwMTc3MCwiZXhwIjoxNzI1MTAxODMwfQ.0RvSUlt3ILwoAKRThAfVvWalj_FfysSR5tXL6Oeb5ZA",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "payment",
+            "item": [
+                {
+                    "name": "initialize",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/payment/initialize",
+                            "path": [
+                                "payment",
+                                "initialize"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"amount\": 300,\n  \"currency\": \"NGN\",\n  \"customer\": {\n    \"name\": \"ade ola\",\n    \"email\": \"ade@ola.com\",\n    \"phone\": \"32274\"\n  }\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/auth/login",
+                            "path": [
+                                "auth",
+                                "login"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"username\": \"adeola\",\n  \"password\": \" payload.password\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "profile",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/auth/profile",
+                            "path": [
+                                "auth",
+                                "profile"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{}"
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkZW9sYSIsInN1YiI6MTUsImlhdCI6MTcyMjMwNTk1NiwiZXhwIjoxNzIyMzA2MDE2fQ.A1KVp8U54ENLLTM671E4OwivHY4qpfAbIapxhsxvIxQ",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "vendor",
+            "item": [
+                {
+                    "name": "create vendor",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors",
+                            "path": [
+                                "vendors"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "get vendors",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors",
+                            "path": [
+                                "vendors"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkZW9sYSIsInN1YiI6MTUsImlhdCI6MTcyNTEwMTc3MCwiZXhwIjoxNzI1MTAxODMwfQ.0RvSUlt3ILwoAKRThAfVvWalj_FfysSR5tXL6Oeb5ZA",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "update vendor",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/2",
+                            "path": [
+                                "vendors",
+                                "2"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default vendor\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "delete vendor",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/1",
+                            "path": [
+                                "vendors",
+                                "1"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "category",
+            "item": [
+                {
+                    "name": "create vendor",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/sections",
+                            "path": [
+                                "sections"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"name\": \"default section\",\n  \"user_id\": 15,\n  \"category_id\": 1\n  \n}"
+                        }
+                    }
+                },
+                {
+                    "name": "get vendors",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors",
+                            "path": [
+                                "vendors"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "update vendor",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/2",
+                            "path": [
+                                "vendors",
+                                "2"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "delete vendor",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/1",
+                            "path": [
+                                "vendors",
+                                "1"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "roles",
+            "item": [
+                {
+                    "name": "permissions",
+                    "item": [
+                        {
+                            "name": "create Permission",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{Base Url}}/permissions",
+                                    "path": [
+                                        "permissions"
+                                    ],
+                                    "host": [
+                                        "{{Base Url}}"
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "create role",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/roles",
+                            "path": [
+                                "roles"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "update role",
+                    "request": {
+                        "method": "PUT",
+                        "url": {
+                            "raw": "{{Base Url}}/roles/1",
+                            "path": [
+                                "roles",
+                                "1"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"name\": \"vendor\"\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "view roles",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/roles",
+                            "path": [
+                                "roles"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "assingn role",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/user-vendor-roles/assign",
+                            "path": [
+                                "user-vendor-roles",
+                                "assign"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"user_id\": 1,\n  \"vendor_id\": 1,\n  \"role_id\": 1\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "create role Copy Copy",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/roles",
+                            "path": [
+                                "roles"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "product",
+            "item": [
+                {
+                    "name": "create vendor",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/sections",
+                            "path": [
+                                "sections"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"name\": \"default section\",\n  \"user_id\": 15,\n  \"category_id\": 1\n  \n}"
+                        }
+                    }
+                },
+                {
+                    "name": "products",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors",
+                            "path": [
+                                "vendors"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "update vendor",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/2",
+                            "path": [
+                                "vendors",
+                                "2"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "delete vendor",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/1",
+                            "path": [
+                                "vendors",
+                                "1"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "order",
+            "item": [
+                {
+                    "name": "create order",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/orders",
+                            "path": [
+                                "orders"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"customer_id\": 1,\n  \"items\": [\n    {\n      \"product_id\": 10,\n      \"quantity\": 20,\n      \"price\": 40\n    }\n  ]\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "get vendors",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors",
+                            "path": [
+                                "vendors"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "update vendor",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/2",
+                            "path": [
+                                "vendors",
+                                "2"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "delete vendor",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/1",
+                            "path": [
+                                "vendors",
+                                "1"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "section",
+            "item": [
+                {
+                    "name": "create vendor",
+                    "request": {
+                        "method": "POST",
+                        "url": {
+                            "raw": "{{Base Url}}/sections",
+                            "path": [
+                                "sections"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"name\": \"default section\",\n  \"user_id\": 15,\n  \"category_id\": 1\n  \n}"
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkZW9sYSIsInN1YiI6MTUsImlhdCI6MTcyNDQ1MDk3MSwiZXhwIjoxNzI0NDUxMDMxfQ.Hr-pa-XfxCmTI8TVj0wcXXe9qYX8d-0jyrm3imSdcHg",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "get All",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{Base Url}}/sections",
+                            "path": [
+                                "sections"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkZW9sYSIsInN1YiI6MTUsImlhdCI6MTcyNDQ1MDQ4NSwiZXhwIjoxNzI0NDUwNTQ1fQ.L5SsLIdy9ic7ARkuAOIu-aQHxtkbnFyuqliqDiFZYK0",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "update vendor",
+                    "request": {
+                        "method": "PATCH",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/2",
+                            "path": [
+                                "vendors",
+                                "2"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                },
+                {
+                    "name": "delete vendor",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{Base Url}}/vendors/1",
+                            "path": [
+                                "vendors",
+                                "1"
+                            ],
+                            "host": [
+                                "{{Base Url}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            },
+                            "raw": "{\n  \"business_name\": \"default name\",\n  \"user_id\": 15\n}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "home",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{Base Url}}/",
+                    "path": [
+                        ""
+                    ],
+                    "host": [
+                        "{{Base Url}}"
+                    ]
+                }
+            }
+        }
+    ]
+}
