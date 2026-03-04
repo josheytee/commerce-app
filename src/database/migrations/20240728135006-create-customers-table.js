@@ -35,7 +35,7 @@ module.exports = {
       deleted_at: {
         type: Sequelize.DATE,
         allowNull: true,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: null,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -51,6 +51,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('StoreCustomers');
     await queryInterface.dropTable('customers');
   },
 };

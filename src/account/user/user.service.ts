@@ -2,13 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './models/user.model';
 import { UserSearchCriteria } from './interfaces/user-search-criteria.interface';
+import * as bcrypt from 'bcryptjs';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User)
     private readonly userModel: typeof User,
-  ) {}
+  ) { }
 
   async findAll(): Promise<User[]> {
     return this.userModel.findAll();
@@ -18,8 +20,24 @@ export class UserService {
     return this.userModel.findOne({ where: criteria as any });
   }
 
-  async create(user: Partial<User>): Promise<User> {
-    return this.userModel.create(user);
+  async create(userPayload: Partial<CreateUserDto>): Promise<User> {
+    const user = { ...userPayload, password_hash: null };
+
+    const found = await this.findOne({ email: userPayload.email });
+
+    if (found && found !== null)
+      throw new Error('Kindly use a different email');
+
+    if (userPayload.password) {
+      const saltRounds = 10;
+      user.password_hash = await bcrypt.hash(user.password, saltRounds);
+    }
+
+    // Create user
+    const newUser = await this.userModel.create(user);
+
+    // Convert to JSON and remove sensitive data
+    return newUser;
   }
 
   async update(id: number, updateData: Partial<User>): Promise<User | null> {

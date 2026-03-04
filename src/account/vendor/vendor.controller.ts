@@ -15,12 +15,12 @@ import { PermissionsGuard } from 'src/account/permission/permissions.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Permissions } from 'src/account/permission/permissions.decorator';
 import { TokenAuthGuard } from '../auth/token-auth.guard';
-import { AuthenticatedRequest } from '../auth/authenticated-request.interface';
+import { AuthenticatedRequest } from '../auth/request/authenticated-request.interface';
 
 @Controller('vendors')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class VendorController {
-  constructor(private readonly vendorService: VendorService) {}
+  constructor(private readonly vendorService: VendorService) { }
 
   @Post()
   create(@Body() data: Partial<Vendor>): Promise<Vendor> {

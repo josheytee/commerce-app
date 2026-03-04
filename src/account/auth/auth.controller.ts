@@ -9,12 +9,13 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { AuthenticatedRequest } from './authenticated-request.interface';
+import { AuthenticatedRequest } from './request/authenticated-request.interface';
 import { TokenAuthGuard } from './token-auth.guard';
+import { UserLoginDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
@@ -29,9 +30,7 @@ export class AuthController {
       throw new Error('User ID is required');
     }
 
-    // Call the login method with the required userId
-    return this.authService.login(userId);
-    // return this.authService.login(req.user);
+    return this.authService.login(req.user);
   }
 
   @Post('register')

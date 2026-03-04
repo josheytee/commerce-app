@@ -10,7 +10,7 @@ import { Reflector } from '@nestjs/core';
 import { UserVendorRoleService } from '../user-vendor-role/user-vendor-role.service';
 import { PERMISSIONS_KEY } from './permissions.decorator';
 import { OWNER_ROLE } from './constants';
-import { AuthenticatedRequest } from '../auth/authenticated-request.interface';
+import { AuthenticatedRequest } from '../auth/request/authenticated-request.interface';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -19,7 +19,7 @@ export class PermissionsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private userVendorRoleService: UserVendorRoleService,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.get<string[]>(
@@ -85,7 +85,7 @@ export class PermissionsGuard implements CanActivate {
       );
       throw new ForbiddenException(
         'You do not have the required permissions: ' +
-          requiredPermissions.toString(),
+        requiredPermissions.toString(),
       );
     }
 

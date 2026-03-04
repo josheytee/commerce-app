@@ -18,8 +18,16 @@ module.exports = {
           key: 'id',
         },
       },
-      role_id: {
-        type: Sequelize.INTEGER,
+      business_name: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        references: {
+          model: 'roles',
+          key: 'id',
+        },
+      },
+      business_phone: {
+        type: Sequelize.STRING,
         allowNull: true,
         references: {
           model: 'roles',

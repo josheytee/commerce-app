@@ -38,8 +38,8 @@ import { Attribute } from 'src/attribute/models/attribute.model';
       username: 'macpro',
       password: '12345678',
       database: 'jart',
-      autoLoadModels: true,
-      synchronize: true,
+      autoLoadModels: false,
+      synchronize: false,
       // logging: console.log,
       models: [
         City,

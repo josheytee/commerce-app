@@ -11,10 +11,11 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './models/user.model';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   async findAll(): Promise<User[]> {
@@ -27,7 +28,7 @@ export class UserController {
   }
 
   @Post()
-  async create(@Body() user: Partial<User>): Promise<User> {
+  async create(@Body() user: Partial<CreateUserDto>): Promise<User> {
     return this.userService.create(user);
   }
 

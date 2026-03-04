@@ -29,6 +29,9 @@ export class Vendor extends Model<Vendor> {
   @Column
   business_name: string;
 
+  @Column
+  business_phone: string;
+
   @ForeignKey(() => User)
   @Column
   user_id: number; // Foreign key to the User model

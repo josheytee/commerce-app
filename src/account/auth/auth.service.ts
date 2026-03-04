@@ -11,6 +11,7 @@ import * as jwt from 'jsonwebtoken';
 import { SessionService } from '../session/session.service';
 import { User } from '../user/interfaces/user.interface';
 import { VendorService } from '../vendor/vendor.service';
+import { UserLoginDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -21,22 +22,22 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly vendorService: VendorService,
     private readonly sessionService: SessionService,
-  ) {}
+  ) { }
 
   async validateToken(token: string): Promise<any> {
     const session = await this.sessionService.findSessionByToken(token);
 
     // todo: use secret instead
-    const vendor = await this.vendorService.findByPublicKey(token);
+    // const vendor = await this.vendorService.findByPublicKey(token);
 
     // If no session is found, throw an UnauthorizedException
-    if (!session && !vendor) {
+    if (!session) {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    if (vendor) {
-      return vendor.user;
-    }
+    // if (vendor) {
+    //   return vendor.user;
+    // }
 
     // Check if the token is expired
     const isExpired = session.expires_at <= new Date();
@@ -74,19 +75,15 @@ export class AuthService {
 
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.usersService.findOne({ username });
-    if (user && (await bcrypt.compare(password, user.password_hash))) {
+    const compare = await bcrypt.compare(password, user.password_hash);
+    if (user && compare) {
       const { password_hash, ...result } = user.dataValues;
       return result;
     }
     return null;
   }
 
-  async login(userId: number): Promise<{ access_token: string }> {
-    // Retrieve the user from the database
-    const user = await this.usersService.findOne({ id: userId });
-    if (!user) {
-      throw new BadRequestException('Invalid user ID');
-    }
+  async login(user: User): Promise<{ access_token: string }> {
 
     // Create the JWT payload
     const token = await this.createToken(user);
