@@ -49,6 +49,6 @@ export class VendorController {
 
   @Delete(':id')
   remove(@Param('id') id: number): Promise<void> {
-    return this.vendorService.remove(id);
+    return this.vendorService.delete(id);
   }
 }

@@ -41,12 +41,12 @@ import { Attribute } from 'src/attribute/models/attribute.model';
       // url: process.env.DATABASE_URL,
       autoLoadModels: false,
       synchronize: false,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
-        },
-      },
+      // dialectOptions: {
+      //   ssl: {
+      //     require: process.env.ENV != 'dev',
+      //     rejectUnauthorized: false,
+      //   },
+      // },
       // logging: console.log,
       models: [
         City,

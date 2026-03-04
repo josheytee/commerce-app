@@ -14,9 +14,11 @@ import { PermissionsGuard } from 'src/account/permission/permissions.guard';
 import { UserVendorRoleService } from 'src/account/user-vendor-role/user-vendor-role.service';
 import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';
 import { Permission } from 'src/account/permission/permission.model';
+import { VendorModule } from 'src/account/vendor/vendor.module';
 
 @Module({
   imports: [
+    VendorModule,
     SequelizeModule.forFeature([
       Role,
       Store,
@@ -32,9 +34,7 @@ import { Permission } from 'src/account/permission/permission.model';
     JwtAuthGuard,
     PermissionsGuard,
     RoleService,
-    VendorService,
-    UserVendorRoleService,
   ],
   controllers: [StoreController],
 })
-export class StoreModule {}
+export class StoreModule { }

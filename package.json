@@ -24,7 +24,8 @@
     "db:migrate:rollback": "npx sequelize-cli db:migrate:undo",
     "db:migrate:rollback:all": "npx sequelize-cli db:migrate:undo:all",
     "db:migrate:refresh": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate",
-    "db:seed:all": "npx sequelize-cli db:seed:all"
+    "db:seed:all": "npx sequelize-cli db:seed:all",
+    "db:migrate:ssh": "npx sequelize db:migrate --url 'postgresql://postgres.lsxkqmaxxkqoythzcnis:qdBVubM9d9J4gSpW@aws-1-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=require'"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.10",
