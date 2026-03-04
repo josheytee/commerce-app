@@ -21,18 +21,10 @@ module.exports = {
       business_name: {
         type: Sequelize.STRING,
         allowNull: true,
-        references: {
-          model: 'roles',
-          key: 'id',
-        },
       },
       business_phone: {
         type: Sequelize.STRING,
         allowNull: true,
-        references: {
-          model: 'roles',
-          key: 'id',
-        },
       },
       api_key: {
         type: Sequelize.STRING,

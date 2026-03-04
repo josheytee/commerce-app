@@ -33,13 +33,20 @@ import { Attribute } from 'src/attribute/models/attribute.model';
   imports: [
     SequelizeModule.forRoot({
       dialect: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'macpro',
-      password: '12345678',
-      database: 'jart',
+      host: process.env.DB_HOST || 'localhost',
+      port: Number(process.env.DB_PORT || 5432),
+      username: process.env.DB_USER || 'macpro',
+      password: process.env.DB_PASSWORD || '12345678',
+      database: process.env.DB_NAME || 'jart',
+      // url: process.env.DATABASE_URL,
       autoLoadModels: false,
       synchronize: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
       // logging: console.log,
       models: [
         City,
