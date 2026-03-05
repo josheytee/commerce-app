@@ -1,27 +1,74 @@
 import * as crypto from 'crypto';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { VendorRepository } from './vendor.repository';
 import { Vendor } from './vendor.model';
 import { Transaction } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
+import { RoleRepository } from '../role/role.repository';
+import { UserVendorRoleRepository } from '../user-vendor-role/user-vendor-role.repository';
+import { CreateVendorDto } from './dto';
 
 @Injectable()
 export class VendorService {
   constructor(
     private vendorRepository: VendorRepository,
+    private roleRepository: RoleRepository,
+    private userVendorRoleRepository: UserVendorRoleRepository,
     private sequelize: Sequelize,
   ) { }
 
-  async create(data: Partial<Vendor>): Promise<Vendor> {
+  async create(createVendorDto: Partial<CreateVendorDto>): Promise<Vendor> {
     // Check if vendor already exists
-    const existingVendor = await this.vendorRepository.findByUserId(
-      data.user_id,
-    );
-    if (existingVendor) {
-      throw new Error('User already has a vendor account');
-    }
+    const transaction = await this.sequelize.transaction();
+    try {
+      const existingVendor = await this.vendorRepository.findByUserId(
+        createVendorDto.user_id,
+      );
+      console.log('existingVendor', existingVendor);
+      if (existingVendor.length) {
+        throw new Error('User already has a vendor account');
+      }
 
-    return this.vendorRepository.create(data);
+      const vendor = await this.vendorRepository.createWithTransaction(
+        {
+          user_id: createVendorDto.user_id,
+          business_name: createVendorDto.business_name,
+          business_phone: createVendorDto.business_phone,
+        },
+        transaction,
+      );
+
+      // 3. 🔑 ATTACH OWNER ROLE - This is where it belongs!
+      const ownerRole = await this.roleRepository.findById(1);
+
+      if (!ownerRole) {
+        throw new BadRequestException(
+          'Owner role not found. Please seed roles first.',
+        );
+      }
+
+      await this.userVendorRoleRepository.createWithTransaction(
+        {
+          user_id: createVendorDto.user_id,
+          vendor_id: vendor.id,
+          role_id: ownerRole.id,
+        },
+        transaction,
+      );
+
+      // 4. Commit transaction
+      await transaction.commit();
+
+      // 5. Return vendor with relationships
+      return this.vendorRepository.findById(vendor.id);
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   async getVendor(id: number): Promise<Vendor> {
@@ -39,6 +86,7 @@ export class VendorService {
     }
     return vendors;
   }
+
   async findOne(id: number): Promise<Vendor> {
     const vendor = await this.vendorRepository.findOne({
       where: { id },

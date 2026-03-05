@@ -10,11 +10,11 @@ module.exports = {
         allowNull: false,
       },
       name: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
       description: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       vendor_id: {
         type: Sequelize.INTEGER,
@@ -24,9 +24,10 @@ module.exports = {
           key: 'id',
         },
         onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       location: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
       created_at: {
@@ -39,11 +40,18 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
     });
+
+    // Add indexes
+    await queryInterface.addIndex('stores', ['vendor_id']);
+    await queryInterface.addIndex('stores', ['name']);
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('user_store_roles');
     await queryInterface.dropTable('stores');
   },
 };

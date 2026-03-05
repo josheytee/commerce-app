@@ -56,9 +56,25 @@ export class Customer extends Model<Customer> {
 
   // @Column({ type: DataType.JSONB })
   // metadata: Record<string, any>;
-  @HasMany(() => Address)
+  @HasMany(() => Address, {
+    foreignKey: 'addressable_id',
+    constraints: false,
+    scope: {
+      addressable_type: 'customer',
+    },
+  })
   addresses: Address[];
 
   @HasMany(() => Cart)
   carts: Cart[];
+
+  async getDefaultAddress() {
+    return Address.findOne({
+      where: {
+        addressable_id: this.id,
+        addressable_type: 'customer',
+        is_default: true,
+      },
+    });
+  }
 }

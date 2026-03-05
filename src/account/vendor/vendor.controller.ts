@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Permissions } from 'src/account/permission/permissions.decorator';
 import { TokenAuthGuard } from '../auth/token-auth.guard';
 import { AuthenticatedRequest } from '../auth/request/authenticated-request.interface';
+import { CreateVendorDto } from './dto';
 
 @Controller('vendors')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
@@ -23,8 +24,11 @@ export class VendorController {
   constructor(private readonly vendorService: VendorService) { }
 
   @Post()
-  create(@Body() data: Partial<Vendor>): Promise<Vendor> {
-    return this.vendorService.create(data);
+  create(
+    @Body() data: CreateVendorDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Vendor> {
+    return this.vendorService.create({ ...data, ...{ userId: req.user.id } });
   }
 
   @Get()

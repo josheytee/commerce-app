@@ -13,7 +13,6 @@ export class VendorRepository extends BaseRepository<Vendor> {
         super(vendorModel);
     }
 
-    // Add vendor-specific methods
     async findByBusinessName(name: string): Promise<Vendor | null> {
         return this.findOne({
             where: { business_name: name },

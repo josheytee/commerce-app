@@ -18,7 +18,15 @@ module.exports = {
       description: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
+        unique: false,
+      },
+      created_by_vendor_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'roles',
+          key: 'id',
+        },
       },
       created_at: {
         type: Sequelize.DATE,

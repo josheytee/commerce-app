@@ -10,15 +10,15 @@ module.exports = {
         allowNull: false,
       },
       name: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
       description: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       price: {
         type: Sequelize.DECIMAL(10, 2),
-        allowNull: true,
+        allowNull: false,
         defaultValue: 0.0,
       },
       store_id: {
@@ -29,6 +29,7 @@ module.exports = {
           key: 'id',
         },
         onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       section_id: {
         type: Sequelize.INTEGER,
@@ -38,11 +39,7 @@ module.exports = {
           key: 'id',
         },
         onDelete: 'CASCADE',
-      },
-      deleted_at: {
-        type: Sequelize.DATE,
-        allowNull: true,
-        defaultValue: null,
+        onUpdate: 'CASCADE',
       },
       created_at: {
         type: Sequelize.DATE,
@@ -54,7 +51,17 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
     });
+
+    // Add indexes
+    await queryInterface.addIndex('products', ['store_id']);
+    await queryInterface.addIndex('products', ['section_id']);
+    await queryInterface.addIndex('products', ['name']);
+    await queryInterface.addIndex('products', ['price']);
   },
 
   down: async (queryInterface, Sequelize) => {

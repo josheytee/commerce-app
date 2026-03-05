@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsNotEmpty } from 'class-validator';
+import { IsString, IsInt, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateVendorDto {
   @IsString()
@@ -6,6 +6,14 @@ export class CreateVendorDto {
   readonly name: string;
 
   @IsInt()
+  @IsOptional()
+  readonly user_id?: number;
+
+  @IsString()
   @IsNotEmpty()
-  readonly userId: number; // The user who owns the vendor
+  readonly business_name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly business_phone: string;
 }
