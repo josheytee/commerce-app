@@ -14,6 +14,7 @@ import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.mo
 import { Permission } from 'src/account/permission/permission.model';
 import { VendorModule } from 'src/account/vendor/vendor.module';
 import { UserVendorRoleModule } from 'src/account/user-vendor-role/user-vendor-role.module';
+import { StoreRepository } from './store.repository';
 
 @Module({
   imports: [
@@ -34,7 +35,9 @@ import { UserVendorRoleModule } from 'src/account/user-vendor-role/user-vendor-r
     JwtAuthGuard,
     PermissionsGuard,
     RoleService,
+    StoreRepository,
   ],
   controllers: [StoreController],
+  exports: [StoreService, StoreRepository],
 })
 export class StoreModule { }

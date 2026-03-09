@@ -11,14 +11,14 @@ import {
 import { SectionService } from './section.service';
 import { Section } from './section.model';
 
-import { JwtAuthGuard } from 'src/account/auth/jwt-auth.guard';
 import { Permissions } from 'src/account/permission/permissions.decorator';
 import { PermissionsGuard } from 'src/account/permission/permissions.guard';
+import { TokenAuthGuard } from 'src/account/auth/token-auth.guard';
 
 @Controller('sections')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(TokenAuthGuard, PermissionsGuard)
 export class SectionController {
-  constructor(private readonly sectionService: SectionService) {}
+  constructor(private readonly sectionService: SectionService) { }
 
   @Post()
   @Permissions('section:create')

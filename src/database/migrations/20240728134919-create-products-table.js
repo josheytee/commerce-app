@@ -13,7 +13,11 @@ module.exports = {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      description: {
+      slug: {
+        type: Sequelize.STRING(255),
+        allowNull: false,
+      },
+      details: {
         type: Sequelize.TEXT,
       },
       price: {

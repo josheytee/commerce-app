@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { VendorRepository } from './vendor.repository';
 import { Vendor } from './vendor.model';
-import { Transaction } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { RoleRepository } from '../role/role.repository';
 import { UserVendorRoleRepository } from '../user-vendor-role/user-vendor-role.repository';

@@ -30,14 +30,14 @@ export class Product extends Model<Product> {
   @Column
   slug: string;
 
-  @Column
-  description: string;
+  // @Column
+  // description: string;
 
   @Column
   details: string;
 
-  @Column
-  quantity: number;
+  // @Column
+  // quantity: number;
 
   // @Column
   // featured: boolean;
@@ -48,8 +48,8 @@ export class Product extends Model<Product> {
   @Column
   price: number;
 
-  @Column
-  status: string;
+  // @Column
+  // status: string;
 
   @ForeignKey(() => Section)
   @Column
