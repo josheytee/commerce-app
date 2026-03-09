@@ -74,17 +74,56 @@ export class AuthService {
   }
 
   async validateUser(username: string, password: string): Promise<any> {
-    const user = await this.usersService.findOne({ username });
-    const compare = await bcrypt.compare(password, user.password_hash);
-    if (user && compare) {
+    try {
+      // Validate input parameters
+      if (!username || !password) {
+        throw new Error('Username and password are required');
+      }
+
+      // Find user by username
+      const user = await this.usersService.findOne({ username });
+      console.log('user', username, user)
+      // Check if user exists
+      if (!user) {
+        return null; // User not found - return null for authentication failure
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        user.password_hash,
+      );
+
+      if (!isPasswordValid) {
+        return null; // Invalid password - return null for authentication failure
+      }
+
+      // Check if user is active (optional - depends on your requirements)
+      // if (user.is_active === false) {
+      //   throw new Error('User account is inactive');
+      // }
+
+      // Return user data without sensitive information
       const { password_hash, ...result } = user.dataValues;
       return result;
+    } catch (error) {
+      // Log the error for debugging (you can inject a logger service)
+      console.error('Error in validateUser:', error.message);
+
+      // Re-throw specific errors that should be handled by the caller
+      if (
+        error.message.includes('required') ||
+        error.message.includes('inactive')
+      ) {
+        throw error;
+      }
+
+      // For any other errors, return null (authentication failed)
+      return null;
     }
-    return null;
   }
 
   async login(user: User): Promise<{ access_token: string }> {
-
     // Create the JWT payload
     const token = await this.createToken(user);
 

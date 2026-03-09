@@ -9,6 +9,9 @@ export class CreateVendorDto {
   @IsOptional()
   readonly user_id?: number;
 
+  @IsInt()
+  readonly category_id: number;
+
   @IsString()
   @IsNotEmpty()
   readonly business_name: string;

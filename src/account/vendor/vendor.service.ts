@@ -28,7 +28,7 @@ export class VendorService {
       const existingVendor = await this.vendorRepository.findByUserId(
         createVendorDto.user_id,
       );
-      console.log('existingVendor', existingVendor);
+
       if (existingVendor.length) {
         throw new Error('User already has a vendor account');
       }
@@ -38,6 +38,7 @@ export class VendorService {
           user_id: createVendorDto.user_id,
           business_name: createVendorDto.business_name,
           business_phone: createVendorDto.business_phone,
+          category_id: createVendorDto.category_id,
         },
         transaction,
       );

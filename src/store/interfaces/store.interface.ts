@@ -3,5 +3,4 @@ export interface Store {
   name: string;
   description?: string;
   vendor_id?: number;
-  category_id: number;
 }

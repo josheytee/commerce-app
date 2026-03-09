@@ -28,7 +28,7 @@ export class VendorController {
     @Body() data: CreateVendorDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<Vendor> {
-    return this.vendorService.create({ ...data, ...{ userId: req.user.id } });
+    return this.vendorService.create({ ...data, ...{ user_id: req.user.id } });
   }
 
   @Get()

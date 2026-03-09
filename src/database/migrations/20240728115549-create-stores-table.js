@@ -26,9 +26,14 @@ module.exports = {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       },
-      location: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
+      address_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'addresses',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
       },
       created_at: {
         type: Sequelize.DATE,

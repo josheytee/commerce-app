@@ -15,10 +15,10 @@ import { Customer } from '../../account/customer/customer.model';
 import { StoreCustomer } from './store-customer.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
 import { Store as IStore } from '../interfaces/store.interface';
-import { Category } from './category.model';
 import { Role } from 'src/account/role/models/role.model';
 import { UserStoreRole } from 'src/store/models/user-store-role.model';
 import { Section } from 'src/section/section.model';
+import { Address } from 'src/address/address.model';
 
 @Table({
   timestamps: true,
@@ -38,12 +38,12 @@ export class Store extends Model<Store> implements IStore {
   @Column
   description: string;
 
-  @ForeignKey(() => Category)
+  @ForeignKey(() => Address)
   @Column
-  category_id: number;
+  address_id: number;
 
-  @BelongsTo(() => Category)
-  category: Category;
+  @BelongsTo(() => Address)
+  address: Address;
 
   @ForeignKey(() => Vendor)
   @Column({

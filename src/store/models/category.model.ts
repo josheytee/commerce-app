@@ -7,6 +7,7 @@ import {
   AutoIncrement,
 } from 'sequelize-typescript';
 import { Store } from './store.model';
+import { Vendor } from 'src/account/vendor/vendor.model';
 
 @Table({
   timestamps: true,
@@ -26,6 +27,6 @@ export class Category extends Model<Category> {
   @Column
   description: string;
 
-  @HasMany(() => Store)
-  stores: Store[];
+  @HasMany(() => Vendor)
+  vendors: Vendor[];
 }
