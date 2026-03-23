@@ -44,7 +44,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else if (exception instanceof ForeignKeyConstraintError) {
       status = HttpStatus.CONFLICT;
       message = 'Foreign key constraint violation';
-    } else if (exception instanceof CustomException) {
+    } else if (exception instanceof JartException) {
       status = exception.statusCode || HttpStatus.INTERNAL_SERVER_ERROR;
       message = exception.message;
     }
@@ -67,7 +67,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   }
 }
 
-class CustomException extends HttpException {
+export class JartException extends HttpException {
   statusCode: HttpStatus;
   constructor(
     message: string,

@@ -13,12 +13,20 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      slug: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       description: {
         type: Sequelize.STRING,
       },
+      cover: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       parent_id: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: 'sections',
           key: 'id',

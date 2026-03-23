@@ -1,70 +1,131 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-strategy';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 
-class CustomStrategy extends Strategy {
-  name: string;
+// Extend the Strategy class properly
+export class CustomTokenStrategy extends Strategy {
+  name = 'token';
+  private readonly logger = new Logger(CustomTokenStrategy.name);
 
   constructor(private authService: AuthService) {
     super();
-    this.name = 'token';
   }
 
-  async authenticate(req: Request) {
+  /**
+   * The main authentication method - must call success(), fail(), or error()
+   */
+  async authenticate(req: Request, options?: any) {
+    this.logger.debug('🔐 CustomTokenStrategy.authenticate() started');
+
     try {
-      const token = req.headers['authorization']?.split(' ')[1];
+      // 1. Extract token from request
+      const token = this.extractTokenFromHeader(req);
+
       if (!token) {
-        return this.fail(new UnauthorizedException('Token not found'), 401);
+        this.logger.debug('❌ No token found in request');
+        return this.fail('Authorization token not found', 401);
       }
 
+      // 2. Validate token with auth service
+      this.logger.debug('🔄 Validating token...');
       const user = await this.authService.validateToken(token);
+
       if (!user) {
-        return this.fail(new UnauthorizedException('Invalid token'), 401);
+        this.logger.debug('❌ Invalid token - no user returned');
+        return this.fail('Invalid or expired token', 401);
       }
 
-      // Attach the user to the request object
+      // 3. Check if user is active (optional)
+      if (user.isActive === false) {
+        this.logger.debug('❌ User account is inactive');
+        return this.fail('User account is inactive', 403);
+      }
+
+      // 4. SUCCESS! This is critical - must call success()
+      this.logger.debug(
+        `✅ Authentication successful for user: ${user.id || user.username}`,
+      );
+
+      // Store user in request object
       (req as any).user = user;
 
-      // Indicate a successful authentication
+      // Call success with the user object
       return this.success(user);
-    } catch (err) {
-      return this.error(err);
+    } catch (error) {
+      // 5. ERROR handling - must call error()
+      this.logger.error(
+        `❌ Authentication error: ${error.message}`,
+        error.stack,
+      );
+      return this.error(error);
     }
   }
 
-  // Implement fail method
-  fail(error: Error, status: number) {
-    return this.error(error);
+  /**
+   * Extract Bearer token from Authorization header
+   */
+  private extractTokenFromHeader(req: Request): string | null {
+    const authHeader = req.headers['authorization'];
+
+    if (!authHeader || typeof authHeader !== 'string') {
+      return null;
+    }
+
+    const [scheme, token] = authHeader.split(' ');
+
+    if (scheme !== 'Bearer' || !token) {
+      return null;
+    }
+
+    return token;
   }
 
-  // Implement success method
-  success(session: any) {
-    return this.pass();
+  /**
+   * Override success method - calls this.pass() which completes the authentication
+   */
+  success(user: any) {
+    this.logger.debug('✅ CustomTokenStrategy.success() called');
+    this.pass(); // This passes control to the next step (the guard)
+    return user;
   }
 
-  // Implement error method
-  error(err: Error) {
-    // Handle error, but without using `emit`
-    console.log('Error during authentication:', err.message);
-    return super.fail(err);
-  }
-
-  // Implement pass method
   pass() {
     // Indicate the strategy passed without an error
     console.log('Authentication passed');
   }
-}
 
-@Injectable()
-export class TokenStrategy extends PassportStrategy(CustomStrategy, 'token') {
-  constructor(authService: AuthService) {
-    super(authService);
+  /**
+   * Override fail method - calls this.fail() with challenge and status
+   */
+  fail(challenge: string | Error, status?: number) {
+    this.logger.debug(`❌ CustomTokenStrategy.fail() called: ${challenge}`);
+
+    if (challenge instanceof Error) {
+      return super.fail(challenge.message, status);
+    }
+    return super.fail(challenge, status);
   }
 
-  async validate(payload: any) {
-    return { user_id: payload.sub, username: payload.username };
+  /**
+   * Override error method - calls this.error() with the error
+   */
+  error(err: Error) {
+    this.logger.error(`❌ CustomTokenStrategy.error() called: ${err.message}`);
+    return super.error(err);
+  }
+}
+
+/**
+ * NestJS wrapper for the custom strategy
+ */
+@Injectable()
+export class TokenStrategy extends PassportStrategy(
+  CustomTokenStrategy,
+  'token',
+) {
+  constructor(authService: AuthService) {
+    super(authService);
   }
 }

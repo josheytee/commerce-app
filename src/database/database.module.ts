@@ -17,7 +17,7 @@ import { StoreCustomer } from 'src/store/models/store-customer.model';
 import { Customer } from 'src/account/customer/customer.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
 import { Section } from 'src/section/section.model';
-import { Category } from 'src/store/models/category.model';
+import { Category } from 'src/category/category.model';
 import { UserStoreRole } from 'src/store/models/user-store-role.model';
 import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';
 import { UserVendorRolePermission } from 'src/account/permission/user-vendor-role-permission.model';
@@ -41,12 +41,12 @@ import { Attribute } from 'src/attribute/models/attribute.model';
       // url: process.env.DATABASE_URL,
       autoLoadModels: false,
       synchronize: false,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
-        },
-      },
+      // dialectOptions: {
+      //   ssl: {
+      //     require: process.env.ENV != 'dev',
+      //     rejectUnauthorized: false,
+      //   },
+      // },
       // logging: console.log,
       models: [
         City,

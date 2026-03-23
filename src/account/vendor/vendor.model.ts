@@ -13,6 +13,7 @@ import { User } from '../user/models/user.model';
 import { Store } from 'src/store/models/store.model';
 import { Role } from 'src/account/role/models/role.model';
 import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
+import { Category } from 'src/category/category.model';
 
 @Table({
   timestamps: true,
@@ -34,7 +35,11 @@ export class Vendor extends Model<Vendor> {
 
   @ForeignKey(() => User)
   @Column
-  user_id: number; // Foreign key to the User model
+  user_id: number;
+
+  @ForeignKey(() => Category)
+  @Column
+  category_id: number;
 
   @Column
   api_key: string;

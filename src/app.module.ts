@@ -18,11 +18,13 @@ import { AttributeModule } from './attribute/attribute.module';
 import { PaymentModule } from './payment/payment.module';
 import { ConfigModule } from '@nestjs/config';
 import { WebhookModule } from './webhook/webhook.module';
+import { CategoryModule } from './category/category.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
     AccountModule,
+    CategoryModule,
     StoreModule,
     SectionModule,
     ProductModule,
@@ -49,4 +51,4 @@ import { WebhookModule } from './webhook/webhook.module';
     AppService,
   ],
 })
-export class AppModule {}
+export class AppModule { }

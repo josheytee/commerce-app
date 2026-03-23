@@ -7,16 +7,19 @@ import { StoreController } from './store.controller';
 import { RoleService } from 'src/account/role/role.service';
 import { Role } from 'src/account/role/models/role.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
-import { VendorService } from 'src/account/vendor/vendor.service';
-import { Category } from './models/category.model';
+import { Category } from '../category/category.model';
 import { JwtService } from '@nestjs/jwt';
 import { PermissionsGuard } from 'src/account/permission/permissions.guard';
-import { UserVendorRoleService } from 'src/account/user-vendor-role/user-vendor-role.service';
 import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';
 import { Permission } from 'src/account/permission/permission.model';
+import { VendorModule } from 'src/account/vendor/vendor.module';
+import { UserVendorRoleModule } from 'src/account/user-vendor-role/user-vendor-role.module';
+import { StoreRepository } from './store.repository';
 
 @Module({
   imports: [
+    VendorModule,
+    UserVendorRoleModule,
     SequelizeModule.forFeature([
       Role,
       Store,
@@ -32,9 +35,9 @@ import { Permission } from 'src/account/permission/permission.model';
     JwtAuthGuard,
     PermissionsGuard,
     RoleService,
-    VendorService,
-    UserVendorRoleService,
+    StoreRepository,
   ],
   controllers: [StoreController],
+  exports: [StoreService, StoreRepository],
 })
-export class StoreModule {}
+export class StoreModule { }

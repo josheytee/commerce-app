@@ -1,3 +1,4 @@
+// migrations/YYYYMMDDHHMMSS-create-addresses.js
 'use strict';
 
 module.exports = {
@@ -8,53 +9,47 @@ module.exports = {
         primaryKey: true,
         autoIncrement: true,
       },
-      customer_id: {
+      // Polymorphic fields
+      addressable_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: {
-          model: 'customers',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
       },
+      addressable_type: {
+        type: Sequelize.ENUM('customer', 'store'),
+        allowNull: false,
+      },
+      // Address fields
       address_type: {
-        type: Sequelize.ENUM('shipping', 'billing', 'both'),
+        type: Sequelize.ENUM(
+          'shipping',
+          'billing',
+          'both',
+          'physical',
+          'postal',
+        ),
         defaultValue: 'both',
       },
-      title: {
+      label: {
         type: Sequelize.STRING(255),
         allowNull: true,
-        comment: 'e.g., Home, Office, etc.',
+        comment: 'e.g., Home, Office, Main Store, Warehouse',
       },
-      first_name: {
+      contact_name: {
         type: Sequelize.STRING(255),
-        allowNull: false,
+        allowNull: true,
+        comment: 'Person of contact at this address',
       },
-      last_name: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-      },
-      email: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-        validate: {
-          isEmail: true,
-        },
-      },
-      phone: {
+      contact_phone: {
         type: Sequelize.STRING(50),
-        allowNull: false,
+        allowNull: true,
       },
       address_line1: {
         type: Sequelize.STRING(255),
         allowNull: false,
-        field: 'address',
       },
       address_line2: {
         type: Sequelize.STRING(255),
         allowNull: true,
-        field: 'address2',
       },
       landmark: {
         type: Sequelize.STRING(255),
@@ -93,7 +88,6 @@ module.exports = {
       postal_code: {
         type: Sequelize.STRING(20),
         allowNull: true,
-        field: 'postal_code',
       },
       po_box: {
         type: Sequelize.STRING(50),
@@ -102,6 +96,12 @@ module.exports = {
       is_default: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
+        comment: 'Default address for this entity',
+      },
+      is_primary_store: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+        comment: 'For stores - is this the primary location',
       },
       is_verified: {
         type: Sequelize.BOOLEAN,
@@ -133,8 +133,17 @@ module.exports = {
       },
     });
 
-    // Add indexes
-    await queryInterface.addIndex('addresses', ['customer_id']);
+    // Indexes for polymorphic queries
+    await queryInterface.addIndex(
+      'addresses',
+      ['addressable_id', 'addressable_type'],
+      {
+        name: 'idx_addresses_polymorphic',
+      },
+    );
+
+    // Individual indexes
+    await queryInterface.addIndex('addresses', ['addressable_type']);
     await queryInterface.addIndex('addresses', ['city_id']);
     await queryInterface.addIndex('addresses', ['state_id']);
     await queryInterface.addIndex('addresses', ['country_id']);
@@ -143,33 +152,42 @@ module.exports = {
     await queryInterface.addIndex('addresses', ['address_type']);
 
     // Composite indexes for common queries
-    await queryInterface.addIndex('addresses', ['customer_id', 'is_default'], {
-      name: 'idx_addresses_customer_default',
-    });
-
     await queryInterface.addIndex(
       'addresses',
-      ['customer_id', 'address_type'],
+      ['addressable_id', 'addressable_type', 'is_default'],
       {
-        name: 'idx_addresses_customer_type',
+        name: 'idx_addresses_entity_default',
       },
     );
 
-    // Unique constraint to ensure only one default address per customer
-    await queryInterface.addConstraint('addresses', {
-      fields: ['customer_id', 'is_default'],
-      type: 'unique',
-      name: 'unique_customer_default_address',
-      where: {
-        is_default: true,
-        deleted_at: null,
+    await queryInterface.addIndex(
+      'addresses',
+      ['addressable_id', 'addressable_type', 'address_type'],
+      {
+        name: 'idx_addresses_entity_type',
       },
-    });
+    );
+
+    // For store primary location
+    await queryInterface.addIndex(
+      'addresses',
+      ['addressable_id', 'addressable_type', 'is_primary_store'],
+      {
+        name: 'idx_addresses_store_primary',
+        where: {
+          addressable_type: 'store',
+          is_primary_store: true,
+          deleted_at: null,
+        },
+      },
+    );
   },
 
   async down(queryInterface, Sequelize) {
-    // Drop enum type first
     await queryInterface.dropTable('addresses');
+    await queryInterface.sequelize.query(
+      'DROP TYPE IF EXISTS enum_addresses_addressable_type',
+    );
     await queryInterface.sequelize.query(
       'DROP TYPE IF EXISTS enum_addresses_address_type',
     );

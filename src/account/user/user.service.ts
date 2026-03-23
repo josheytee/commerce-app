@@ -4,6 +4,7 @@ import { User } from './models/user.model';
 import { UserSearchCriteria } from './interfaces/user-search-criteria.interface';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
+import { JartException } from 'src/all-exceptions.filter';
 
 @Injectable()
 export class UserService {
@@ -26,7 +27,7 @@ export class UserService {
     const found = await this.findOne({ email: userPayload.email });
 
     if (found && found !== null)
-      throw new Error('Kindly use a different email');
+      throw new JartException('Email already exists, Kindly use another email');
 
     if (userPayload.password) {
       const saltRounds = 10;

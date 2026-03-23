@@ -4,11 +4,14 @@ import { Product } from './product.model';
 import { ProductService } from './product.service';
 import { ProductController } from './product.controller';
 import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';
-import { UserVendorRoleService } from 'src/account/user-vendor-role/user-vendor-role.service';
+import { UserVendorRoleModule } from 'src/account/user-vendor-role/user-vendor-role.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Product, UserVendorRole])],
-  providers: [ProductService, UserVendorRoleService],
+  imports: [
+    UserVendorRoleModule,
+    SequelizeModule.forFeature([Product, UserVendorRole]),
+  ],
+  providers: [ProductService],
   controllers: [ProductController],
 })
-export class ProductModule {}
+export class ProductModule { }

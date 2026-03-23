@@ -12,6 +12,7 @@ import { SessionService } from '../session/session.service';
 import { User } from '../user/interfaces/user.interface';
 import { VendorService } from '../vendor/vendor.service';
 import { UserLoginDto } from './dto';
+import { JartException } from 'src/all-exceptions.filter';
 
 @Injectable()
 export class AuthService {
@@ -55,7 +56,7 @@ export class AuthService {
 
   async createToken(user: User): Promise<string> {
     const token = this.jwtService.sign({
-      username: user.username,
+      email: user.email,
       sub: user.id,
     });
     const expiresAt = new Date();
@@ -73,18 +74,21 @@ export class AuthService {
     await this.sessionService.removeByToken(token);
   }
 
-  async validateUser(username: string, password: string): Promise<any> {
-    const user = await this.usersService.findOne({ username });
-    const compare = await bcrypt.compare(password, user.password_hash);
-    if (user && compare) {
+  async validateUser(email: string, password: string): Promise<any> {
+    // Find user by email instead of username
+    const user = await this.usersService.findOne({ email });
+    if (user && (await this.comparePassword(password, user.password_hash))) {
       const { password_hash, ...result } = user.dataValues;
       return result;
     }
     return null;
   }
 
-  async login(user: User): Promise<{ access_token: string }> {
+  async comparePassword(password, passwordHash) {
+    return await bcrypt.compare(password, passwordHash);
+  }
 
+  async login(user: User): Promise<{ access_token: string }> {
     // Create the JWT payload
     const token = await this.createToken(user);
 

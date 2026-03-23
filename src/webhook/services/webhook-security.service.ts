@@ -4,7 +4,7 @@ import { VendorService } from 'src/account/vendor/vendor.service';
 
 @Injectable()
 export class WebhookSecurityService {
-  constructor(private readonly vendorService: VendorService) {}
+  constructor(private readonly vendorService: VendorService) { }
 
   async generateSignature(payload: any, secret: string): Promise<string> {
     const hmac = crypto.createHmac('sha256', secret);

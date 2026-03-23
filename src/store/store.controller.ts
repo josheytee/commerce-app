@@ -7,6 +7,7 @@ import {
   Patch,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { StoreService } from './store.service';
 import { Store } from './models/store.model';
@@ -15,22 +16,29 @@ import { JwtAuthGuard } from 'src/account/auth/jwt-auth.guard';
 import { Permissions } from 'src/account/permission/permissions.decorator';
 import { PermissionsGuard } from 'src/account/permission/permissions.guard';
 import { TokenAuthGuard } from 'src/account/auth/token-auth.guard';
+import { AuthenticatedRequest } from 'src/account/auth/request/authenticated-request.interface';
+import { CreateStoreDto } from './dto';
 
 @Controller('stores')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class StoreController {
-  constructor(private readonly storeService: StoreService) {}
+  constructor(private readonly storeService: StoreService) { }
 
   @Post()
   @Permissions('store:create')
-  create(@Body() data: Partial<Store>): Promise<Store> {
+  create(
+    @Body() data: Partial<CreateStoreDto>,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Store> {
+
     return this.storeService.create(data);
   }
 
   @Get()
   @Permissions('store:view')
-  findAll(): Promise<Store[]> {
-    return this.storeService.findAll();
+  findAll(@Req() req: AuthenticatedRequest): Promise<Store[]> {
+    const userId = req.user.id;
+    return this.storeService.findAllByUserId(userId);
   }
 
   @Get(':id')
