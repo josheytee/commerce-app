@@ -6,7 +6,6 @@ import {
   PrimaryKey,
   AutoIncrement,
 } from 'sequelize-typescript';
-import { Store } from './store.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
 
 @Table({

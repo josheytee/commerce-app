@@ -5,6 +5,7 @@ import {
   UseGuards,
   Body,
   BadRequestException,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
@@ -12,6 +13,8 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthenticatedRequest } from './request/authenticated-request.interface';
 import { TokenAuthGuard } from './token-auth.guard';
 import { UserLoginDto } from './dto';
+import { GetUser } from './decorators/get-user.decorator';
+import { AuthenticatedUser } from './interfaces';
 
 @Controller('auth')
 export class AuthController {
@@ -21,15 +24,6 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   async login(@Request() req: AuthenticatedRequest) {
     // Extract the userId from the request (e.g., after user authentication)
-    // console;
-    const userId = req.user.id;
-
-    // console.log(req, userId, 'user id');
-
-    if (!userId) {
-      throw new Error('User ID is required');
-    }
-
     return this.authService.login(req.user);
   }
 
@@ -50,8 +44,8 @@ export class AuthController {
   }
 
   @UseGuards(TokenAuthGuard)
-  @Post('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  @Get('profile')
+  async getProfile(@GetUser() user: AuthenticatedUser) {
+    return user;
   }
 }

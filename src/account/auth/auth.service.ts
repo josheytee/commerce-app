@@ -12,6 +12,7 @@ import { SessionService } from '../session/session.service';
 import { User } from '../user/interfaces/user.interface';
 import { VendorService } from '../vendor/vendor.service';
 import { UserLoginDto } from './dto';
+import { JartException } from 'src/all-exceptions.filter';
 
 @Injectable()
 export class AuthService {
@@ -55,7 +56,7 @@ export class AuthService {
 
   async createToken(user: User): Promise<string> {
     const token = this.jwtService.sign({
-      username: user.username,
+      email: user.email,
       sub: user.id,
     });
     const expiresAt = new Date();
@@ -73,54 +74,18 @@ export class AuthService {
     await this.sessionService.removeByToken(token);
   }
 
-  async validateUser(username: string, password: string): Promise<any> {
-    try {
-      // Validate input parameters
-      if (!username || !password) {
-        throw new Error('Username and password are required');
-      }
-
-      // Find user by username
-      const user = await this.usersService.findOne({ username });
-      console.log('user', username, user)
-      // Check if user exists
-      if (!user) {
-        return null; // User not found - return null for authentication failure
-      }
-
-      // Verify password
-      const isPasswordValid = await bcrypt.compare(
-        password,
-        user.password_hash,
-      );
-
-      if (!isPasswordValid) {
-        return null; // Invalid password - return null for authentication failure
-      }
-
-      // Check if user is active (optional - depends on your requirements)
-      // if (user.is_active === false) {
-      //   throw new Error('User account is inactive');
-      // }
-
-      // Return user data without sensitive information
+  async validateUser(email: string, password: string): Promise<any> {
+    // Find user by email instead of username
+    const user = await this.usersService.findOne({ email });
+    if (user && (await this.comparePassword(password, user.password_hash))) {
       const { password_hash, ...result } = user.dataValues;
       return result;
-    } catch (error) {
-      // Log the error for debugging (you can inject a logger service)
-      console.error('Error in validateUser:', error.message);
-
-      // Re-throw specific errors that should be handled by the caller
-      if (
-        error.message.includes('required') ||
-        error.message.includes('inactive')
-      ) {
-        throw error;
-      }
-
-      // For any other errors, return null (authentication failed)
-      return null;
     }
+    return null;
+  }
+
+  async comparePassword(password, passwordHash) {
+    return await bcrypt.compare(password, passwordHash);
   }
 
   async login(user: User): Promise<{ access_token: string }> {

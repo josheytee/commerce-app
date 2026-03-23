@@ -13,7 +13,7 @@ import { User } from '../user/models/user.model';
 import { Store } from 'src/store/models/store.model';
 import { Role } from 'src/account/role/models/role.model';
 import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
-import { Category } from 'src/store/models/category.model';
+import { Category } from 'src/category/category.model';
 
 @Table({
   timestamps: true,

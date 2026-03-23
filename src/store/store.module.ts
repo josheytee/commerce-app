@@ -7,7 +7,7 @@ import { StoreController } from './store.controller';
 import { RoleService } from 'src/account/role/role.service';
 import { Role } from 'src/account/role/models/role.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
-import { Category } from './models/category.model';
+import { Category } from '../category/category.model';
 import { JwtService } from '@nestjs/jwt';
 import { PermissionsGuard } from 'src/account/permission/permissions.guard';
 import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';

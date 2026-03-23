@@ -17,7 +17,7 @@ import { StoreCustomer } from 'src/store/models/store-customer.model';
 import { Customer } from 'src/account/customer/customer.model';
 import { Vendor } from 'src/account/vendor/vendor.model';
 import { Section } from 'src/section/section.model';
-import { Category } from 'src/store/models/category.model';
+import { Category } from 'src/category/category.model';
 import { UserStoreRole } from 'src/store/models/user-store-role.model';
 import { UserVendorRole } from 'src/account/user-vendor-role/user-vendor-role.model';
 import { UserVendorRolePermission } from 'src/account/permission/user-vendor-role-permission.model';
