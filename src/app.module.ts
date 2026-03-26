@@ -19,6 +19,9 @@ import { PaymentModule } from './payment/payment.module';
 import { ConfigModule } from '@nestjs/config';
 import { WebhookModule } from './webhook/webhook.module';
 import { CategoryModule } from './category/category.module';
+import { MediaModule } from './media/media.module';
+import { RatingModule } from './rating/rating.module';
+import { ReviewModule } from './review/review.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -36,6 +39,9 @@ import { CategoryModule } from './category/category.module';
     AttributeModule,
     PaymentModule,
     WebhookModule,
+    MediaModule,
+    ReviewModule,
+    RatingModule,
   ],
   controllers: [AppController],
   providers: [

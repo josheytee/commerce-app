@@ -9,10 +9,12 @@ import { Permission } from '../permission/permission.model';
 import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
 import { UserVendorRoleModule } from '../user-vendor-role/user-vendor-role.module';
 import { RoleModule } from '../role/role.module';
+import { MediaModule } from 'src/media/media.module';
 
 @Module({
   imports: [
     forwardRef(() => RoleModule),
+    MediaModule,
     UserVendorRoleModule,
     SequelizeModule.forFeature([Role, Vendor, Permission, UserVendorRole]),
   ],

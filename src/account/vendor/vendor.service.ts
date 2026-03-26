@@ -140,11 +140,11 @@ export class VendorService {
     }
   }
 
-  async generateApiKey(vendorId: number): Promise<string> {
-    const apiKey = crypto.randomBytes(32).toString('hex');
-    await Vendor.update({ api_key: apiKey }, { where: { id: vendorId } });
-    return apiKey;
-  }
+  // async generateApiKey(vendorId: number): Promise<string> {
+  //   const apiKey = crypto.randomBytes(32).toString('hex');
+  //   await Vendor.update({ api_key: apiKey }, { where: { id: vendorId } });
+  //   return apiKey;
+  // }
 
   async getVendorStats(id: number): Promise<any> {
     const vendor = await this.vendorRepository.findById(id, {

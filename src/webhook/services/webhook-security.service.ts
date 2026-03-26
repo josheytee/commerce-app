@@ -23,7 +23,7 @@ export class WebhookSecurityService {
     }
     const expectedSignature = await this.generateSignature(
       payload,
-      vendor.api_key, // change to secret in future
+      'vendor.api_key', // change to secret in future
     );
     return crypto.timingSafeEqual(
       Buffer.from(receivedSignature),

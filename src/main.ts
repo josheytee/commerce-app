@@ -10,6 +10,20 @@ async function bootstrap() {
       instance: instance,
     }),
   });
+
+  // Enable CORS
+  app.enableCors({
+    origin: true, // Allow all origins (development only)
+    // OR specify allowed origins:
+    // origin: ['http://localhost:3000', 'https://yourdomain.com'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true, // Allow cookies and authorization headers
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+    exposedHeaders: 'Content-Range, X-Content-Range',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+
   // Set the global prefix
   app.setGlobalPrefix('api');
 
