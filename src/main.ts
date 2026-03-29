@@ -5,6 +5,7 @@ import { instance } from './winston-logger.config';
 import { VersioningType } from '@nestjs/common';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -45,6 +46,23 @@ async function bootstrap() {
       return res.status(204).send();
     }
     next();
+  });
+
+  const config = new DocumentBuilder()
+    .setTitle('Ojalanta API')
+    .setDescription('Multi-vendor marketplace API')
+    .setVersion('1.0')
+    .addBearerAuth() // 🔐 for JWT
+    .addServer('http://localhost:3000')
+    .addServer('https://commerce-app-mv98.onrender.com') // change later
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true, // keeps token after refresh
+    },
   });
 
   const port = process.env.PORT || 3000;

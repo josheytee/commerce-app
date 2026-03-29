@@ -10,30 +10,38 @@ import { map } from 'rxjs/operators';
 import { Request, Response } from 'express';
 
 @Injectable()
-export class ResponseInterceptor implements NestInterceptor {
+export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
   private readonly logger = new Logger(ResponseInterceptor.name);
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest<Request>();
-    const response = context.switchToHttp().getResponse<Response>();
+    const ctx = context.switchToHttp();
+    const request = ctx.getRequest<Request>();
+    const response = ctx.getResponse<Response>();
+
     const method = request.method;
     const now = Date.now();
 
     return next.handle().pipe(
       map((data) => {
+        const formattedData = this.formatData(data);
+
         const res = {
-          statusCode: response.statusCode,
-          timestamp: new Date().toISOString(),
-          path: request.url,
-          method: method,
+          success: true,
           message: this.getMessage(method),
-          data: this.formatData(data),
-          responseTime: `${Date.now() - now}ms`,
+          data: formattedData,
+
+          // optional meta (very useful)
+          meta: {
+            statusCode: response.statusCode,
+            timestamp: new Date().toISOString(),
+            path: request.url,
+            method,
+            responseTime: `${Date.now() - now}ms`,
+          },
         };
 
-        this.logger.log(`Request: ${method} ${request.url}`);
-        this.logger.log(`Response: ${JSON.stringify(res)}`);
-        this.logger.log(`Response time: ${res.responseTime}`);
+        // 🔍 Cleaner logging (avoid logging huge payloads in prod)
+        this.logger.log(`${method} ${request.url} - ${res.meta.responseTime}`);
 
         return res;
       }),
@@ -47,6 +55,7 @@ export class ResponseInterceptor implements NestInterceptor {
       case 'POST':
         return 'Created successfully';
       case 'PUT':
+      case 'PATCH':
         return 'Updated successfully';
       case 'DELETE':
         return 'Deleted successfully';
@@ -56,18 +65,14 @@ export class ResponseInterceptor implements NestInterceptor {
   }
 
   private formatData(data: any): any {
-    if (
-      data &&
-      typeof data === 'object' &&
-      data.hasOwnProperty('rows') &&
-      data.hasOwnProperty('count')
-    ) {
-      // Handle paginated results
+    // 🧠 Handle Sequelize pagination
+    if (data && typeof data === 'object' && 'rows' in data && 'count' in data) {
       return {
         total: data.count,
         items: data.rows,
       };
     }
+
     return data;
   }
 }

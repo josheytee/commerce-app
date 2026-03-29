@@ -5,20 +5,31 @@ import {
     Param,
     UseInterceptors,
     UploadedFile,
+    UploadedFiles,
     BadRequestException,
     UseGuards,
     Req,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-// import { MediaUploadService } from '../media/media-upload.service';
-// import { MediaType } from '../media/models/media-type.enum';
-// import { VendorService } from './vendor.service';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { VendorService } from '../vendor.service';
 import { MediaUploadService } from 'src/media/services/media-upload.service';
 import { MediaType } from 'src/media/models/media-type.enum';
+import {
+    ApiBearerAuth,
+    ApiTags,
+    ApiConsumes,
+    ApiBody,
+    ApiOperation,
+    ApiParam,
+} from '@nestjs/swagger';
+import { TokenAuthGuard } from 'src/account/auth/token-auth.guard';
+import { PermissionsGuard } from 'src/account/permission/permissions.guard';
 
+@ApiBearerAuth()
+@ApiTags('Vendors')
 @Controller('vendors')
+@UseGuards(TokenAuthGuard, PermissionsGuard)
 export class VendorMediaController {
     constructor(
         private vendorService: VendorService,
@@ -26,10 +37,24 @@ export class VendorMediaController {
     ) { }
 
     @Post(':id/logo')
-    @UseGuards(AuthGuard('jwt'))
+    @ApiOperation({ summary: 'Upload vendor logo' })
+    @ApiParam({ name: 'id', description: 'Vendor ID', type: 'number' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                logo: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Logo image file (jpg, png, etc.)',
+                },
+            },
+        },
+    })
     @UseInterceptors(FileInterceptor('logo'))
     async uploadLogo(
-        @Param('id') id: string,
+        @Param('id') id: number,
         @UploadedFile() file: Express.Multer.File,
         @Req() req,
     ) {
@@ -37,7 +62,6 @@ export class VendorMediaController {
             throw new BadRequestException('No file uploaded');
         }
 
-        // Verify vendor exists
         const vendor = await this.vendorService.findById(+id);
         if (!vendor) {
             throw new BadRequestException('Vendor not found');
@@ -51,16 +75,25 @@ export class VendorMediaController {
             req.user.id,
         );
 
-        return {
-            success: true,
-            data: media,
-            message: 'Logo uploaded successfully',
-        };
+        return media;
     }
 
-
     @Post(':id/cover')
-    @UseGuards(AuthGuard('jwt'))
+    @ApiOperation({ summary: 'Upload vendor cover image' })
+    @ApiParam({ name: 'id', description: 'Vendor ID', type: 'number' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                cover: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'Cover image file (jpg, png, etc.)',
+                },
+            },
+        },
+    })
     @UseInterceptors(FileInterceptor('cover'))
     async uploadCover(
         @Param('id') id: string,
@@ -80,40 +113,55 @@ export class VendorMediaController {
         );
 
         return {
-            success: true,
-            data: media,
-            message: 'Cover image uploaded successfully',
+            media,
         };
     }
 
-    @Post(':id/gallery')
-    @UseGuards(AuthGuard('jwt'))
-    @UseInterceptors(FileInterceptor('images', { limits: { files: 10 } }))
-    async uploadGallery(
-        @Param('id') id: string,
-        @UploadedFile() files: Express.Multer.File[],
-        @Req() req,
-    ) {
-        if (!files || files.length === 0) {
-            throw new BadRequestException('No files uploaded');
-        }
+    // @Post(':id/gallery')
+    // @ApiOperation({ summary: 'Upload multiple gallery images' })
+    // @ApiParam({ name: 'id', description: 'Vendor ID', type: 'number' })
+    // @ApiConsumes('multipart/form-data')
+    // @ApiBody({
+    //     schema: {
+    //         type: 'object',
+    //         properties: {
+    //             images: {
+    //                 type: 'array',
+    //                 items: {
+    //                     type: 'string',
+    //                     format: 'binary',
+    //                 },
+    //                 description: 'Gallery image files (up to 10)',
+    //             },
+    //         },
+    //     },
+    // })
+    // @UseInterceptors(FilesInterceptor('images', 10))
+    // async uploadGallery(
+    //     @Param('id') id: string,
+    //     @UploadedFiles() files: Express.Multer.File[],
+    //     @Req() req,
+    // ) {
+    //     if (!files || files.length === 0) {
+    //         throw new BadRequestException('No files uploaded');
+    //     }
 
-        const uploadPromises = files.map(file =>
-            this.mediaUploadService.uploadAndSave(
-                file,
-                'vendor',
-                +id,
-                MediaType.VENDOR_GALLERY,
-                req.user.id,
-            ),
-        );
+    //     const uploadPromises = files.map((file) =>
+    //         this.mediaUploadService.uploadAndSave(
+    //             file,
+    //             'vendor',
+    //             +id,
+    //             MediaType.VENDOR_GALLERY,
+    //             req.user.id,
+    //         ),
+    //     );
 
-        const media = await Promise.all(uploadPromises);
+    //     const media = await Promise.all(uploadPromises);
 
-        return {
-            success: true,
-            data: media,
-            message: `${media.length} images uploaded successfully`,
-        };
-    }
+    //     return {
+    //         success: true,
+    //         data: media,
+    //         message: `${media.length} images uploaded successfully`,
+    //     };
+    // }
 }

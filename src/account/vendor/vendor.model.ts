@@ -155,6 +155,17 @@ export class Vendor extends Model<Vendor> {
   images: Media[];
 
   // Specific media type helpers
+  @HasOne(() => Media, {
+    foreignKey: 'entity_id',
+    constraints: false,
+    scope: {
+      entity_type: 'vendor',
+      type: MediaType.VENDOR_LOGO,
+      is_primary: true,
+    },
+  })
+  logo: Media;
+
   @HasMany(() => Media, {
     foreignKey: 'entity_id',
     constraints: false,
@@ -165,6 +176,17 @@ export class Vendor extends Model<Vendor> {
   })
   logos: Media[];
 
+  @HasOne(() => Media, {
+    foreignKey: 'entity_id',
+    constraints: false,
+    scope: {
+      entity_type: 'vendor',
+      type: MediaType.VENDOR_COVER,
+      is_primary: true,
+    },
+  })
+  cover_image: Media;
+
   @HasMany(() => Media, {
     foreignKey: 'entity_id',
     constraints: false,
@@ -174,16 +196,6 @@ export class Vendor extends Model<Vendor> {
     },
   })
   cover_images: Media[];
-
-  @HasMany(() => Media, {
-    foreignKey: 'entity_id',
-    constraints: false,
-    scope: {
-      entity_type: 'vendor',
-      type: MediaType.VENDOR_GALLERY,
-    },
-  })
-  gallery_images: Media[];
 
   // Helper method to get primary logo
   async getPrimaryLogo(): Promise<Media | null> {

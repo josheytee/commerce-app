@@ -13,6 +13,9 @@ import { UserVendorRoleRepository } from '../user-vendor-role/user-vendor-role.r
 import { CreateVendorDto } from './dto';
 import { MediaType } from 'src/media/models/media-type.enum';
 import { MediaRepository } from 'src/media/media.repository';
+import { Media } from 'src/media/models/media.model';
+import { User } from '../user/models/user.model';
+import { Category } from 'src/category/category.model';
 
 @Injectable()
 export class VendorService {
@@ -130,31 +133,22 @@ export class VendorService {
     return vendors;
   }
 
-  async addImage(vendorId: number) {
-    try {
-      await this.mediaRepository.createVendorImage(
-        vendorId,
-        'https://example.com/logo.png',
-      );
-    } catch (error) {
-      console.error('Detailed SQL Error:', {
-        message: error.message,
-        sql: error.sql,
-        parameters: error.parameters,
-        original: error.original,
-      });
-      throw error;
-    }
-  }
 
   async findById(id: number): Promise<Vendor> {
     const vendor = await this.vendorRepository.findOne({
       where: { id },
+      include: [
+        { model: Media, as: 'logo' }, // Single logo
+        { model: User, as: 'user' },
+        { model: Category, as: 'category' },
+      ],
     });
+
     if (!vendor) {
       throw new NotFoundException('Vendor not found');
     }
-    return vendor;
+
+    return vendor; // Returns Vendor with vendor.logo (single object)
   }
 
   async update(id: number, data: Partial<Vendor>): Promise<Vendor> {

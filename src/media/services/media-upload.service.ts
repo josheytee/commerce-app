@@ -31,7 +31,7 @@ export class MediaUploadService {
         this.validateFile(file);
 
         // Save file to disk/cloud
-        const fileInfo = await this.saveFile(file, entityType);
+        const fileInfo = await this.saveFile(file, entityId, entityType);
 
         // Create media record in database
         const media = await this.mediaModel.create({
@@ -75,12 +75,18 @@ export class MediaUploadService {
 
     private async saveFile(
         file: Express.Multer.File,
+        entityId: number,
         entityType: string,
     ): Promise<any> {
         // Generate unique filename
         const extension = file.originalname.split('.').pop();
         const filename = `${uuidv4()}.${extension}`;
-        const uploadDir = path.join(process.cwd(), 'uploads', entityType);
+        const uploadDir = path.join(
+            process.cwd(),
+            'uploads',
+            entityType,
+            String(entityId),
+        );
         const filePath = path.join(uploadDir, filename);
 
         // Ensure directory exists

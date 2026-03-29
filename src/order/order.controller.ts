@@ -11,12 +11,16 @@ import {
 import { OrderService } from './order.service';
 import { Order } from './models/order.model';
 import { OrderItem } from './models/order-item.model';
+import { ApiTags } from '@nestjs/swagger';
+import { ApiSuccessResponse } from 'src/api.response';
 
 @Controller('orders')
+@ApiTags('Orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService) { }
 
   @Post()
+  @ApiSuccessResponse(Order)
   async create(@Body() orderDto: any) {
     const { customer_id, items } = orderDto;
     return this.orderService.create(customer_id, items);
@@ -31,6 +35,7 @@ export class OrderController {
   }
 
   @Post('update-status/:orderId')
+  @ApiSuccessResponse(Order)
   async updateOrderStatus(
     @Param('orderId') orderId: number,
     @Body() updateDto: any,
@@ -40,16 +45,19 @@ export class OrderController {
   }
 
   @Get()
+  @ApiSuccessResponse(Order)
   findAll(): Promise<Order[]> {
     return this.orderService.findAll();
   }
 
   @Get(':id')
+  @ApiSuccessResponse(Order)
   findOne(@Param('id') id: number): Promise<Order> {
     return this.orderService.findOne(id);
   }
 
   @Patch(':id')
+  @ApiSuccessResponse(Order)
   update(
     @Param('id') id: number,
     @Body() data: { order: Partial<Order>; items: Partial<OrderItem>[] },
@@ -58,6 +66,7 @@ export class OrderController {
   }
 
   @Delete(':id')
+  @ApiSuccessResponse(Order)
   remove(@Param('id') id: number): Promise<void> {
     return this.orderService.remove(id);
   }

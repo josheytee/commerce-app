@@ -1,4 +1,4 @@
-import { Logger, Module } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AccountModule } from './account/account.module';
@@ -22,6 +22,7 @@ import { CategoryModule } from './category/category.module';
 import { MediaModule } from './media/media.module';
 import { RatingModule } from './rating/rating.module';
 import { ReviewModule } from './review/review.module';
+import { RequestIdMiddleware } from './request-id-middleware';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -57,4 +58,8 @@ import { ReviewModule } from './review/review.module';
     AppService,
   ],
 })
-export class AppModule { }
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

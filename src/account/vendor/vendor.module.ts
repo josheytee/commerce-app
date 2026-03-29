@@ -1,7 +1,6 @@
 import { VendorRepository } from './vendor.repository';
 import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { VendorController } from './vendor.controller';
 import { VendorService } from './vendor.service';
 import { Vendor } from './vendor.model';
 import { Role } from '../role/models/role.model';
@@ -10,6 +9,7 @@ import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
 import { UserVendorRoleModule } from '../user-vendor-role/user-vendor-role.module';
 import { RoleModule } from '../role/role.module';
 import { MediaModule } from 'src/media/media.module';
+import { VendorController, VendorMediaController } from './controllers';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { MediaModule } from 'src/media/media.module';
     SequelizeModule.forFeature([Role, Vendor, Permission, UserVendorRole]),
   ],
   providers: [VendorService, VendorRepository],
-  controllers: [VendorController],
+  controllers: [VendorController, VendorMediaController],
   exports: [VendorService, VendorRepository],
 })
 export class VendorModule { }

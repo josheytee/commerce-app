@@ -15,14 +15,18 @@ import { TokenAuthGuard } from './token-auth.guard';
 import { UserLoginDto } from './dto';
 import { GetUser } from './decorators/get-user.decorator';
 import { AuthenticatedUser } from './interfaces';
-
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
-  async login(@Request() req: AuthenticatedRequest) {
+  async login(
+    @Request() req: AuthenticatedRequest,
+    @Body() body: UserLoginDto,
+  ) {
     // Extract the userId from the request (e.g., after user authentication)
     return this.authService.login(req.user);
   }
@@ -44,6 +48,7 @@ export class AuthController {
   }
 
   @UseGuards(TokenAuthGuard)
+  @ApiBearerAuth()
   @Get('profile')
   async getProfile(@GetUser() user: AuthenticatedUser) {
     return user;
