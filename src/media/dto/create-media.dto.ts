@@ -39,7 +39,7 @@ export class CreateMediaDto {
     caption?: string;
 
     @IsEnum(MediaType)
-    @IsNotEmpty()
+    @IsOptional()
     type: MediaType;
 
     @IsString()

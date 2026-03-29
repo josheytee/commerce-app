@@ -6,6 +6,7 @@ import { BaseRepository } from 'src/database/repositories/base.repository';
 import { CreateMediaDto } from 'src/media/dto';
 import { MediaType } from 'src/media/models/media-type.enum';
 import { MediaRepository } from 'src/media/media.repository';
+import { Media } from 'src/media/models/media.model';
 
 @Injectable()
 export class VendorRepository extends BaseRepository<Vendor> {
@@ -13,7 +14,6 @@ export class VendorRepository extends BaseRepository<Vendor> {
         @InjectModel(Vendor)
         private vendorModel: typeof Vendor,
         private mediaRepository: MediaRepository,
-
     ) {
         super(vendorModel);
     }
@@ -59,6 +59,15 @@ export class VendorRepository extends BaseRepository<Vendor> {
     async findByUserId(userId: number): Promise<Vendor[] | null> {
         return this.findAll({
             where: { user_id: userId },
+            include: [
+                {
+                    model: Media,
+                    as: 'images',
+                    where: { entity_type: 'vendor' },
+                    separate: true,
+                    required: false, // LEFT JOIN - get vendors even without images
+                },
+            ],
         });
     }
 
@@ -68,21 +77,41 @@ export class VendorRepository extends BaseRepository<Vendor> {
         });
     }
 
-    // async addMedia(vendorId: number, files: any[], userId: number) {
-    //     const mediaDtos: CreateMediaDto[] = files.map((file, index) => ({
-    //         url: file.url,
-    //         key: file.key,
-    //         thumbnail_url: file.thumbnail_url,
-    //         medium_url: file.medium_url,
-    //         type: MediaType.VENDOR_GALLERY,
+    async addVendorLogo(vendorId: number, imageUrl: string): Promise<Media> {
+        return this.mediaRepository.createVendorImage(vendorId, imageUrl);
+    }
+    // async addImage(vendorId: number, imageData: Media, userId: number) {
+    //     // console.log('files', files);
+    //     // const mediaDtos: CreateMediaDto[] = files.map((file, index) => ({
+    //     //     url: file.url,
+    //     //     key: file.key,
+    //     //     thumbnail_url: file.thumbnail_url,
+    //     //     medium_url: file.medium_url,
+    //     //     // type: MediaType.VENDOR_GALLERY,
+    //     //     entity_type: 'vendor',
+    //     //     entity_id: vendorId,
+    //     //     sort_order: index,
+    //     //     file_size: file.size,
+    //     //     mime_type: file.mimetype,
+    //     // }));
+    //     const mediaDtos: any = {
+    //         url: imageData.url,
+    //         key: imageData.key,
     //         entity_type: 'vendor',
     //         entity_id: vendorId,
-    //         sort_order: index,
-    //         file_size: file.size,
-    //         mime_type: file.mimetype,
-    //     }));
+    //         type: imageData.type || 'vendor_logo', // ⚠️ CRITICAL: Include the type!
+    //         sort_order: imageData.sort_order || 0,
+    //         is_primary: imageData.is_primary || false,
+    //         uploaded_by: imageData.uploaded_by,
+    //         alt_text: imageData.alt_text,
+    //         title: imageData.title,
+    //         caption: imageData.caption,
+    //         file_size: imageData.file_size,
+    //         mime_type: imageData.mime_type,
+    //         metadata: imageData.metadata,
+    //     };
 
-    //     return await this.mediaRepository.createMultiple(mediaDtos, userId);
+    //     return await this.mediaRepository.create(mediaDtos, userId);
     // }
 
     // async addReview(vendorId: number, reviewDto: any, userId: number) {

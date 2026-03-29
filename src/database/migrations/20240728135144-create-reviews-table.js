@@ -5,37 +5,68 @@ module.exports = {
     await queryInterface.createTable('reviews', {
       id: {
         type: Sequelize.INTEGER,
-        primaryKey: true,
         autoIncrement: true,
+        primaryKey: true,
+      },
+      title: {
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
-      product_id: {
-        type: Sequelize.INTEGER,
+      content: {
+        type: Sequelize.TEXT,
         allowNull: false,
-        references: {
-          model: 'products',
-          key: 'id',
-        },
       },
-      customer_id: {
-        type: Sequelize.INTEGER,
+      entity_type: {
+        type: Sequelize.ENUM('vendor', 'product', 'store', 'service'),
         allowNull: false,
-        references: {
-          model: 'customers',
-          key: 'id',
-        },
       },
-      rating: {
+      entity_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      comment: {
-        type: Sequelize.STRING,
+      user_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
       },
-      deleted_at: {
+      pros: {
+        type: Sequelize.JSONB,
+        allowNull: true,
+      },
+      cons: {
+        type: Sequelize.JSONB,
+        allowNull: true,
+      },
+      images: {
+        type: Sequelize.JSONB,
+        allowNull: true,
+      },
+      helpful_count: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+      },
+      not_helpful_count: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+      },
+      is_verified_purchase: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      is_approved: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      approved_at: {
         type: Sequelize.DATE,
         allowNull: true,
-        defaultValue: null,
+      },
+      approved_by: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      metadata: {
+        type: Sequelize.JSONB,
+        allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -47,6 +78,22 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
+    });
+
+    await queryInterface.addIndex('reviews', ['entity_type', 'entity_id'], {
+      name: 'reviews_entity_index',
+    });
+
+    await queryInterface.addConstraint('reviews', {
+      fields: ['user_id'],
+      type: 'foreign key',
+      name: 'fk_reviews_user_id',
+      references: {
+        table: 'users',
+        field: 'id',
+      },
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
     });
   },
 

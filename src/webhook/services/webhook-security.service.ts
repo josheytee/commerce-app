@@ -17,7 +17,7 @@ export class WebhookSecurityService {
     receivedSignature: string,
     vendorId: number,
   ): Promise<boolean> {
-    const vendor = await this.vendorService.findOne(vendorId); // Fetch vendor details
+    const vendor = await this.vendorService.findById(vendorId); // Fetch vendor details
     if (!vendor) {
       throw new UnauthorizedException('Vendor not found');
     }

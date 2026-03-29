@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/sequelize';
 import { BaseRepository } from 'src/database/repositories/base.repository';
 
 import { Media } from './models/media.model';
-import { MediaType } from 'express';
 import { CreateMediaDto } from './dto';
+import { MediaType } from './models/media-type.enum';
 
 @Injectable()
 export class MediaRepository extends BaseRepository<Media> {
@@ -22,7 +22,7 @@ export class MediaRepository extends BaseRepository<Media> {
             ...createMediaDto,
             uploaded_by: userId,
         };
-        const media = await this.create(payload);
+        const media = await super.create(payload);
         return media;
     }
 
@@ -37,6 +37,16 @@ export class MediaRepository extends BaseRepository<Media> {
             };
         });
         return await this.bulkCreate(medias);
+    }
+    async createVendorImage(vendorId: number, imageUrl: string): Promise<Media> {
+        return this.create({
+            entity_id: vendorId,
+            url: imageUrl,
+            entity_type: 'vendor',
+            is_primary: true,
+            alt_text: 'Vendor Logo',
+            type: MediaType.VENDOR_LOGO,
+        });
     }
 
     // async findAll(options?: {

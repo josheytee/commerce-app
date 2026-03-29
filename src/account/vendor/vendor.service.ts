@@ -1,3 +1,4 @@
+import { UserLoginDto } from './../auth/dto/user-login.dto';
 import * as crypto from 'crypto';
 import {
   BadRequestException,
@@ -10,12 +11,15 @@ import { Sequelize } from 'sequelize-typescript';
 import { RoleRepository } from '../role/role.repository';
 import { UserVendorRoleRepository } from '../user-vendor-role/user-vendor-role.repository';
 import { CreateVendorDto } from './dto';
+import { MediaType } from 'src/media/models/media-type.enum';
+import { MediaRepository } from 'src/media/media.repository';
 
 @Injectable()
 export class VendorService {
   constructor(
     private vendorRepository: VendorRepository,
     private roleRepository: RoleRepository,
+    private mediaRepository: MediaRepository,
     private userVendorRoleRepository: UserVendorRoleRepository,
     private sequelize: Sequelize,
   ) { }
@@ -24,21 +28,54 @@ export class VendorService {
     // Check if vendor already exists
     const transaction = await this.sequelize.transaction();
     try {
-      const existingVendor = await this.vendorRepository.findByUserId(
-        createVendorDto.user_id,
-      );
+      // const existingVendor = await this.vendorRepository.findByUserId(
+      //   createVendorDto.user_id,
+      // );
 
-      if (existingVendor.length) {
-        throw new Error('User already has a vendor account');
-      }
+      // if (existingVendor.length) {
+      //   throw new Error('User already has a vendor account');
+      // }
+      console.log('createVendorDto', createVendorDto);
+      const vendorData = {
+        //   business_name: createVendorDto.business_name,
+        //   business_phone: createVendorDto.business_phone,
+        //   business_email: createVendorDto.business_email,
+        //   business_description: createVendorDto.business_description,
+        //   business_short_description: createVendorDto.business_short_description,
+        //   business_address: createVendorDto.business_address,
+        //   business_website: createVendorDto.business_website,
+        //   logo_url: createVendorDto.logo_url,
+        //   cover_image_url: createVendorDto.cover_image_url,
+        //   rating_average: createVendorDto.rating_average || 0,
+        //   total_ratings: createVendorDto.total_ratings || 0,
+        //   total_reviews: createVendorDto.total_reviews || 0,
+        //   business_hours: createVendorDto.business_hours || {},
+        //   social_media: createVendorDto.social_media || {},
+        //   business_services: createVendorDto.business_services || [],
+        payment_methods: createVendorDto.payment_methods || [],
+        //   delivery_options: createVendorDto.delivery_options || [],
+        //   status: createVendorDto.status || 'pending',
+        //   is_verified: createVendorDto.is_verified || false,
+        //   tax_id: createVendorDto.tax_id,
+        //   registration_number: createVendorDto.registration_number,
+        //   settings: createVendorDto.settings || {},
+        //   metadata: createVendorDto.metadata || {},
+        //   user_id: createVendorDto.user_id,
+        //   category_id: createVendorDto.category_id,
+        ...createVendorDto,
+      };
+
+      // Remove undefined values
+      Object.keys(vendorData).forEach((key) => {
+        if (vendorData[key] === undefined) {
+          delete vendorData[key];
+        }
+      });
+
+      console.log('Creating vendor with data:', vendorData);
 
       const vendor = await this.vendorRepository.createWithTransaction(
-        {
-          user_id: createVendorDto.user_id,
-          business_name: createVendorDto.business_name,
-          business_phone: createVendorDto.business_phone,
-          category_id: createVendorDto.category_id,
-        },
+        vendorData,
         transaction,
       );
 
@@ -66,6 +103,12 @@ export class VendorService {
       // 5. Return vendor with relationships
       return this.vendorRepository.findById(vendor.id);
     } catch (error) {
+      // console.error('Detailed SQL Error:', {
+      //   message: error.message,
+      //   sql: error.sql,
+      //   parameters: error.parameters,
+      //   original: error.original,
+      // });
       await transaction.rollback();
       throw error;
     }
@@ -87,7 +130,24 @@ export class VendorService {
     return vendors;
   }
 
-  async findOne(id: number): Promise<Vendor> {
+  async addImage(vendorId: number) {
+    try {
+      await this.mediaRepository.createVendorImage(
+        vendorId,
+        'https://example.com/logo.png',
+      );
+    } catch (error) {
+      console.error('Detailed SQL Error:', {
+        message: error.message,
+        sql: error.sql,
+        parameters: error.parameters,
+        original: error.original,
+      });
+      throw error;
+    }
+  }
+
+  async findById(id: number): Promise<Vendor> {
     const vendor = await this.vendorRepository.findOne({
       where: { id },
     });

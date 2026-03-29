@@ -28,6 +28,9 @@ import { Address } from 'src/address/address.model';
 import { Cart } from 'src/cart/models/cart.model';
 import { ProductAttribute } from 'src/attribute/models/product_attribute.model';
 import { Attribute } from 'src/attribute/models/attribute.model';
+import { Rating } from 'src/rating/models/rating.model';
+import { Review } from 'src/review/model/review.model';
+import { Media } from 'src/media/models/media.model';
 
 @Module({
   imports: [
@@ -67,6 +70,9 @@ import { Attribute } from 'src/attribute/models/attribute.model';
         Section,
         Vendor,
         Inventory,
+        Media,
+        Review,
+        Rating,
         Product,
         Order,
         Cart,

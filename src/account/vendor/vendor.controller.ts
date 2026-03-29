@@ -37,10 +37,18 @@ export class VendorController {
     const user_id = req.user.id; // Extract the user ID from the request
     return this.vendorService.findVendorsByUserId(user_id);
   }
+  @Post(':id/images')
+  addImage(
+    @Param('id') id: number,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
+    const user_id = req.user.id;
+    return this.vendorService.addImage(id);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: number): Promise<Vendor> {
-    return this.vendorService.findOne(id);
+    return this.vendorService.findById(id);
   }
 
   @Patch(':id')
