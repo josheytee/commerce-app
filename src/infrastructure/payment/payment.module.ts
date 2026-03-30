@@ -24,9 +24,9 @@ import { forwardRef, Module } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { FlutterwavePaymentProvider } from './providers/flutterwave.provider';
 import { PaymentController } from './payment.controller';
-import { OrderModule } from 'src/modules/vendor/order/order.module';
 import { ConfigModule } from '@nestjs/config';
 import { OrderCallbackHandlerService } from './callbacks/order-callback-handler.service';
+import { OrderModule } from 'src/modules/vendor';
 
 @Module({
   imports: [forwardRef(() => OrderModule)],

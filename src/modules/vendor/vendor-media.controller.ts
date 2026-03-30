@@ -11,8 +11,6 @@ import {
     Req,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
-import { VendorService } from '../vendor.service';
 import { MediaUploadService } from 'src/modules/vendor/media/services/media-upload.service';
 import { MediaType } from 'src/modules/vendor/media/models/media-type.enum';
 import {
@@ -25,6 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
+import { VendorService } from './onboarding/vendor.service';
 
 @ApiBearerAuth()
 @ApiTags('Vendors')

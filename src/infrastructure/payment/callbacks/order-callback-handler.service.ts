@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { OrderService } from 'src/modules/vendor/order/order.service';
 import { CallbackHandler } from '../interfaces/callback-handler.interface';
+import { OrderService } from 'src/modules/vendor/orders/order.service';
 
 @Injectable()
 export class OrderCallbackHandlerService implements CallbackHandler {

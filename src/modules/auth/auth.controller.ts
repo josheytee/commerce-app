@@ -14,7 +14,7 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { UserLoginDto } from './dto/requests';
 import { TokenAuthGuard } from './token-auth.guard';
 import { AuthenticatedUser, AuthenticatedRequest } from './interfaces';
-@ApiTags('Authentication')
+@ApiTags('User Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }

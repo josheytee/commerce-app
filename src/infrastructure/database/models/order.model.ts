@@ -10,7 +10,7 @@ import {
   PrimaryKey,
   AutoIncrement,
 } from 'sequelize-typescript';
-import { OrderItem } from './order-item.model';
+import { OrderItemModel } from './order-item.model';
 import { Customer } from 'src/modules/user/customer/customer.model';
 
 @Table({
@@ -19,7 +19,7 @@ import { Customer } from 'src/modules/user/customer/customer.model';
   paranoid: true,
   tableName: 'orders',
 })
-export class Order extends Model<Order> {
+export class OrderModel extends Model<OrderModel> {
   @PrimaryKey
   @AutoIncrement
   @Column
@@ -41,8 +41,8 @@ export class Order extends Model<Order> {
   @Column
   status: string;
 
-  @HasMany(() => OrderItem)
-  orderItems: OrderItem[];
+  @HasMany(() => OrderItemModel)
+  orderItems: OrderItemModel[];
 
   @CreatedAt
   @Column({ field: 'created_at' })

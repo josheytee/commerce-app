@@ -18,7 +18,7 @@ import { Product } from '../../products/product.model';
   // paranoid: true,
   tableName: 'order_items',
 })
-export class OrderItem extends Model<OrderItem> {
+export class OrderItemModel extends Model<OrderItemModel> {
   @PrimaryKey
   @AutoIncrement
   @Column

@@ -2,8 +2,6 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Inventory } from 'src/modules/vendor/inventory/inventory.model';
-import { OrderItem } from 'src/modules/vendor/order/models/order-item.model';
-import { Order } from 'src/modules/vendor/order/models/order.model';
 
 import { Section } from 'src/modules/vendor/section/section.model';
 import { City } from 'src/modules/user/addresses/city/city.model';
@@ -79,7 +77,7 @@ import { UserVendorRolePermission } from 'src/modules/user/permission/user-vendo
                 Cart,
                 Attribute,
                 ProductAttribute,
-                OrderItem,
+                OrderItemModel,
                 UserStoreRole,
                 UserVendorRole,
                 UserVendorRolePermission,

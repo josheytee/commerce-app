@@ -9,7 +9,7 @@ import { UserVendorRole } from '../../user/user-vendor-role/user-vendor-role.mod
 import { UserVendorRoleModule } from '../../user/user-vendor-role/user-vendor-role.module';
 import { RoleModule } from '../../user/role/role.module';
 import { MediaModule } from 'src/modules/vendor/media/media.module';
-import { VendorController, VendorMediaController } from './controllers';
+import { VendorOnboardingController } from './controllers';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { VendorController, VendorMediaController } from './controllers';
     SequelizeModule.forFeature([Role, Vendor, Permission, UserVendorRole]),
   ],
   providers: [VendorService, VendorRepository],
-  controllers: [VendorController, VendorMediaController],
+  controllers: [VendorOnboardingController],
   exports: [VendorService, VendorRepository],
 })
 export class OnboardingModule { }

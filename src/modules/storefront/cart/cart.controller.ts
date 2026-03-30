@@ -14,7 +14,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Cart } from './models/cart.model';
 import { ApiSuccessResponse } from 'src/api.response';
 
-@ApiTags('Carts')
+@ApiTags('Storefront - Cart')
 @Controller('carts')
 export class CartController {
   constructor(private readonly cartService: CartService) { }

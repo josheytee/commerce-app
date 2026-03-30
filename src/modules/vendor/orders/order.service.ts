@@ -1,19 +1,19 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { OrderItem } from './models/order-item.model';
-import { Order } from './models/order.model';
+
 import { OrderSearchCriteria } from './order-search-criteria.interface';
 import { PaymentService } from 'src/infrastructure/payment/payment.service';
 import { CustomerService } from 'src/modules/user/customer/customer.service';
+import { OrderItemModel, OrderModel } from 'src/infrastructure';
 // import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
 export class OrderService {
   constructor(
-    @InjectModel(Order)
-    private orderModel: typeof Order,
-    @InjectModel(OrderItem)
-    private orderItemModel: typeof OrderItem,
+    @InjectModel(OrderModel)
+    private orderModel: typeof OrderModel,
+    @InjectModel(OrderItemModel)
+    private orderItemModel: typeof OrderItemModel,
     private readonly paymentService: PaymentService,
     private readonly customerService: CustomerService,
   ) { }
@@ -88,7 +88,7 @@ export class OrderService {
   //   // Process payment
   //   const order = await this.orderModel.findByPk(orderId);
   //   if (!order) {
-  //     throw new Error('Order not found');
+  //     throw new Error('OrderModel not found');
   //   }
   //   const paymentResponse = await this.paymentService.processPayment(
   //     orderId,
@@ -97,10 +97,10 @@ export class OrderService {
   //   return paymentResponse;
   // }
 
-  async updateOrderStatus(orderId: number, status: string): Promise<Order> {
+  async updateOrderStatus(orderId: number, status: string): Promise<OrderModel> {
     const order = await this.orderModel.findByPk(orderId);
     if (!order) {
-      throw new Error('Order not found');
+      throw new Error('OrderModel not found');
     }
 
     order.status = status;
@@ -108,27 +108,29 @@ export class OrderService {
     return order;
   }
 
-  async findAll(): Promise<Order[]> {
-    return this.orderModel.findAll({ include: [OrderItem] });
+  async findAll(): Promise<OrderModel[]> {
+    return this.orderModel.findAll({ include: [OrderItemModel] });
   }
 
-  async find(criteria: OrderSearchCriteria): Promise<Order | null> {
+  async find(criteria: OrderSearchCriteria): Promise<OrderModel | null> {
     return this.orderModel.findOne({ where: criteria as any });
   }
 
-  async findOne(id: number): Promise<Order> {
-    const order = await this.orderModel.findByPk(id, { include: [OrderItem] });
+  async findOne(id: number): Promise<OrderModel> {
+    const order = await this.orderModel.findByPk(id, {
+      include: [OrderItemModel],
+    });
     if (!order) {
-      throw new NotFoundException('Order not found');
+      throw new NotFoundException('OrderModel not found');
     }
     return order;
   }
 
   async update(
     id: number,
-    data: Partial<Order>,
-    items: Partial<OrderItem>[],
-  ): Promise<Order> {
+    data: Partial<OrderModel>,
+    items: Partial<OrderItemModel>[],
+  ): Promise<OrderModel> {
     const order = await this.findOne(id);
     await order.update(data);
 

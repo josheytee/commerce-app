@@ -19,7 +19,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 
-@ApiTags('Products')
+@ApiTags('Vendor - Products')
 @Controller('products')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ProductController {

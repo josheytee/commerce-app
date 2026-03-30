@@ -9,10 +9,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { Order } from './models/order.model';
-import { OrderItem } from './models/order-item.model';
+
 import { ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/api.response';
+import { OrderModel, OrderItemModel } from 'src/infrastructure';
 
 @Controller('orders')
 @ApiTags('Orders')
@@ -20,7 +20,7 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) { }
 
   @Post()
-  @ApiSuccessResponse(Order)
+  @ApiSuccessResponse(OrderModel)
   async create(@Body() orderDto: any) {
     const { customer_id, items } = orderDto;
     return this.orderService.create(customer_id, items);
@@ -35,7 +35,7 @@ export class OrderController {
   }
 
   @Post('update-status/:orderId')
-  @ApiSuccessResponse(Order)
+  @ApiSuccessResponse(OrderModel)
   async updateOrderStatus(
     @Param('orderId') orderId: number,
     @Body() updateDto: any,
@@ -45,28 +45,28 @@ export class OrderController {
   }
 
   @Get()
-  @ApiSuccessResponse(Order)
-  findAll(): Promise<Order[]> {
+  @ApiSuccessResponse(OrderModel)
+  findAll(): Promise<OrderModel[]> {
     return this.orderService.findAll();
   }
 
   @Get(':id')
-  @ApiSuccessResponse(Order)
-  findOne(@Param('id') id: number): Promise<Order> {
+  @ApiSuccessResponse(OrderModel)
+  findOne(@Param('id') id: number): Promise<OrderModel> {
     return this.orderService.findOne(id);
   }
 
   @Patch(':id')
-  @ApiSuccessResponse(Order)
+  @ApiSuccessResponse(OrderModel)
   update(
     @Param('id') id: number,
-    @Body() data: { order: Partial<Order>; items: Partial<OrderItem>[] },
-  ): Promise<Order> {
+    @Body() data: { order: Partial<OrderModel>; items: Partial<OrderItemModel>[] },
+  ): Promise<OrderModel> {
     return this.orderService.update(id, data.order, data.items);
   }
 
   @Delete(':id')
-  @ApiSuccessResponse(Order)
+  @ApiSuccessResponse(OrderModel)
   remove(@Param('id') id: number): Promise<void> {
     return this.orderService.remove(id);
   }

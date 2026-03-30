@@ -9,9 +9,9 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { VendorService } from '../vendor.service';
-import { Vendor } from '../vendor.model';
-import { CreateVendorDto } from '../dto';
+import { VendorService } from './onboarding/vendor.service';
+import { Vendor } from './onboarding/vendor.model';
+import { CreateVendorDto } from './onboarding/dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/api.response';
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
@@ -20,20 +20,11 @@ import { AuthenticatedRequest } from 'src/modules/auth/interfaces';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 
 @ApiBearerAuth()
-@ApiTags('Vendors')
+@ApiTags('Vendor')
 @Controller('vendors')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class VendorController {
   constructor(private readonly vendorService: VendorService) { }
-
-  @Post()
-  @ApiSuccessResponse(Vendor)
-  create(
-    @Body() data: CreateVendorDto,
-    @Req() req: AuthenticatedRequest,
-  ): Promise<Vendor> {
-    return this.vendorService.create({ ...data, ...{ user_id: req.user.id } });
-  }
 
   @Get()
   @Permissions('vendor:view')

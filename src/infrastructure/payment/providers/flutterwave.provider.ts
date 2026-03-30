@@ -2,8 +2,6 @@
 import fetch from 'node-fetch';
 import { PaymentProvider } from '../interfaces/payment-provider.interface';
 import { ConfigService } from '@nestjs/config';
-import { OrderService } from 'src/modules/vendor/order/order.service';
-import { Inject } from '@nestjs/common';
 import { CallbackHandler } from '../interfaces/callback-handler.interface';
 import { OrderCallbackHandlerService } from '../callbacks/order-callback-handler.service';
 
