@@ -1,0 +1,65 @@
+'use strict';
+
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('sections', {
+      id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      slug: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      description: {
+        type: Sequelize.STRING,
+      },
+      cover: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      parent_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'sections',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+      },
+      store_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'stores',
+          key: 'id',
+        },
+      },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+        defaultValue: null,
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
+    });
+  },
+
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('sections');
+  },
+};

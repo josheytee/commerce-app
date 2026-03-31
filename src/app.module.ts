@@ -1,47 +1,24 @@
-import { Logger, Module } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AccountModule } from './account/account.module';
-import { StoreModule } from './store/store.module';
-import { DatabaseModule } from './database/database.module';
-import { ProductModule } from './product/product.module';
-import { InventoryModule } from './inventory/inventory.module';
-import { OrderModule } from './order/order.module';
+import { DatabaseModule } from './infrastructure/database/database.module';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { AllExceptionsFilter } from './all-exceptions.filter';
-import { ResponseInterceptor } from './response.interceptor';
-import { SectionModule } from './section/section.module';
+import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
+import { ResponseInterceptor } from './shared/interceptors/response.interceptor';
 import { WinstonModule } from 'nest-winston';
-import { AddressModule } from './address/address.module';
-import { CartModule } from './cart/cart.module';
-import { AttributeModule } from './attribute/attribute.module';
-import { PaymentModule } from './payment/payment.module';
 import { ConfigModule } from '@nestjs/config';
 import { WebhookModule } from './webhook/webhook.module';
-import { CategoryModule } from './category/category.module';
-import { MediaModule } from './media/media.module';
-import { RatingModule } from './rating/rating.module';
-import { ReviewModule } from './review/review.module';
+import { RequestIdMiddleware } from './shared/middleware/request-id-middleware';
+import { AuthModule, StorefrontModule, VendorModule } from './modules';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
     DatabaseModule,
-    AccountModule,
-    CategoryModule,
-    StoreModule,
-    SectionModule,
-    ProductModule,
-    InventoryModule,
-    OrderModule,
+    StorefrontModule,
+    VendorModule,
     WinstonModule,
-    AddressModule,
-    CartModule,
-    AttributeModule,
-    PaymentModule,
     WebhookModule,
-    MediaModule,
-    ReviewModule,
-    RatingModule,
   ],
   controllers: [AppController],
   providers: [
@@ -57,4 +34,8 @@ import { ReviewModule } from './review/review.module';
     AppService,
   ],
 })
-export class AppModule { }
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}
