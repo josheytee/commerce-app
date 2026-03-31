@@ -26,13 +26,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
-
+    let details: string | undefined;
+    console.log('Exception caught by AllExceptionsFilter:', {
+      name: (exception as any)?.name,
+      message: (exception as any)?.message,
+      stack: (exception as any)?.stack,
+      ...(exception instanceof HttpException && {
+        statusCode: exception.getStatus(),
+        response: exception.getResponse(),
+      }),
+    });
     // 🔐 Handle NestJS HTTP Exceptions
     if (exception instanceof HttpException) {
       status = exception.getStatus();
 
       const exceptionResponse = exception.getResponse();
-      console.log('exceptionResponse', exceptionResponse);
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object') {
@@ -57,6 +65,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     else if (exception instanceof DatabaseError) {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = 'Database error occurred';
+      details = exception.message;
     }
 
     // 🧠 Custom App Exception
@@ -80,6 +89,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         path: request.url,
         method: request.method,
         requestId,
+        details,
       },
     };
 

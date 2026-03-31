@@ -8,13 +8,11 @@ import { LocalStrategy } from './local.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { TokenStrategy } from './token.strategy';
 import { UserModule } from '../user/user.module';
-import { VendorModule } from '../vendor/vendor.module';
 import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
     UserModule,
-    VendorModule,
     SessionModule,
     PassportModule.register({ session: false }), // Disable sessions
     JwtModule.register({

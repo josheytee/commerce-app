@@ -5,7 +5,6 @@ import {
     Param,
     UseInterceptors,
     UploadedFile,
-    UploadedFiles,
     BadRequestException,
     UseGuards,
     Req,
@@ -26,7 +25,7 @@ import { VendorService } from './onboarding/vendor.service';
 import { MediaTypeEnum } from 'src/shared';
 
 @ApiBearerAuth()
-@ApiTags('Vendors')
+@ApiTags('Vendor Management')
 @Controller('vendors')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class VendorMediaController {

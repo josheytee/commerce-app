@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as nunjucks from 'nunjucks';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '../user/user/interfaces/user.interface';
+import { User } from '../user/interfaces/user.interface';
 
 export const encoder = {
   encode: (data: string, encoding: BufferEncoding = 'base64') => {

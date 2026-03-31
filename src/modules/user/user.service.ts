@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UserSearchCriteria } from './interfaces/user-search-criteria.interface';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JartException } from 'src/all-exceptions.filter';
+import { JartException } from 'src/shared/filters/all-exceptions.filter';
 import { UserModel } from 'src/infrastructure';
 
 @Injectable()

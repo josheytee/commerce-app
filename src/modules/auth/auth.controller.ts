@@ -11,7 +11,7 @@ import { GetUser } from './decorators/get-user.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
-import { UserLoginDto } from './dto/requests';
+import { RegisterDto, UserLoginDto } from './dto/requests';
 import { TokenAuthGuard } from './token-auth.guard';
 import { AuthenticatedUser, AuthenticatedRequest } from './interfaces';
 @ApiTags('User Authentication')
@@ -30,7 +30,7 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(@Body() body: any) {
+  async register(@Body() body: RegisterDto) {
     if (
       !body.username ||
       !body.password ||

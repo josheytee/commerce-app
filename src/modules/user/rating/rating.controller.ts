@@ -12,7 +12,7 @@ import { CreateRatingDto } from './dto/create-rating.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
 import { AuthenticatedUser } from 'src/modules/auth/interfaces';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
-import { ApiSuccessResponse } from 'src/api.response';
+import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { ApiTags } from '@nestjs/swagger';
 import { RatingModel } from 'src/infrastructure';
 

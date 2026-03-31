@@ -15,7 +15,7 @@ import { TokenAuthGuard } from '../../../modules/auth/token-auth.guard';
 import { AuthenticatedRequest } from '../../../modules/auth/interfaces/authenticated-request.interface';
 import { CreateVendorDto } from '../../vendor/onboarding/dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { ApiSuccessResponse } from 'src/api.response';
+import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 

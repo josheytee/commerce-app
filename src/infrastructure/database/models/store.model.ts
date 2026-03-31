@@ -1,28 +1,27 @@
 import {
-  Table,
-  Column,
-  Model,
-  ForeignKey,
+  AutoIncrement,
   BelongsTo,
+  BelongsToMany,
+  Column,
+  DataType,
+  ForeignKey,
   HasMany,
   PrimaryKey,
-  AutoIncrement,
-  BelongsToMany,
-  DataType,
+  Table,
+  Model,
 } from 'sequelize-typescript';
-import { InventoryModel } from 'src/infrastructure/database/models/inventory.model';
-import { StoreCustomer } from './store-customer.model';
-import { SectionModel } from 'src/infrastructure/database/models/section.model';
-import { AddressModel } from 'src/infrastructure/database/models/address.model';
-import { CustomerModel } from 'src/infrastructure/database/models/customer.model';
-import { UserStoreRoleModel } from './user-store-role.model';
-import { RoleModel } from 'src/infrastructure/database/models/role.model';
+import { AddressModel } from './address.model';
 import { VendorModel } from './vendor.model';
+import { CustomerModel } from './customer.model';
+import { StoreCustomer } from './store-customer.model';
+import { SectionModel } from './section.model';
+import { InventoryModel } from './inventory.model';
+import { RoleModel } from './role.model';
+import { UserStoreRoleModel } from './user-store-role.model';
 
 @Table({
   timestamps: true,
   underscored: true,
-  // paranoid: true,
   tableName: 'stores',
 })
 export class StoreModel extends Model<StoreModel> {
@@ -34,8 +33,44 @@ export class StoreModel extends Model<StoreModel> {
   @Column
   name: string;
 
-  @Column
+  @Column(DataType.TEXT)
   description: string;
+
+  @Column({
+    type: DataType.STRING,
+    unique: true,
+  })
+  slug: string;
+
+  @Column(DataType.STRING)
+  meta_title: string;
+
+  @Column(DataType.TEXT)
+  meta_description: string;
+
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    defaultValue: [],
+  })
+  tags: string[];
+
+  @Column({
+    type: DataType.ENUM('active', 'inactive', 'suspended'),
+    defaultValue: 'inactive',
+  })
+  status: 'active' | 'inactive' | 'suspended';
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+  })
+  is_verified: boolean;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+  })
+  is_featured: boolean;
 
   @ForeignKey(() => AddressModel)
   @Column

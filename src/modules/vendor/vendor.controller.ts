@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { VendorService } from './onboarding/vendor.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { ApiSuccessResponse } from 'src/api.response';
+import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { AuthenticatedRequest } from 'src/modules/auth/interfaces';
@@ -19,7 +19,7 @@ import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 import { VendorModel } from 'src/infrastructure';
 
 @ApiBearerAuth()
-@ApiTags('VendorModel')
+@ApiTags('Vendor Management')
 @Controller('vendors')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class VendorController {

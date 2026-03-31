@@ -16,13 +16,7 @@ import {
   Max,
   MaxLength,
 } from 'class-validator';
-
-export enum VendorStatus {
-  PENDING = 'pending',
-  ACTIVE = 'active',
-  SUSPENDED = 'suspended',
-  INACTIVE = 'inactive',
-}
+import { VendorStatusEnum } from 'src/shared';
 
 export class CreateVendorDto {
   @ApiProperty({
@@ -150,12 +144,12 @@ export class CreateVendorDto {
   delivery_options?: string[];
 
   @ApiPropertyOptional({
-    enum: VendorStatus,
-    example: VendorStatus.PENDING,
+    enum: VendorStatusEnum,
+    example: VendorStatusEnum.PENDING,
   })
-  @IsEnum(VendorStatus)
+  @IsEnum(VendorStatusEnum)
   @IsOptional()
-  status?: VendorStatus;
+  status?: VendorStatusEnum;
 
   @ApiPropertyOptional({ example: false })
   @IsBoolean()

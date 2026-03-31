@@ -23,10 +23,7 @@ export class StoreService {
     try {
       const store = await this.storeRepository.createWithTransaction(
         {
-          vendor_id: createStoreDto.vendor_id,
-          name: createStoreDto.name,
-          description: createStoreDto.description,
-          address_id: createStoreDto.address_id,
+          ...createStoreDto,
         },
         transaction,
       );
@@ -60,10 +57,42 @@ export class StoreService {
     }
   }
 
+  async findAllByVendorId(id: number): Promise<StoreModel[]> {
+    try {
+      // Validate input
+      if (!id || id <= 0) {
+        throw new BadRequestException('Invalid vendor ID');
+      }
+
+      // Direct query through associations
+      const stores = await this.storeRepository.findAllByVendorId(id);
+      console.log(`Found ${stores.length} stores for vendor ID: ${id}`);
+
+      return stores;
+    } catch (error) {
+      console.error(`Error finding stores for vendor ${id}:`, error.message);
+      throw new InternalServerErrorException('Failed to retrieve stores');
+    }
+  }
+
   async findOne(id: number): Promise<StoreModel> {
     const store = await this.storeRepository.findById(id);
     if (!store) {
-      throw new NotFoundException('StoreModel not found');
+      throw new NotFoundException('Store not found');
+    }
+    return store;
+  }
+
+  async findOneByVendorId(
+    vendorId: number,
+    storeId: number,
+  ): Promise<StoreModel> {
+    const store = await this.storeRepository.findOneByVendorId(
+      vendorId,
+      storeId,
+    );
+    if (!store) {
+      throw new NotFoundException('Store not found');
     }
     return store;
   }
@@ -74,13 +103,25 @@ export class StoreService {
       data,
     );
     if (affectedCount === 0) {
-      throw new NotFoundException('StoreModel not found');
+      throw new NotFoundException('Store not found');
     }
     return updatedVendor;
   }
 
-  async remove(id: number): Promise<void> {
-    const store = await this.findOne(id);
+  async updateByVendor(
+    vendorId: number,
+    storeId: number,
+    data: Partial<StoreModel>,
+  ): Promise<StoreModel> {
+    const store = await this.findOneByVendorId(vendorId, storeId);
+
+    await store.update(data);
+
+    return store;
+  }
+
+  async removeByVendorId(vendorId: number, storeId: number): Promise<void> {
+    const store = await this.findOneByVendorId(vendorId, storeId);
     await store.destroy();
   }
 }

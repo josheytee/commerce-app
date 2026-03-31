@@ -6,7 +6,6 @@ import { RoleController } from './role.controller';
 import { RoleService } from './role.service';
 import { PermissionsGuard } from '../permission/permissions.guard';
 import { UserVendorRoleModule } from '../user-vendor-role/user-vendor-role.module';
-import { VendorModule } from 'src/modules/vendor/vendor.module';
 import {
   RoleModel,
   VendorModel,
@@ -16,7 +15,6 @@ import {
 
 @Module({
   imports: [
-    VendorModule,
     UserVendorRoleModule,
     SequelizeModule.forFeature([
       RoleModel,

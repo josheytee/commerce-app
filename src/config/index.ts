@@ -7,3 +7,4 @@ export { default as queueConfig } from './queue.config';
 export { default as storageConfig } from './storage.config';
 export { default as paymentConfig } from './payment.config';
 export { default as notificationConfig } from './notification.config';
+// export { default as winstonLoggerConfig } from './winston-logger.config';

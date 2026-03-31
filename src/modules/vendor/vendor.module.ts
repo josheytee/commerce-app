@@ -13,10 +13,16 @@ import {
   PermissionModel,
   UserVendorRoleModel,
 } from 'src/infrastructure';
+import { StoreSectionModule } from './store-section/store-section.module';
+import { StoreModule } from './store/store.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 
 @Module({
   imports: [
     forwardRef(() => RoleModule),
+    forwardRef(() => StoreSectionModule),
+    forwardRef(() => StoreModule),
+    OnboardingModule,
     MediaModule,
     UserVendorRoleModule,
     SequelizeModule.forFeature([

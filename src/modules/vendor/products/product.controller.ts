@@ -14,13 +14,13 @@ import { ProductModel } from 'src/infrastructure';
 
 import { JwtAuthGuard } from 'src/modules/auth/jwt-auth.guard';
 
-import { ApiSuccessResponse } from 'src/api.response';
+import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { ApiTags } from '@nestjs/swagger';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 
-@ApiTags('VendorModel - Products')
-@Controller('products')
+@ApiTags('Vendor - Products')
+@Controller('vendors/products')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ProductController {
   constructor(private readonly productService: ProductService) { }

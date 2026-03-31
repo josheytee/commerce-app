@@ -36,7 +36,7 @@ export class VendorProductsController {
       **Rate Limit:** 100 requests/minute
     `,
         operationId: 'createVendorProduct',
-        tags: ['VendorModel - Products'],
+        tags: ['Vendor - Products'],
         deprecated: false,
     })
     @ApiBody({

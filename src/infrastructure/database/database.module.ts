@@ -31,6 +31,7 @@ import { UserStoreRoleModel } from 'src/infrastructure/database/models/user-stor
 import { UserVendorRoleModel } from 'src/infrastructure/database/models/user-vendor-role.model';
 import { UserVendorRolePermissionModel } from 'src/infrastructure/database/models/user-vendor-role-permission.model';
 import { OrderItemModel, OrderModel } from './models';
+import { SectionRepository } from './repositories';
 
 @Module({
     imports: [
@@ -85,5 +86,7 @@ import { OrderItemModel, OrderModel } from './models';
             ],
         }),
     ],
+    // providers: [SectionRepository],
+    // exports: [SectionRepository],
 })
 export class DatabaseModule { }

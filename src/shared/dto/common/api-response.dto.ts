@@ -1,60 +1,54 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class PaginationMetaDto {
-    @ApiProperty({ example: 100, description: 'Total number of items' })
-    total: number;
+export class MetaDto {
+    @ApiProperty({ example: 200 })
+    statusCode: number;
 
-    @ApiProperty({ example: 1, description: 'Current page number' })
-    page: number;
+    @ApiProperty({ example: '2026-03-29T12:00:00.000Z' })
+    timestamp: string;
 
-    @ApiProperty({ example: 20, description: 'Items per page' })
-    limit: number;
+    @ApiProperty({ example: '/api/models' })
+    path: string;
 
-    @ApiProperty({ example: 5, description: 'Total number of pages' })
-    totalPages: number;
+    @ApiProperty({ example: 'GET' })
+    method: string;
 
-    @ApiPropertyOptional({ example: true, description: 'Has next page' })
-    hasNextPage?: boolean;
-
-    @ApiPropertyOptional({ example: false, description: 'Has previous page' })
-    hasPrevPage?: boolean;
+    @ApiProperty({ example: 'uuid-request-id', required: false })
+    requestId?: string;
 }
 
 export class ApiResponseDto<T> {
-    @ApiProperty({ example: true, description: 'Request success status' })
+    @ApiProperty({ example: true })
     success: boolean;
 
-    @ApiProperty({
-        example: 'Operation completed successfully',
-        description: 'Human-readable message',
-    })
+    @ApiProperty({ example: 'Fetched successfully' })
     message: string;
 
-    @ApiProperty({ description: 'Response data payload', nullable: true })
-    data: T | null;
+    @ApiProperty({ required: false })
+    data: T;
 
-    @ApiPropertyOptional({
-        description: 'Additional metadata (pagination, filters, etc.)',
-    })
-    meta?: PaginationMetaDto | Record<string, any>;
+    @ApiProperty({ type: MetaDto })
+    meta: MetaDto;
 }
 
-// Usage in controller
-// @Get()
-// async findAll(@Query() pagination: PaginationDto): Promise < ApiResponseDto < PaginatedResult < ProductListDto >>> {
-//     const result = await this._service.findAll(pagination);
+export class PaginatedResponseDto<T> {
+    @ApiProperty()
+    total: number;
 
-//     return {
-//         success: true,
-//         message: 'Products retrieved successfully',
-//         data: result.items,
-//         meta: {
-//             total: result.total,
-//             page: result.page,
-//             limit: result.limit,
-//             totalPages: Math.ceil(result.total / result.limit),
-//             hasNextPage: result.page < Math.ceil(result.total / result.limit),
-//             hasPrevPage: result.page > 1,
-//         },
-//     };
-// }
+    @ApiProperty({ isArray: true })
+    items: T[];
+}
+
+export class ApiErrorResponseDto {
+    @ApiProperty({ example: false })
+    success: boolean;
+
+    @ApiProperty({ example: 'Bad Request' })
+    message: string;
+
+    @ApiProperty({ example: null })
+    data: null;
+
+    @ApiProperty({ type: MetaDto })
+    meta: MetaDto;
+}

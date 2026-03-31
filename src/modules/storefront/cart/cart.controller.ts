@@ -11,7 +11,7 @@ import { CartService } from './cart.service';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiSuccessResponse } from 'src/api.response';
+import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { CartModel } from 'src/infrastructure';
 
 @ApiTags('Storefront - Cart')

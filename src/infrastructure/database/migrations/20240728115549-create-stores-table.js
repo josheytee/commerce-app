@@ -35,6 +35,40 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
+      slug: {
+        type: Sequelize.STRING,
+        unique: true,
+        allowNull: false,
+      },
+
+      meta_title: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+
+      meta_description: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
+
+      tags: {
+        type: Sequelize.ARRAY(Sequelize.STRING),
+        defaultValue: [],
+      },
+
+      status: {
+        type: Sequelize.ENUM('active', 'inactive', 'suspended'),
+        defaultValue: 'inactive',
+      },
+
+      is_verified: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
+      is_featured: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,

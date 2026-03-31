@@ -11,7 +11,7 @@ import {
 import { OrderService } from './order.service';
 
 import { ApiTags } from '@nestjs/swagger';
-import { ApiSuccessResponse } from 'src/api.response';
+import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { OrderModel, OrderItemModel } from 'src/infrastructure';
 
 @Controller('orders')
