@@ -9,33 +9,33 @@ import {
   Param,
 } from '@nestjs/common';
 import { TwoFactorAuthService } from './two-factor-auth.service';
-import { TwoFactorAuth } from './two-factor-auth.model';
+import { TwoFactorAuthModel } from 'src/infrastructure';
 
 @Controller('two-factor-auths')
 export class TwoFactorAuthController {
-  constructor(private readonly twoFactorAuthService: TwoFactorAuthService) {}
+  constructor(private readonly twoFactorAuthService: TwoFactorAuthService) { }
 
   @Get()
-  async findAll(): Promise<TwoFactorAuth[]> {
+  async findAll(): Promise<TwoFactorAuthModel[]> {
     return this.twoFactorAuthService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<TwoFactorAuth> {
+  async findOne(@Param('id') id: number): Promise<TwoFactorAuthModel> {
     return this.twoFactorAuthService.findOne(id);
   }
 
   @Post()
   async create(
-    @Body() twoFactorAuth: Partial<TwoFactorAuth>,
-  ): Promise<TwoFactorAuth> {
+    @Body() twoFactorAuth: Partial<TwoFactorAuthModel>,
+  ): Promise<TwoFactorAuthModel> {
     return this.twoFactorAuthService.create(twoFactorAuth);
   }
 
   @Put(':id')
   async update(
     @Param('id') id: number,
-    @Body() twoFactorAuth: Partial<TwoFactorAuth>,
+    @Body() twoFactorAuth: Partial<TwoFactorAuthModel>,
   ): Promise<[number]> {
     return this.twoFactorAuthService.update(id, twoFactorAuth);
   }

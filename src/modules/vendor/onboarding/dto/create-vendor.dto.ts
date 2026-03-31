@@ -196,7 +196,7 @@ export class CreateVendorDto {
 
   @ApiPropertyOptional({
     example: 2,
-    description: 'Category ID',
+    description: 'CategoryModel ID',
   })
   @IsNumber()
   @IsOptional()

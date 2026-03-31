@@ -7,7 +7,7 @@ import {
     IsUrl,
     Min,
 } from 'class-validator';
-import { MediaType } from '../models/media-type.enum';
+import { MediaTypeEnum } from 'src/shared';
 
 export class CreateMediaDto {
     @IsUrl()
@@ -38,9 +38,9 @@ export class CreateMediaDto {
     @IsString()
     caption?: string;
 
-    @IsEnum(MediaType)
+    @IsEnum(MediaTypeEnum)
     @IsOptional()
-    type: MediaType;
+    type: MediaTypeEnum;
 
     @IsString()
     @IsNotEmpty()

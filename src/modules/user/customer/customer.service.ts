@@ -1,31 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Customer } from './customer.model';
+import { CustomerModel } from 'src/infrastructure';
 
 @Injectable()
 export class CustomerService {
   constructor(
-    @InjectModel(Customer)
-    private customerModel: typeof Customer,
-  ) {}
+    @InjectModel(CustomerModel)
+    private customerModel: typeof CustomerModel,
+  ) { }
 
-  async create(data: Partial<Customer>): Promise<Customer> {
+  async create(data: Partial<CustomerModel>): Promise<CustomerModel> {
     return this.customerModel.create(data);
   }
 
-  async findAll(): Promise<Customer[]> {
+  async findAll(): Promise<CustomerModel[]> {
     return this.customerModel.findAll();
   }
 
-  async findOne(id: number): Promise<Customer> {
+  async findOne(id: number): Promise<CustomerModel> {
     const customer = await this.customerModel.findByPk(id);
     if (!customer) {
-      throw new NotFoundException('Customer not found');
+      throw new NotFoundException('CustomerModel not found');
     }
     return customer;
   }
 
-  async update(id: number, data: Partial<Customer>): Promise<Customer> {
+  async update(id: number, data: Partial<CustomerModel>): Promise<CustomerModel> {
     const [numberOfAffectedRows] = await this.customerModel.update(data, {
       where: { id },
     });

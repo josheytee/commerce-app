@@ -9,9 +9,8 @@ import {
   PrimaryKey,
   AutoIncrement,
 } from 'sequelize-typescript';
-import { Order } from './order.model';
-import { Product } from '../../products/product.model';
-
+import { OrderModel } from './order.model';
+import { ProductModel } from './product.model';
 @Table({
   timestamps: true,
   underscored: true,
@@ -24,19 +23,19 @@ export class OrderItemModel extends Model<OrderItemModel> {
   @Column
   id: number;
 
-  @ForeignKey(() => Order)
+  @ForeignKey(() => OrderModel)
   @Column
   order_id: number;
 
-  @BelongsTo(() => Order)
-  order: Order;
+  @BelongsTo(() => OrderModel)
+  order: OrderModel;
 
-  @ForeignKey(() => Product)
+  @ForeignKey(() => ProductModel)
   @Column
   product_id: number;
 
-  @BelongsTo(() => Product)
-  product: Product;
+  @BelongsTo(() => ProductModel)
+  product: ProductModel;
 
   @Column
   quantity: number;

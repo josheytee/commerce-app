@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { CategoryModel } from 'src/infrastructure';
 import { BaseRepository } from 'src/infrastructure/database/repositories/base.repository';
-import { Category } from './category.model';
 
 @Injectable()
-export class CategoryRepository extends BaseRepository<Category> {
+export class CategoryRepository extends BaseRepository<CategoryModel> {
     constructor(
-        @InjectModel(Category)
-        private categoryModel: typeof Category,
+        @InjectModel(CategoryModel)
+        private categoryModel: typeof CategoryModel,
     ) {
         super(categoryModel);
     }

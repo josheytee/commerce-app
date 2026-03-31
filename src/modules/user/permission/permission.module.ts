@@ -1,19 +1,26 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { RoleService } from '../role/role.service';
-import { Role } from '../role/models/role.model';
-import { Permission } from './permission.model';
-import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
-import { Vendor } from '../../vendor/onboarding/vendor.model';
 import { UserVendorRoleModule } from '../user-vendor-role/user-vendor-role.module';
 import { VendorModule } from 'src/modules/vendor/vendor.module';
 import { VendorController } from 'src/modules/vendor/vendor.controller';
+import {
+  RoleModel,
+  VendorModel,
+  PermissionModel,
+  UserVendorRoleModel,
+} from 'src/infrastructure';
 
 @Module({
   imports: [
     VendorModule,
     UserVendorRoleModule,
-    SequelizeModule.forFeature([Role, Vendor, Permission, UserVendorRole]),
+    SequelizeModule.forFeature([
+      RoleModel,
+      VendorModel,
+      PermissionModel,
+      UserVendorRoleModel,
+    ]),
   ],
   providers: [RoleService],
   controllers: [VendorController],

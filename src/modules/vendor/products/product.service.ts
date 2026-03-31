@@ -1,23 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Product } from './product.model';
 import { CreateProductDto } from './dto/create-product.dto';
-import { ProductAttribute } from 'src/modules/vendor/products/attribute/models/product_attribute.model';
+import { ProductModel } from 'src/infrastructure';
 
 @Injectable()
 export class ProductService {
   constructor(
-    @InjectModel(Product)
-    private productModel: typeof Product,
+    @InjectModel(ProductModel)
+    private productModel: typeof ProductModel,
   ) { }
 
-  async create(data: Partial<Product>): Promise<Product> {
+  async create(data: Partial<ProductModel>): Promise<ProductModel> {
     return this.productModel.create(data);
   }
 
   async createWithAttributes(
     createProductDto: CreateProductDto,
-  ): Promise<Product> {
+  ): Promise<ProductModel> {
     const product = await this.productModel.create({
       name: createProductDto.name,
     });
@@ -33,7 +32,7 @@ export class ProductService {
 
   async searchProductsByAttributes(
     attributes: { attributeId: number; value: string }[],
-  ): Promise<Product[]> {
+  ): Promise<ProductModel[]> {
     const products = await this.productModel.findAll({
       include: [
         {
@@ -49,19 +48,19 @@ export class ProductService {
     return products;
   }
 
-  async findAll(): Promise<Product[]> {
+  async findAll(): Promise<ProductModel[]> {
     return this.productModel.findAll();
   }
 
-  async findOne(id: number): Promise<Product> {
+  async findOne(id: number): Promise<ProductModel> {
     const product = await this.productModel.findByPk(id);
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('ProductModel not found');
     }
     return product;
   }
 
-  async update(id: number, data: Partial<Product>): Promise<Product> {
+  async update(id: number, data: Partial<ProductModel>): Promise<ProductModel> {
     const product = await this.findOne(id);
     return product.update(data);
   }

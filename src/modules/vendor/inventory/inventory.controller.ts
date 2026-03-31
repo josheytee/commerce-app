@@ -8,32 +8,32 @@ import {
   Delete,
 } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
-import { Inventory } from './inventory.model';
+import { InventoryModel } from 'src/infrastructure';
 
 @Controller('inventories')
 export class InventoryController {
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(private readonly inventoryService: InventoryService) { }
 
   @Post()
-  create(@Body() data: Partial<Inventory>): Promise<Inventory> {
+  create(@Body() data: Partial<InventoryModel>): Promise<InventoryModel> {
     return this.inventoryService.create(data);
   }
 
   @Get()
-  findAll(): Promise<Inventory[]> {
+  findAll(): Promise<InventoryModel[]> {
     return this.inventoryService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number): Promise<Inventory> {
+  findOne(@Param('id') id: number): Promise<InventoryModel> {
     return this.inventoryService.findOne(id);
   }
 
   @Patch(':id')
   update(
     @Param('id') id: number,
-    @Body() data: Partial<Inventory>,
-  ): Promise<Inventory> {
+    @Body() data: Partial<InventoryModel>,
+  ): Promise<InventoryModel> {
     return this.inventoryService.update(id, data);
   }
 

@@ -14,8 +14,7 @@ import {
     ValidateIf,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { ReviewType } from '../model/review-type.enum';
-
+import { ReviewTypeEnum } from 'src/shared';
 export class CreateReviewDto {
     @IsString()
     @IsNotEmpty()
@@ -27,9 +26,9 @@ export class CreateReviewDto {
     content: string;
 
     // This is the actual database entity/model name
-    @IsEnum(ReviewType)
+    @IsEnum(ReviewTypeEnum)
     @IsNotEmpty()
-    entity_type: ReviewType;
+    entity_type: ReviewTypeEnum;
 
     @IsInt()
     @IsNotEmpty()

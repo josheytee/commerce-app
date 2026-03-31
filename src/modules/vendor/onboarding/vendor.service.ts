@@ -3,16 +3,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { MediaRepository } from 'src/modules/vendor/media/media.repository';
 import { VendorRepository } from './vendor.repository';
-import { Vendor } from './vendor.model';
+import {
+  VendorModel,
+  MediaModel,
+  UserModel,
+  CategoryModel,
+} from 'src/infrastructure';
 import { Sequelize } from 'sequelize-typescript';
 import { RoleRepository } from '../../user/role/role.repository';
 import { UserVendorRoleRepository } from '../../user/user-vendor-role/user-vendor-role.repository';
 import { CreateVendorDto } from './dto';
-import { MediaRepository } from 'src/modules/vendor/media/media.repository';
-import { Media } from 'src/modules/vendor/media/models/media.model';
-import { User } from '../../user/user/models/user.model';
-import { Category } from 'src/modules/storefront/categories/category.model';
 
 @Injectable()
 export class VendorService {
@@ -24,7 +26,9 @@ export class VendorService {
     private sequelize: Sequelize,
   ) { }
 
-  async create(createVendorDto: Partial<CreateVendorDto>): Promise<Vendor> {
+  async create(
+    createVendorDto: Partial<CreateVendorDto>,
+  ): Promise<VendorModel> {
     // Check if vendor already exists
     const transaction = await this.sequelize.transaction();
     try {
@@ -114,15 +118,15 @@ export class VendorService {
     }
   }
 
-  async getVendor(id: number): Promise<Vendor> {
+  async getVendor(id: number): Promise<VendorModel> {
     const vendor = await this.vendorRepository.findWithFullDetails(id);
     if (!vendor) {
-      throw new NotFoundException('Vendor not found');
+      throw new NotFoundException('VendorModel not found');
     }
     return vendor;
   }
 
-  async findVendorsByUserId(userId: number): Promise<Vendor[]> {
+  async findVendorsByUserId(userId: number): Promise<VendorModel[]> {
     const vendors = await this.vendorRepository.findByUserId(userId);
     if (!vendors) {
       throw new NotFoundException('Vendors not found');
@@ -130,30 +134,30 @@ export class VendorService {
     return vendors;
   }
 
-  async findById(id: number): Promise<Vendor> {
+  async findById(id: number): Promise<VendorModel> {
     const vendor = await this.vendorRepository.findOne({
       where: { id },
       include: [
-        { model: Media, as: 'logo' }, // Single logo
-        { model: User, as: 'user' },
-        { model: Category, as: 'category' },
+        { model: MediaModel, as: 'logo' }, // Single logo
+        { model: UserModel, as: 'user' },
+        { model: CategoryModel, as: 'category' },
       ],
     });
 
     if (!vendor) {
-      throw new NotFoundException('Vendor not found');
+      throw new NotFoundException('VendorModel not found');
     }
 
-    return vendor; // Returns Vendor with vendor.logo (single object)
+    return vendor; // Returns VendorModel with vendor.logo (single object)
   }
 
-  async update(id: number, data: Partial<Vendor>): Promise<Vendor> {
+  async update(id: number, data: Partial<VendorModel>): Promise<VendorModel> {
     const [affectedCount, [updatedVendor]] = await this.vendorRepository.update(
       id,
       data,
     );
     if (affectedCount === 0) {
-      throw new NotFoundException('Vendor not found');
+      throw new NotFoundException('VendorModel not found');
     }
     return updatedVendor;
   }
@@ -161,15 +165,15 @@ export class VendorService {
   async delete(id: number): Promise<void> {
     const affectedCount = await this.vendorRepository.delete(id);
     if (affectedCount === 0) {
-      throw new NotFoundException('Vendor not found');
+      throw new NotFoundException('VendorModel not found');
     }
   }
 
   // Transaction example
   async createVendorWithStores(
-    vendorData: Partial<Vendor>,
+    vendorData: Partial<VendorModel>,
     storesData: any[],
-  ): Promise<Vendor> {
+  ): Promise<VendorModel> {
     const transaction = await this.sequelize.transaction();
 
     try {
@@ -192,7 +196,7 @@ export class VendorService {
 
   // async generateApiKey(vendorId: number): Promise<string> {
   //   const apiKey = crypto.randomBytes(32).toString('hex');
-  //   await Vendor.update({ api_key: apiKey }, { where: { id: vendorId } });
+  //   await VendorModel.update({ api_key: apiKey }, { where: { id: vendorId } });
   //   return apiKey;
   // }
 
@@ -207,7 +211,7 @@ export class VendorService {
     });
 
     if (!vendor) {
-      throw new NotFoundException('Vendor not found');
+      throw new NotFoundException('VendorModel not found');
     }
 
     return {

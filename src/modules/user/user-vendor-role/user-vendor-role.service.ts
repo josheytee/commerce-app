@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { UserVendorRole } from './user-vendor-role.model';
-import { Permission } from '../permission/permission.model';
-import { UserVendorRolePermission } from '../permission/user-vendor-role-permission.model';
 import { CreateUserVendorRoleDto } from './dto';
 import { UserVendorRoleRepository } from './user-vendor-role.repository';
+import { PermissionModel } from 'src/infrastructure';
 
 @Injectable()
 export class UserVendorRoleService {
@@ -17,11 +14,11 @@ export class UserVendorRoleService {
     return this.userVendorRoleRepository.assignRole(createUserVendorRoleDto);
   }
 
-  async getPermissionsForUser(userId: number): Promise<Permission[]> {
+  async getPermissionsForUser(userId: number): Promise<PermissionModel[]> {
     return this.userVendorRoleRepository.getPermissionsForUser(userId);
   }
 
-  // async createPermission(permissionName: string): Promise<Permission> {
+  // async createPermission(permissionName: string): Promise<PermissionModel> {
   //   const permission = await this.permissionModel.create({
   //     name: permissionName,
   //   });
@@ -31,7 +28,7 @@ export class UserVendorRoleService {
   // async assignPermissionToUserVendorRole(
   //   userVendorRoleId: number,
   //   permissionId: number,
-  // ): Promise<UserVendorRolePermission> {
+  // ): Promise<UserVendorRolePermissionModel> {
   //   const userVendorRolePermission =
   //     await this.userVendorRolePermissionModel.create({
   //       user_vendor_role_id: userVendorRoleId,

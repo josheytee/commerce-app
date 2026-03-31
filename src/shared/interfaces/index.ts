@@ -21,8 +21,8 @@ export interface IApiResponse<T> {
 }
 
 export interface IUser {
-    id: string;
+    id: number;
     email: string;
     username: string;
-    role: string;
+    // role: string;
 }

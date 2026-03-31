@@ -2,17 +2,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, Transaction, WhereOptions } from 'sequelize';
-import { Address, AddressableType, AddressType } from './address.model';
-import { City } from './city/city.model';
-import { State } from './state/state.model';
-import { Country } from './country/country.model';
 import { BaseRepository } from 'src/infrastructure/database/repositories/base.repository';
+import {
+    CityModel,
+    CountryModel,
+    StateModel,
+    AddressModel,
+} from 'src/infrastructure';
+import { AddressableTypeEnum, AddressTypeEnum } from 'src/shared';
 
 @Injectable()
-export class AddressRepository extends BaseRepository<Address> {
+export class AddressRepository extends BaseRepository<AddressModel> {
     constructor(
-        @InjectModel(Address)
-        private addressModel: typeof Address,
+        @InjectModel(AddressModel)
+        private addressModel: typeof AddressModel,
     ) {
         super(addressModel);
     }
@@ -20,22 +23,22 @@ export class AddressRepository extends BaseRepository<Address> {
     // ==================== CREATE OPERATIONS ====================
 
     async createAddress(
-        data: Partial<Address>,
+        data: Partial<AddressModel>,
         transaction?: Transaction,
-    ): Promise<Address> {
+    ): Promise<AddressModel> {
         return this.addressModel.create(data, { transaction });
     }
 
     async createCustomerAddress(
         customerId: number,
-        addressData: Partial<Address>,
+        addressData: Partial<AddressModel>,
         transaction?: Transaction,
-    ): Promise<Address> {
+    ): Promise<AddressModel> {
         // If this is set as default, unset any existing default
         if (addressData.is_default) {
             await this.unsetDefaultAddress(
                 customerId,
-                AddressableType.CUSTOMER,
+                AddressableTypeEnum.CUSTOMER,
                 transaction,
             );
         }
@@ -44,7 +47,7 @@ export class AddressRepository extends BaseRepository<Address> {
             {
                 ...addressData,
                 addressable_id: customerId,
-                addressable_type: AddressableType.CUSTOMER,
+                addressable_type: AddressableTypeEnum.CUSTOMER,
             },
             { transaction },
         );
@@ -52,9 +55,9 @@ export class AddressRepository extends BaseRepository<Address> {
 
     async createStoreAddress(
         storeId: number,
-        addressData: Partial<Address>,
+        addressData: Partial<AddressModel>,
         transaction?: Transaction,
-    ): Promise<Address> {
+    ): Promise<AddressModel> {
         // If this is set as primary store, unset any existing primary
         if (addressData.is_primary_store) {
             await this.unsetPrimaryStoreAddress(storeId, transaction);
@@ -64,7 +67,7 @@ export class AddressRepository extends BaseRepository<Address> {
         if (addressData.is_default) {
             await this.unsetDefaultAddress(
                 storeId,
-                AddressableType.STORE,
+                AddressableTypeEnum.STORE,
                 transaction,
             );
         }
@@ -73,7 +76,7 @@ export class AddressRepository extends BaseRepository<Address> {
             {
                 ...addressData,
                 addressable_id: storeId,
-                addressable_type: AddressableType.STORE,
+                addressable_type: AddressableTypeEnum.STORE,
             },
             { transaction },
         );
@@ -81,7 +84,10 @@ export class AddressRepository extends BaseRepository<Address> {
 
     // ==================== READ OPERATIONS ====================
 
-    async findByIdScopped(id: number, scope?: string[]): Promise<Address | null> {
+    async findByIdScopped(
+        id: number,
+        scope?: string[],
+    ): Promise<AddressModel | null> {
         let query: any = this.addressModel;
 
         if (scope?.length) {
@@ -91,10 +97,10 @@ export class AddressRepository extends BaseRepository<Address> {
         return query.findByPk(id);
     }
 
-    async findByIdOrFail(id: number, scope?: string[]): Promise<Address> {
+    async findByIdOrFail(id: number, scope?: string[]): Promise<AddressModel> {
         const address = await this.findByIdScopped(id, scope);
         if (!address) {
-            throw new NotFoundException(`Address with ID ${id} not found`);
+            throw new NotFoundException(`AddressModel with ID ${id} not found`);
         }
         return address;
     }
@@ -102,16 +108,16 @@ export class AddressRepository extends BaseRepository<Address> {
     async findAllByCustomer(
         customerId: number,
         options?: {
-            addressType?: AddressType;
+            addressType?: AddressTypeEnum;
             isDefault?: boolean;
             includeLocation?: boolean;
             limit?: number;
             offset?: number;
         },
-    ): Promise<Address[]> {
+    ): Promise<AddressModel[]> {
         const where: WhereOptions = {
             addressable_id: customerId,
-            addressable_type: AddressableType.CUSTOMER,
+            addressable_type: AddressableTypeEnum.CUSTOMER,
         };
 
         if (options?.addressType) {
@@ -137,9 +143,9 @@ export class AddressRepository extends BaseRepository<Address> {
 
         if (options?.includeLocation !== false) {
             query.include = [
-                { model: City, as: 'city' },
-                { model: State, as: 'state' },
-                { model: Country, as: 'country' },
+                { model: CityModel, as: 'city' },
+                { model: StateModel, as: 'state' },
+                { model: CountryModel, as: 'country' },
             ];
         }
 
@@ -149,15 +155,15 @@ export class AddressRepository extends BaseRepository<Address> {
     async findAllByStore(
         storeId: number,
         options?: {
-            addressType?: AddressType;
+            addressType?: AddressTypeEnum;
             isDefault?: boolean;
             isPrimaryStore?: boolean;
             includeLocation?: boolean;
         },
-    ): Promise<Address[]> {
+    ): Promise<AddressModel[]> {
         const where: WhereOptions = {
             addressable_id: storeId,
-            addressable_type: AddressableType.STORE,
+            addressable_type: AddressableTypeEnum.STORE,
         };
 
         if (options?.addressType) {
@@ -183,9 +189,9 @@ export class AddressRepository extends BaseRepository<Address> {
 
         if (options?.includeLocation !== false) {
             query.include = [
-                { model: City, as: 'city' },
-                { model: State, as: 'state' },
-                { model: Country, as: 'country' },
+                { model: CityModel, as: 'city' },
+                { model: StateModel, as: 'state' },
+                { model: CountryModel, as: 'country' },
             ];
         }
 
@@ -194,32 +200,32 @@ export class AddressRepository extends BaseRepository<Address> {
 
     async findCustomerDefaultAddress(
         customerId: number,
-    ): Promise<Address | null> {
+    ): Promise<AddressModel | null> {
         return this.addressModel.findOne({
             where: {
                 addressable_id: customerId,
-                addressable_type: AddressableType.CUSTOMER,
+                addressable_type: AddressableTypeEnum.CUSTOMER,
                 is_default: true,
             },
             include: [
-                { model: City, as: 'city' },
-                { model: State, as: 'state' },
-                { model: Country, as: 'country' },
+                { model: CityModel, as: 'city' },
+                { model: StateModel, as: 'state' },
+                { model: CountryModel, as: 'country' },
             ],
         });
     }
 
-    async findStorePrimaryAddress(storeId: number): Promise<Address | null> {
+    async findStorePrimaryAddress(storeId: number): Promise<AddressModel | null> {
         return this.addressModel.findOne({
             where: {
                 addressable_id: storeId,
-                addressable_type: AddressableType.STORE,
+                addressable_type: AddressableTypeEnum.STORE,
                 is_primary_store: true,
             },
             include: [
-                { model: City, as: 'city' },
-                { model: State, as: 'state' },
-                { model: Country, as: 'country' },
+                { model: CityModel, as: 'city' },
+                { model: StateModel, as: 'state' },
+                { model: CountryModel, as: 'country' },
             ],
         });
     }
@@ -228,8 +234,8 @@ export class AddressRepository extends BaseRepository<Address> {
         latitude: number,
         longitude: number,
         radiusInKm: number = 10,
-        entityType?: AddressableType,
-    ): Promise<Address[]> {
+        entityType?: AddressableTypeEnum,
+    ): Promise<AddressModel[]> {
         // Haversine formula for distance calculation
         const query = `
       SELECT *, 
@@ -263,9 +269,9 @@ export class AddressRepository extends BaseRepository<Address> {
 
     async updateAddress(
         id: number,
-        data: Partial<Address>,
+        data: Partial<AddressModel>,
         transaction?: Transaction,
-    ): Promise<Address> {
+    ): Promise<AddressModel> {
         const address = await this.findByIdOrFail(id);
 
         // Handle default address logic
@@ -286,7 +292,10 @@ export class AddressRepository extends BaseRepository<Address> {
         return address.reload({ transaction });
     }
 
-    async setAsDefault(id: number, transaction?: Transaction): Promise<Address> {
+    async setAsDefault(
+        id: number,
+        transaction?: Transaction,
+    ): Promise<AddressModel> {
         const address = await this.findByIdOrFail(id);
 
         await this.unsetDefaultAddress(
@@ -304,10 +313,10 @@ export class AddressRepository extends BaseRepository<Address> {
     async setAsPrimaryStore(
         id: number,
         transaction?: Transaction,
-    ): Promise<Address> {
+    ): Promise<AddressModel> {
         const address = await this.findByIdOrFail(id);
 
-        if (address.addressable_type !== AddressableType.STORE) {
+        if (address.addressable_type !== AddressableTypeEnum.STORE) {
             throw new Error('Only store addresses can be set as primary');
         }
 
@@ -319,7 +328,10 @@ export class AddressRepository extends BaseRepository<Address> {
         return address;
     }
 
-    async verifyAddress(id: number, transaction?: Transaction): Promise<Address> {
+    async verifyAddress(
+        id: number,
+        transaction?: Transaction,
+    ): Promise<AddressModel> {
         const address = await this.findByIdOrFail(id);
         address.is_verified = true;
         return address.save({ transaction });
@@ -339,7 +351,7 @@ export class AddressRepository extends BaseRepository<Address> {
         return this.addressModel.destroy({
             where: {
                 addressable_id: customerId,
-                addressable_type: AddressableType.CUSTOMER,
+                addressable_type: AddressableTypeEnum.CUSTOMER,
             },
             transaction,
         });
@@ -348,7 +360,7 @@ export class AddressRepository extends BaseRepository<Address> {
     async softDeleteAddress(
         id: number,
         transaction?: Transaction,
-    ): Promise<Address> {
+    ): Promise<AddressModel> {
         const address = await this.findByIdOrFail(id);
         await address.destroy({ transaction }); // Will soft delete due to paranoid: true
         return address;
@@ -357,13 +369,13 @@ export class AddressRepository extends BaseRepository<Address> {
     async restoreAddress(
         id: number,
         transaction?: Transaction,
-    ): Promise<Address> {
+    ): Promise<AddressModel> {
         const address = await this.addressModel.findByPk(id, {
             paranoid: false, // Include soft-deleted
         });
 
         if (!address) {
-            throw new NotFoundException(`Address with ID ${id} not found`);
+            throw new NotFoundException(`AddressModel with ID ${id} not found`);
         }
 
         await address.restore({ transaction });
@@ -374,7 +386,7 @@ export class AddressRepository extends BaseRepository<Address> {
 
     private async unsetDefaultAddress(
         entityId: number,
-        entityType: AddressableType,
+        entityType: AddressableTypeEnum,
         transaction?: Transaction,
     ): Promise<void> {
         await this.addressModel.update(
@@ -399,7 +411,7 @@ export class AddressRepository extends BaseRepository<Address> {
             {
                 where: {
                     addressable_id: storeId,
-                    addressable_type: AddressableType.STORE,
+                    addressable_type: AddressableTypeEnum.STORE,
                     is_primary_store: true,
                 },
                 transaction,
@@ -411,15 +423,15 @@ export class AddressRepository extends BaseRepository<Address> {
         return this.addressModel.count({
             where: {
                 addressable_id: customerId,
-                addressable_type: AddressableType.CUSTOMER,
+                addressable_type: AddressableTypeEnum.CUSTOMER,
             },
         });
     }
 
     async findDuplicates(
-        addressData: Partial<Address>,
+        addressData: Partial<AddressModel>,
         excludeId?: number,
-    ): Promise<Address[]> {
+    ): Promise<AddressModel[]> {
         const where: WhereOptions = {
             address_line1: addressData.address_line1,
             city_id: addressData.city_id,

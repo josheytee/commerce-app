@@ -2,22 +2,22 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseRepository } from 'src/infrastructure/database/repositories/base.repository';
 
-import { Media } from './models/media.model';
 import { CreateMediaDto } from './dto';
-import { MediaType } from './models/media-type.enum';
+import { MediaModel } from 'src/infrastructure';
+import { MediaTypeEnum } from 'src/shared';
 
 @Injectable()
-export class MediaRepository extends BaseRepository<Media> {
+export class MediaRepository extends BaseRepository<MediaModel> {
     constructor(
-        @InjectModel(Media)
-        private mediaModel: typeof Media,
+        @InjectModel(MediaModel)
+        private mediaModel: typeof MediaModel,
     ) {
         super(mediaModel);
     }
     async create(
         createMediaDto: CreateMediaDto,
         userId?: number,
-    ): Promise<Media> {
+    ): Promise<MediaModel> {
         const payload = {
             ...createMediaDto,
             uploaded_by: userId,
@@ -29,7 +29,7 @@ export class MediaRepository extends BaseRepository<Media> {
     async createMultiple(
         createMediaDtos: CreateMediaDto[],
         userId?: number,
-    ): Promise<Media[]> {
+    ): Promise<MediaModel[]> {
         const medias = createMediaDtos.map((dto) => {
             return {
                 ...dto,
@@ -38,24 +38,27 @@ export class MediaRepository extends BaseRepository<Media> {
         });
         return await this.bulkCreate(medias);
     }
-    async createVendorImage(vendorId: number, imageUrl: string): Promise<Media> {
+    async createVendorImage(
+        vendorId: number,
+        imageUrl: string,
+    ): Promise<MediaModel> {
         return this.create({
             entity_id: vendorId,
             url: imageUrl,
             entity_type: 'vendor',
             is_primary: true,
-            alt_text: 'Vendor Logo',
-            type: MediaType.VENDOR_LOGO,
+            alt_text: 'VendorModel Logo',
+            type: MediaTypeEnum.VENDOR_LOGO,
         });
     }
 
     // async findAll(options?: {
     //     entity_type?: string;
     //     entity_id?: number;
-    //     type?: MediaType;
+    //     type?: MediaTypeEnum;
     //     is_primary?: boolean;
-    // }): Promise<Media[]> {
-    //     const where: FindOptionsWhere<Media> = {};
+    // }): Promise<MediaModel[]> {
+    //     const where: FindOptionsWhere<MediaModel> = {};
 
     //     if (options?.entity_type) where.entity_type = options.entity_type;
     //     if (options?.entity_id) where.entity_id = options.entity_id;
@@ -94,13 +97,16 @@ export class MediaRepository extends BaseRepository<Media> {
     async getPrimary(
         entity_type: string,
         entity_id: number,
-    ): Promise<Media | null> {
+    ): Promise<MediaModel | null> {
         return await this.findOne({
             where: { entity_type, entity_id, is_primary: true },
         });
     }
 
-    async getGallery(entity_type: string, entity_id: number): Promise<Media[]> {
+    async getGallery(
+        entity_type: string,
+        entity_id: number,
+    ): Promise<MediaModel[]> {
         return await this.findAll({
             where: { entity_type, entity_id, is_primary: false },
             // order: { id: 'ASC' },

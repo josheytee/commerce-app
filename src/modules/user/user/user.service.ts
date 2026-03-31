@@ -1,27 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { User } from './models/user.model';
 import { UserSearchCriteria } from './interfaces/user-search-criteria.interface';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JartException } from 'src/all-exceptions.filter';
+import { UserModel } from 'src/infrastructure';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(User)
-    private readonly userModel: typeof User,
+    @InjectModel(UserModel)
+    private readonly userModel: typeof UserModel,
   ) { }
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<UserModel[]> {
     return this.userModel.findAll();
   }
 
-  async findOne(criteria: UserSearchCriteria): Promise<User | null> {
+  async findOne(criteria: UserSearchCriteria): Promise<UserModel | null> {
     return this.userModel.findOne({ where: criteria as any });
   }
 
-  async create(userPayload: Partial<CreateUserDto>): Promise<User> {
+  async create(userPayload: Partial<CreateUserDto>): Promise<UserModel> {
     const user = { ...userPayload, password_hash: null };
 
     const found = await this.findOne({ email: userPayload.email });
@@ -41,7 +41,7 @@ export class UserService {
     return newUser;
   }
 
-  async update(id: number, updateData: Partial<User>): Promise<User | null> {
+  async update(id: number, updateData: Partial<UserModel>): Promise<UserModel | null> {
     const [numberOfAffectedRows] = await this.userModel.update(updateData, {
       where: { id },
     });

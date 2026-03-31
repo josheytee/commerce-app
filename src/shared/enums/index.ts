@@ -37,14 +37,6 @@ export enum PermissionEnum {
     USER_MANAGE = 'user:manage',
 }
 
-export enum AddressTypeEnum {
-    SHIPPING = 'shipping',
-    BILLING = 'billing',
-    BOTH = 'both',
-    PHYSICAL = 'physical',
-    POSTAL = 'postal',
-}
-
 export enum MediaTypeEnum {
     VENDOR_LOGO = 'vendor_logo',
     VENDOR_COVER = 'vendor_cover',
@@ -56,6 +48,13 @@ export enum MediaTypeEnum {
     SECTION_IMAGE = 'section_image',
     CATEGORY_IMAGE = 'category_image',
     REVIEW_IMAGE = 'review_image',
+}
+
+export enum ReviewTypeEnum {
+    VENDOR = 'vendor',
+    PRODUCT = 'product',
+    STORE = 'store',
+    SERVICE = 'service',
 }
 
 export enum BusinessTypeEnum {
@@ -82,4 +81,19 @@ export enum PaymentStatusEnum {
     FAILED = 'failed',
     REFUNDED = 'refunded',
     PARTIALLY_REFUNDED = 'partially_refunded',
+}
+
+export enum AddressableTypeEnum {
+    CUSTOMER = 'customer',
+    STORE = 'store',
+}
+
+export enum AddressTypeEnum {
+    SHIPPING = 'shipping',
+    BILLING = 'billing',
+    BOTH = 'both',
+    PHYSICAL = 'physical',
+    POSTAL = 'postal',
+    WAREHOUSE = 'warehouse',
+    RETURNS = 'returns',
 }

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { State } from './state.model';
+import { StateModel } from 'src/infrastructure';
 
 @Injectable()
 export class StateService {
-  constructor(@InjectModel(State) private stateModel: typeof State) {}
+  constructor(@InjectModel(StateModel) private stateModel: typeof StateModel) { }
 
   async create(data: { name: string; country_id: number }) {
     return this.stateModel.create(data);

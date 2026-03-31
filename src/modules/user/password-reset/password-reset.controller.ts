@@ -9,33 +9,33 @@ import {
   Param,
 } from '@nestjs/common';
 import { PasswordResetService } from './password-reset.service';
-import { PasswordReset } from './password-reset.model';
+import { PasswordResetModel } from 'src/infrastructure';
 
 @Controller('password-resets')
 export class PasswordResetController {
-  constructor(private readonly passwordResetService: PasswordResetService) {}
+  constructor(private readonly passwordResetService: PasswordResetService) { }
 
   @Get()
-  async findAll(): Promise<PasswordReset[]> {
+  async findAll(): Promise<PasswordResetModel[]> {
     return this.passwordResetService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<PasswordReset> {
+  async findOne(@Param('id') id: number): Promise<PasswordResetModel> {
     return this.passwordResetService.findOne(id);
   }
 
   @Post()
   async create(
-    @Body() passwordReset: Partial<PasswordReset>,
-  ): Promise<PasswordReset> {
+    @Body() passwordReset: Partial<PasswordResetModel>,
+  ): Promise<PasswordResetModel> {
     return this.passwordResetService.create(passwordReset);
   }
 
   @Put(':id')
   async update(
     @Param('id') id: number,
-    @Body() passwordReset: Partial<PasswordReset>,
+    @Body() passwordReset: Partial<PasswordResetModel>,
   ): Promise<[number]> {
     return this.passwordResetService.update(id, passwordReset);
   }

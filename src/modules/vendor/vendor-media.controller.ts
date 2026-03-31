@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { MediaUploadService } from 'src/modules/vendor/media/services/media-upload.service';
-import { MediaType } from 'src/modules/vendor/media/models/media-type.enum';
 import {
     ApiBearerAuth,
     ApiTags,
@@ -24,6 +23,7 @@ import {
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { VendorService } from './onboarding/vendor.service';
+import { MediaTypeEnum } from 'src/shared';
 
 @ApiBearerAuth()
 @ApiTags('Vendors')
@@ -37,7 +37,7 @@ export class VendorMediaController {
 
     @Post(':id/logo')
     @ApiOperation({ summary: 'Upload vendor logo' })
-    @ApiParam({ name: 'id', description: 'Vendor ID', type: 'number' })
+    @ApiParam({ name: 'id', description: 'VendorModel ID', type: 'number' })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -63,14 +63,14 @@ export class VendorMediaController {
 
         const vendor = await this.vendorService.findById(+id);
         if (!vendor) {
-            throw new BadRequestException('Vendor not found');
+            throw new BadRequestException('VendorModel not found');
         }
 
         const media = await this.mediaUploadService.uploadAndSave(
             file,
             'vendor',
             +id,
-            MediaType.VENDOR_LOGO,
+            MediaTypeEnum.VENDOR_LOGO,
             req.user.id,
         );
 
@@ -79,7 +79,7 @@ export class VendorMediaController {
 
     @Post(':id/cover')
     @ApiOperation({ summary: 'Upload vendor cover image' })
-    @ApiParam({ name: 'id', description: 'Vendor ID', type: 'number' })
+    @ApiParam({ name: 'id', description: 'VendorModel ID', type: 'number' })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -107,7 +107,7 @@ export class VendorMediaController {
             file,
             'vendor',
             +id,
-            MediaType.VENDOR_COVER,
+            MediaTypeEnum.VENDOR_COVER,
             req.user.id,
         );
 
@@ -118,7 +118,7 @@ export class VendorMediaController {
 
     // @Post(':id/gallery')
     // @ApiOperation({ summary: 'Upload multiple gallery images' })
-    // @ApiParam({ name: 'id', description: 'Vendor ID', type: 'number' })
+    // @ApiParam({ name: 'id', description: 'VendorModel ID', type: 'number' })
     // @ApiConsumes('multipart/form-data')
     // @ApiBody({
     //     schema: {
@@ -150,7 +150,7 @@ export class VendorMediaController {
     //             file,
     //             'vendor',
     //             +id,
-    //             MediaType.VENDOR_GALLERY,
+    //             MediaTypeEnum.VENDOR_GALLERY,
     //             req.user.id,
     //         ),
     //     );

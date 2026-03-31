@@ -7,7 +7,7 @@ import {
     Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ReviewType } from '../model/review-type.enum';
+import { ReviewTypeEnum } from 'src/shared';
 
 export class ReviewQueryDto {
     @IsOptional()
@@ -27,8 +27,8 @@ export class ReviewQueryDto {
     user_id?: number;
 
     @IsOptional()
-    @IsEnum(ReviewType)
-    type?: ReviewType;
+    @IsEnum(ReviewTypeEnum)
+    type?: ReviewTypeEnum;
 
     @IsOptional()
     @Type(() => Boolean)

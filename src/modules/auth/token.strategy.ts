@@ -48,7 +48,7 @@ export class CustomTokenStrategy extends Strategy {
         `✅ Authentication successful for user: ${user.id || user.username}`,
       );
 
-      // Store user in request object
+      // StoreModel user in request object
       (req as any).user = user;
 
       // Call success with the user object

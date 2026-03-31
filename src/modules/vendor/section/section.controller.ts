@@ -9,12 +9,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SectionService } from './section.service';
-import { Section } from './section.model';
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/api.response';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
+import { SectionModel } from 'src/infrastructure';
 
 @ApiTags('Sections')
 @Controller('sections')
@@ -24,34 +24,34 @@ export class SectionController {
 
   @Post()
   @Permissions('section:create')
-  @ApiSuccessResponse(Section)
-  create(@Body() data: Partial<Section>): Promise<Section> {
+  @ApiSuccessResponse(SectionModel)
+  create(@Body() data: Partial<SectionModel>): Promise<SectionModel> {
     return this.sectionService.create(data);
   }
 
   @Get()
-  @ApiSuccessResponse(Section)
-  findAll(): Promise<Section[]> {
+  @ApiSuccessResponse(SectionModel)
+  findAll(): Promise<SectionModel[]> {
     return this.sectionService.findAll();
   }
 
   @Get(':id')
-  @ApiSuccessResponse(Section)
-  findOne(@Param('id') id: number): Promise<Section> {
+  @ApiSuccessResponse(SectionModel)
+  findOne(@Param('id') id: number): Promise<SectionModel> {
     return this.sectionService.findOne(id);
   }
 
   @Patch(':id')
-  @ApiSuccessResponse(Section)
+  @ApiSuccessResponse(SectionModel)
   update(
     @Param('id') id: number,
-    @Body() data: Partial<Section>,
-  ): Promise<Section> {
+    @Body() data: Partial<SectionModel>,
+  ): Promise<SectionModel> {
     return this.sectionService.update(id, data);
   }
 
   @Delete(':id')
-  @ApiSuccessResponse(Section)
+  @ApiSuccessResponse(SectionModel)
   remove(@Param('id') id: number): Promise<void> {
     return this.sectionService.remove(id);
   }

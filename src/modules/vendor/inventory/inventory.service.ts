@@ -1,31 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Inventory } from './inventory.model';
+import { InventoryModel } from 'src/infrastructure';
 
 @Injectable()
 export class InventoryService {
   constructor(
-    @InjectModel(Inventory)
-    private inventoryModel: typeof Inventory,
-  ) {}
+    @InjectModel(InventoryModel)
+    private inventoryModel: typeof InventoryModel,
+  ) { }
 
-  async create(data: Partial<Inventory>): Promise<Inventory> {
+  async create(data: Partial<InventoryModel>): Promise<InventoryModel> {
     return this.inventoryModel.create(data);
   }
 
-  async findAll(): Promise<Inventory[]> {
+  async findAll(): Promise<InventoryModel[]> {
     return this.inventoryModel.findAll();
   }
 
-  async findOne(id: number): Promise<Inventory> {
+  async findOne(id: number): Promise<InventoryModel> {
     const inventory = await this.inventoryModel.findByPk(id);
     if (!inventory) {
-      throw new NotFoundException('Inventory not found');
+      throw new NotFoundException('InventoryModel not found');
     }
     return inventory;
   }
 
-  async update(id: number, data: Partial<Inventory>): Promise<Inventory> {
+  async update(id: number, data: Partial<InventoryModel>): Promise<InventoryModel> {
     const inventory = await this.findOne(id);
     return inventory.update(data);
   }

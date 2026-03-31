@@ -1,5 +1,4 @@
 import { StoreRepository } from './store.repository';
-import { Store } from './models/store.model';
 import { CreateStoreDto } from './dto';
 import { Sequelize } from 'sequelize-typescript';
 import {
@@ -8,6 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { StoreModel } from 'src/infrastructure';
 // import { VendorRepository } from '../onboarding/vendor.repository';
 @Injectable()
 export class StoreService {
@@ -17,7 +17,7 @@ export class StoreService {
     private sequelize: Sequelize,
   ) { }
 
-  async create(createStoreDto: Partial<CreateStoreDto>): Promise<Store> {
+  async create(createStoreDto: Partial<CreateStoreDto>): Promise<StoreModel> {
     // Check if vendor already exists
     const transaction = await this.sequelize.transaction();
     try {
@@ -42,7 +42,7 @@ export class StoreService {
     }
   }
 
-  async findAllByUserId(id: number): Promise<Store[]> {
+  async findAllByUserId(id: number): Promise<StoreModel[]> {
     try {
       // Validate input
       if (!id || id <= 0) {
@@ -60,21 +60,21 @@ export class StoreService {
     }
   }
 
-  async findOne(id: number): Promise<Store> {
+  async findOne(id: number): Promise<StoreModel> {
     const store = await this.storeRepository.findById(id);
     if (!store) {
-      throw new NotFoundException('Store not found');
+      throw new NotFoundException('StoreModel not found');
     }
     return store;
   }
 
-  async update(id: number, data: Partial<Store>): Promise<Store> {
+  async update(id: number, data: Partial<StoreModel>): Promise<StoreModel> {
     const [affectedCount, [updatedVendor]] = await this.storeRepository.update(
       id,
       data,
     );
     if (affectedCount === 0) {
-      throw new NotFoundException('Store not found');
+      throw new NotFoundException('StoreModel not found');
     }
     return updatedVendor;
   }

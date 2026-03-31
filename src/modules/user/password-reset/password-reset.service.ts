@@ -1,30 +1,32 @@
 // src/services/password-reset.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { PasswordReset } from './password-reset.model';
+import { PasswordResetModel } from 'src/infrastructure';
 
 @Injectable()
 export class PasswordResetService {
   constructor(
-    @InjectModel(PasswordReset)
-    private readonly passwordResetModel: typeof PasswordReset,
-  ) {}
+    @InjectModel(PasswordResetModel)
+    private readonly passwordResetModel: typeof PasswordResetModel,
+  ) { }
 
-  async findAll(): Promise<PasswordReset[]> {
+  async findAll(): Promise<PasswordResetModel[]> {
     return this.passwordResetModel.findAll();
   }
 
-  async findOne(id: number): Promise<PasswordReset> {
+  async findOne(id: number): Promise<PasswordResetModel> {
     return this.passwordResetModel.findByPk(id);
   }
 
-  async create(passwordReset: Partial<PasswordReset>): Promise<PasswordReset> {
+  async create(
+    passwordReset: Partial<PasswordResetModel>,
+  ): Promise<PasswordResetModel> {
     return this.passwordResetModel.create(passwordReset);
   }
 
   async update(
     id: number,
-    passwordReset: Partial<PasswordReset>,
+    passwordReset: Partial<PasswordResetModel>,
   ): Promise<[number]> {
     return this.passwordResetModel.update(passwordReset, { where: { id } });
   }

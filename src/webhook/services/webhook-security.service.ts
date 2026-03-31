@@ -19,7 +19,7 @@
 //   ): Promise<boolean> {
 //     const vendor = await this.vendorService.findById(vendorId); // Fetch vendor details
 //     if (!vendor) {
-//       throw new UnauthorizedException('Vendor not found');
+//       throw new UnauthorizedException('VendorModel not found');
 //     }
 //     const expectedSignature = await this.generateSignature(
 //       payload,

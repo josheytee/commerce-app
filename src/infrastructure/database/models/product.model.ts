@@ -1,126 +1,71 @@
-// infrastructure/database/models/product.model.ts
 import {
-    Table,
-    Column,
-    Model,
-    DataType,
-    PrimaryKey,
-    AutoIncrement,
-    ForeignKey,
-    BelongsTo,
-    HasMany,
-    HasOne,
-    BelongsToMany,
-    Scopes,
-    Default,
-    AllowNull,
-    Unique,
-    Index,
-    CreatedAt,
-    UpdatedAt,
-    DeletedAt,
+  Table,
+  Column,
+  Model,
+  HasMany,
+  PrimaryKey,
+  AutoIncrement,
+  BelongsTo,
+  ForeignKey,
 } from 'sequelize-typescript';
-import { StoreModel } from './store.model';
-import { VendorModel } from './vendor.model';
 import { SectionModel } from './section.model';
-import { ProductVariantModel } from './product-variant.model';
+import { StoreModel } from './store.model';
 import { InventoryModel } from './inventory.model';
 
-@Scopes(() => ({
-    active: {
-        where: { isActive: true },
-    },
-    withInventory: {
-        include: [InventoryModel],
-    },
-    withVariants: {
-        include: [ProductVariantModel],
-    },
-}))
+
 @Table({
-    tableName: 'products',
-    timestamps: true,
-    paranoid: true, // Soft deletes
-    underscored: true, // Use snake_case in DB
-    indexes: [
-        { name: 'idx_products_name', fields: ['name'] },
-        { name: 'idx_products_slug', fields: ['slug'], unique: true },
-        { name: 'idx_products_store_id', fields: ['store_id'] },
-        { name: 'idx_products_price', fields: ['price'] },
-        {
-            name: 'idx_products_status_created',
-            fields: ['is_active', 'created_at'],
-        },
-    ],
+  timestamps: true,
+  underscored: true,
+  paranoid: true,
+  tableName: 'products',
 })
-export class ProductModel extends Model {
-    @PrimaryKey
-    @AutoIncrement
-    @Column(DataType.INTEGER)
-    id: number;
+export class ProductModel extends Model<ProductModel> {
+  @PrimaryKey
+  @AutoIncrement
+  @Column
+  id: number;
 
-    @AllowNull(false)
-    @Column(DataType.STRING(255))
-    name: string;
+  @Column
+  name: string;
 
-    @AllowNull(false)
-    @Unique
-    @Column(DataType.STRING(255))
-    slug: string;
+  @Column
+  slug: string;
 
-    @AllowNull(true)
-    @Column(DataType.TEXT)
-    details: string;
+  // @Column
+  // description: string;
 
-    @AllowNull(false)
-    @Default(0)
-    @Column(DataType.DECIMAL(10, 2))
-    price: number;
+  @Column
+  details: string;
 
-    @AllowNull(false)
-    @Default(true)
-    @Column(DataType.BOOLEAN)
-    isActive: boolean;
+  // @Column
+  // quantity: number;
 
-    // Foreign Keys
-    @ForeignKey(() => StoreModel)
-    @AllowNull(false)
-    @Column(DataType.INTEGER)
-    storeId: number;
+  // @Column
+  // featured: boolean;
 
-    @ForeignKey(() => VendorModel)
-    @AllowNull(false)
-    @Column(DataType.INTEGER)
-    vendorId: number;
+  // @Column
+  // review_able: boolean;
 
-    @ForeignKey(() => SectionModel)
-    @AllowNull(true)
-    @Column(DataType.INTEGER)
-    sectionId: number;
+  @Column
+  price: number;
 
-    // Timestamps
-    @CreatedAt
-    createdAt: Date;
+  // @Column
+  // status: string;
 
-    @UpdatedAt
-    updatedAt: Date;
+  @ForeignKey(() => SectionModel)
+  @Column
+  section_id: number;
 
-    @DeletedAt
-    deletedAt: Date;
+  @BelongsTo(() => SectionModel)
+  section: SectionModel;
 
-    // Associations
-    @BelongsTo(() => StoreModel)
-    store: StoreModel;
+  @ForeignKey(() => StoreModel)
+  @Column
+  store_id: number;
 
-    @BelongsTo(() => VendorModel)
-    vendor: VendorModel;
+  @BelongsTo(() => StoreModel)
+  store: StoreModel;
 
-    @BelongsTo(() => SectionModel)
-    section: SectionModel;
-
-    @HasMany(() => ProductVariantModel)
-    variants: ProductVariantModel[];
-
-    @HasOne(() => InventoryModel)
-    inventory: InventoryModel;
+  @HasMany(() => InventoryModel)
+  inventories: InventoryModel[];
 }

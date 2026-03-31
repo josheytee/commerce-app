@@ -4,21 +4,21 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Rating } from './models/rating.model';
 import { CreateRatingDto } from './dto/create-rating.dto';
 import { UpdateRatingDto } from './dto/update-rating.dto';
+import { RatingModel } from 'src/infrastructure';
 
 @Injectable()
 export class RatingService {
   constructor(
-    @InjectModel(Rating)
-    private ratingModel: typeof Rating,
+    @InjectModel(RatingModel)
+    private ratingModel: typeof RatingModel,
   ) { }
 
   async create(
     createRatingDto: CreateRatingDto,
     userId: number,
-  ): Promise<Rating> {
+  ): Promise<RatingModel> {
     // Check if user already rated this entity
     const existing = await this.ratingModel.findOne({
       where: {
@@ -42,7 +42,7 @@ export class RatingService {
     id: number,
     updateRatingDto: UpdateRatingDto,
     userId: number,
-  ): Promise<Rating> {
+  ): Promise<RatingModel> {
     const rating = await this.findOne(id);
 
     if (rating.user_id !== userId) {
@@ -53,10 +53,10 @@ export class RatingService {
     return rating;
   }
 
-  async findOne(id: number): Promise<Rating> {
+  async findOne(id: number): Promise<RatingModel> {
     const rating = await this.ratingModel.findByPk(id);
     if (!rating) {
-      throw new NotFoundException(`Rating with ID ${id} not found`);
+      throw new NotFoundException(`RatingModel with ID ${id} not found`);
     }
     return rating;
   }
@@ -65,7 +65,7 @@ export class RatingService {
     entity_type: string,
     entity_id: number,
     user_id: number,
-  ): Promise<Rating | null> {
+  ): Promise<RatingModel | null> {
     return await this.ratingModel.findOne({
       where: { entity_type, entity_id, user_id },
     });
@@ -77,7 +77,7 @@ export class RatingService {
     user_id?: number;
     limit?: number;
     offset?: number;
-  }): Promise<{ data: Rating[]; total: number }> {
+  }): Promise<{ data: RatingModel[]; total: number }> {
     const where: any = {};
 
     if (options?.entity_type) where.entity_type = options.entity_type;

@@ -1,6 +1,6 @@
-import { Role } from "src/modules/user/role/models/role.model";
-import { Vendor } from "src/modules/vendor/onboarding/vendor.model";
-import { Store } from "src/modules/vendor/store/models/store.model";
+import { RoleModel } from 'src/infrastructure/database/models/role.model';
+import { VendorModel } from 'src/infrastructure/database/models/vendor.model';
+import { StoreModel } from 'src/infrastructure/database/models/store.model';
 
 
 export interface AuthenticatedUser {
@@ -14,9 +14,9 @@ export interface AuthenticatedUser {
     dob?: string;
     verified_at?: string;
     last_login?: string;
-    vendors?: Vendor[];
-    roles?: Role[];
-    stores?: Store[];
+    vendors?: VendorModel[];
+    roles?: RoleModel[];
+    stores?: StoreModel[];
     // Add any other fields you need from the User model
 }
 

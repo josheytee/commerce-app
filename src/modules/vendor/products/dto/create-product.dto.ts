@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
-import { Attribute } from 'src/modules/vendor/products/attribute/models/attribute.model';
+import { AttributeModel } from 'src/infrastructure/database/models/attribute.model';
 
 export class CreateProductDto {
   @IsString()
@@ -22,5 +22,5 @@ export class CreateProductDto {
   @IsNotEmpty()
   store_id: number;
 
-  // attributes: Attribute[];
+  // attributes: AttributeModel[];
 }

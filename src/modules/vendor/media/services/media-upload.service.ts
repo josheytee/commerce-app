@@ -1,28 +1,28 @@
 // media-upload.service.ts
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-// import { Media } from './models/media.model';
-// import { MediaType } from './models/media-type.enum';
+// import { MediaModel } from './models/media.model';
+// import { MediaTypeEnum } from './models/media-type.enum';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { Media } from '../models/media.model';
-import { MediaType } from '../models/media-type.enum';
+import { MediaTypeEnum } from 'src/shared';
+import { MediaModel } from 'src/infrastructure';
 
 @Injectable()
 export class MediaUploadService {
     constructor(
-        @InjectModel(Media)
-        private mediaModel: typeof Media,
+        @InjectModel(MediaModel)
+        private mediaModel: typeof MediaModel,
     ) { }
 
     async uploadAndSave(
         file: Express.Multer.File,
         entityType: string,
         entityId: number,
-        mediaType: MediaType,
+        mediaType: MediaTypeEnum,
         userId: number,
-    ): Promise<Media> {
+    ): Promise<MediaModel> {
         if (!file) {
             throw new BadRequestException('No file provided');
         }

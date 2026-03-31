@@ -1,31 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseRepository } from 'src/infrastructure/database/repositories/base.repository';
-import { Store } from './models/store.model';
-import { Vendor } from '../onboarding/vendor.model';
-import { User } from 'src/modules/user/user/models/user.model';
-
+import { UserModel, StoreModel, VendorModel } from 'src/infrastructure';
 
 @Injectable()
-export class StoreRepository extends BaseRepository<Store> {
+export class StoreRepository extends BaseRepository<StoreModel> {
     constructor(
-        @InjectModel(Store)
-        private storeModel: typeof Store,
+        @InjectModel(StoreModel)
+        private storeModel: typeof StoreModel,
     ) {
         super(storeModel);
     }
 
-    async findAllByUserId(id: number): Promise<Store[]> {
+    async findAllByUserId(id: number): Promise<StoreModel[]> {
         // Direct query through associations
-        const stores = await Store.findAll({
+        const stores = await StoreModel.findAll({
             include: [
                 {
-                    model: Vendor,
+                    model: VendorModel,
                     as: 'vendor',
                     required: true,
                     include: [
                         {
-                            model: User,
+                            model: UserModel,
                             as: 'user',
                             where: { id }, // Filter by user ID directly
                             required: true,

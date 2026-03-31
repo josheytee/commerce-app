@@ -10,11 +10,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { RoleService } from './role.service';
-import { Role } from './models/role.model';
 import { CreateRoleDto } from './dtos/create-role.dto';
 import { CreateCustomRoleDto } from './dtos/create-custom-role.dto';
 import { Permissions } from '../permission/permissions.decorator';
 import { PermissionsGuard } from '../permission/permissions.guard';
+import { RoleModel } from 'src/infrastructure';
 
 
 @Controller('roles')
@@ -22,17 +22,17 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) { }
 
   @Get()
-  async findAll(): Promise<Role[]> {
+  async findAll(): Promise<RoleModel[]> {
     return this.roleService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<Role> {
+  async findOne(@Param('id') id: number): Promise<RoleModel> {
     return this.roleService.findOne(id);
   }
 
   @Post()
-  async create(@Body() role: CreateRoleDto): Promise<Role> {
+  async create(@Body() role: CreateRoleDto): Promise<RoleModel> {
     return this.roleService.create(role);
   }
 
@@ -57,8 +57,8 @@ export class RoleController {
   @Put(':id')
   async update(
     @Param('id') id: number,
-    @Body() role: Partial<Role>,
-  ): Promise<Role> {
+    @Body() role: Partial<RoleModel>,
+  ): Promise<RoleModel> {
     return this.roleService.update(id, role);
   }
 

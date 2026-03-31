@@ -24,7 +24,7 @@ export class VendorProductsController {
       **Requirements:**
       - Active vendor account
       - Valid store association
-      - Product name must be unique per store
+      - ProductModel name must be unique per store
       
       **Process:**
       1. Validates vendor permissions
@@ -36,15 +36,15 @@ export class VendorProductsController {
       **Rate Limit:** 100 requests/minute
     `,
         operationId: 'createVendorProduct',
-        tags: ['Vendor - Products'],
+        tags: ['VendorModel - Products'],
         deprecated: false,
     })
     @ApiBody({
         type: CreateProductDto,
-        description: 'Product creation payload',
+        description: 'ProductModel creation payload',
         required: true,
         examples: {
-            'Simple Product': {
+            'Simple ProductModel': {
                 value: {
                     name: 'Wireless Headphones',
                     slug: 'wireless-headphones',
@@ -54,7 +54,7 @@ export class VendorProductsController {
                     details: 'High-quality wireless headphones with noise cancellation',
                 },
             },
-            'Product with Variants': {
+            'ProductModel with Variants': {
                 value: {
                     name: 'T-Shirt',
                     slug: 'cotton-t-shirt',
@@ -79,7 +79,7 @@ export class VendorProductsController {
     })
     @ApiResponse({
         status: 201,
-        description: 'Product created successfully',
+        description: 'ProductModel created successfully',
         type: ApiResponseDto<ProductDetailResponseDto>,
         headers: {
             'X-Request-ID': {

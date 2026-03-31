@@ -1,10 +1,10 @@
-import { ReviewType } from '../model/review-type.enum';
+import { ReviewTypeEnum } from "src/shared";
 
 export class ReviewResponseDto {
     id: number;
     title: string;
     content: string;
-    type: ReviewType;
+    type: ReviewTypeEnum;
     entity_type: string;
     entity_id: number;
     user_id: number;

@@ -1,28 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Permission } from './permission.model';
-import { UserVendorRole } from '../user-vendor-role/user-vendor-role.model';
-import { UserVendorRolePermission } from './user-vendor-role-permission.model';
+import {
+  PermissionModel,
+  UserVendorRoleModel,
+  UserVendorRolePermissionModel,
+} from 'src/infrastructure';
 
 @Injectable()
 export class PermissionService {
   constructor(
-    @InjectModel(Permission)
-    private permissionModel: typeof Permission,
-    @InjectModel(UserVendorRole)
-    private userVendorRoleModel: typeof UserVendorRole,
-    @InjectModel(UserVendorRolePermission)
-    private userVendorRolePermissionModel: typeof UserVendorRolePermission,
-  ) {}
+    @InjectModel(PermissionModel)
+    private permissionModel: typeof PermissionModel,
+    @InjectModel(UserVendorRoleModel)
+    private userVendorRoleModel: typeof UserVendorRoleModel,
+    @InjectModel(UserVendorRolePermissionModel)
+    private userVendorRolePermissionModel: typeof UserVendorRolePermissionModel,
+  ) { }
 
-  async createPermission(name: string): Promise<Permission> {
+  async createPermission(name: string): Promise<PermissionModel> {
     return this.permissionModel.create({ name });
   }
 
   async assignPermissionToRole(
     roleId: number,
     permissionId: number,
-  ): Promise<UserVendorRolePermission> {
+  ): Promise<UserVendorRolePermissionModel> {
     return this.userVendorRolePermissionModel.create({
       user_vendor_role_id: roleId,
       permission_id: permissionId,

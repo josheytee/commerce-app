@@ -5,15 +5,15 @@ import { CityModule } from './city/city.module';
 import { AddressService } from './address.service';
 import { AddressController } from './address.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Address } from './address.model';
 import { AddressRepository } from './address.repository';
+import { AddressModel } from 'src/infrastructure';
 
 @Module({
   imports: [
     CountryModule,
     StateModule,
     CityModule,
-    SequelizeModule.forFeature([Address]),
+    SequelizeModule.forFeature([AddressModel]),
   ],
   providers: [AddressRepository, AddressService],
   controllers: [AddressController],

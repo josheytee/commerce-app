@@ -1,34 +1,33 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Section } from './section.model';
-import { Product } from '../products/product.model';
+import { SectionModel, ProductModel } from 'src/infrastructure';
 
 @Injectable()
 export class SectionService {
   constructor(
-    @InjectModel(Section)
-    private sectionModel: typeof Section,
+    @InjectModel(SectionModel)
+    private sectionModel: typeof SectionModel,
   ) { }
 
-  async create(data: Partial<Section>): Promise<Section> {
+  async create(data: Partial<SectionModel>): Promise<SectionModel> {
     return this.sectionModel.create(data);
   }
 
-  async findAll(): Promise<Section[]> {
-    return this.sectionModel.findAll({ include: [Product] });
+  async findAll(): Promise<SectionModel[]> {
+    return this.sectionModel.findAll({ include: [ProductModel] });
   }
 
-  async findOne(id: number): Promise<Section> {
+  async findOne(id: number): Promise<SectionModel> {
     const section = await this.sectionModel.findByPk(id, {
-      include: [Product],
+      include: [ProductModel],
     });
     if (!section) {
-      throw new NotFoundException('Section not found');
+      throw new NotFoundException('SectionModel not found');
     }
     return section;
   }
 
-  async update(id: number, data: Partial<Section>): Promise<Section> {
+  async update(id: number, data: Partial<SectionModel>): Promise<SectionModel> {
     const section = await this.findOne(id);
     return section.update(data);
   }

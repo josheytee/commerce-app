@@ -1,18 +1,17 @@
 // repositories/vendor.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Vendor } from './vendor.model';
 import { BaseRepository } from 'src/infrastructure/database/repositories/base.repository';
 import { CreateMediaDto } from 'src/modules/vendor/media/dto';
-import { MediaType } from 'src/modules/vendor/media/models/media-type.enum';
+import { MediaTypeEnum } from 'src/shared/';
 import { MediaRepository } from 'src/modules/vendor/media/media.repository';
-import { Media } from 'src/modules/vendor/media/models/media.model';
+import { MediaModel, VendorModel } from 'src/infrastructure';
 
 @Injectable()
-export class VendorRepository extends BaseRepository<Vendor> {
+export class VendorRepository extends BaseRepository<VendorModel> {
     constructor(
-        @InjectModel(Vendor)
-        private vendorModel: typeof Vendor,
+        @InjectModel(VendorModel)
+        private vendorModel: typeof VendorModel,
         private mediaRepository: MediaRepository,
     ) {
         super(vendorModel);
@@ -21,7 +20,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
     // async findSingle(id: number) {
     //     const vendor = await this.vendorModel.findByPk(id);
     //     if (!vendor) {
-    //         throw new Error('Vendor not found');
+    //         throw new Error('VendorModel not found');
     //     }
 
     //     // Get media
@@ -50,18 +49,18 @@ export class VendorRepository extends BaseRepository<Vendor> {
     //     };
     // }
 
-    async findByBusinessName(name: string): Promise<Vendor | null> {
+    async findByBusinessName(name: string): Promise<VendorModel | null> {
         return this.findOne({
             where: { business_name: name },
         });
     }
 
-    async findByUserId(userId: number): Promise<Vendor[] | null> {
+    async findByUserId(userId: number): Promise<VendorModel[] | null> {
         return this.findAll({
             where: { user_id: userId },
             include: [
                 {
-                    model: Media,
+                    model: MediaModel,
                     as: 'images',
                     where: { entity_type: 'vendor' },
                     separate: true,
@@ -71,23 +70,23 @@ export class VendorRepository extends BaseRepository<Vendor> {
         });
     }
 
-    async findWithFullDetails(id: number): Promise<Vendor | null> {
+    async findWithFullDetails(id: number): Promise<VendorModel | null> {
         return this.findById(id, {
             include: ['user', 'stores', 'users'],
         });
     }
 
-    async addVendorLogo(vendorId: number, imageUrl: string): Promise<Media> {
+    async addVendorLogo(vendorId: number, imageUrl: string): Promise<MediaModel> {
         return this.mediaRepository.createVendorImage(vendorId, imageUrl);
     }
-    // async addImage(vendorId: number, imageData: Media, userId: number) {
+    // async addImage(vendorId: number, imageData: MediaModel, userId: number) {
     //     // console.log('files', files);
     //     // const mediaDtos: CreateMediaDto[] = files.map((file, index) => ({
     //     //     url: file.url,
     //     //     key: file.key,
     //     //     thumbnail_url: file.thumbnail_url,
     //     //     medium_url: file.medium_url,
-    //     //     // type: MediaType.VENDOR_GALLERY,
+    //     //     // type: MediaTypeEnum.VENDOR_GALLERY,
     //     //     entity_type: 'vendor',
     //     //     entity_id: vendorId,
     //     //     sort_order: index,
@@ -168,18 +167,18 @@ export class VendorRepository extends BaseRepository<Vendor> {
 
 // import { Injectable } from '@nestjs/common';
 // import { InjectModel } from '@nestjs/sequelize';
-// import { Vendor } from './models/vendor.model';
+// import { VendorModel } from './models/vendor.model';
 // import { MediaService } from '../shared/media/media.service';
 // import { ReviewService } from '../shared/review/review.service';
 // import { RatingService } from '../shared/rating/rating.service';
-// import { MediaType } from '../shared/media/models/media-type.enum';
+// import { MediaTypeEnum } from '../shared/media/models/media-type.enum';
 // import { CreateMediaDto } from '../shared/media/dto/create-media.dto';
 
 // @Injectable()
 // export class VendorService {
 //   constructor(
-//     @InjectModel(Vendor)
-//     private vendorModel: typeof Vendor,
+//     @InjectModel(VendorModel)
+//     private vendorModel: typeof VendorModel,
 //     private mediaService: MediaService,
 //     private reviewService: ReviewService,
 //     private ratingService: RatingService,
@@ -188,7 +187,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
 //   async findOne(id: number) {
 //     const vendor = await this.vendorModel.findByPk(id);
 //     if (!vendor) {
-//       throw new Error('Vendor not found');
+//       throw new Error('VendorModel not found');
 //     }
 
 //     // Get media
@@ -223,7 +222,7 @@ export class VendorRepository extends BaseRepository<Vendor> {
 //       key: file.key,
 //       thumbnail_url: file.thumbnail_url,
 //       medium_url: file.medium_url,
-//       type: MediaType.VENDOR_GALLERY,
+//       type: MediaTypeEnum.VENDOR_GALLERY,
 //       entity_type: 'vendor',
 //       entity_id: vendorId,
 //       sort_order: index,

@@ -4,23 +4,22 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Op } from 'sequelize';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
-import { ReviewType } from './model/review-type.enum';
-import { Review } from './model/review.model';
+import { ReviewModel } from 'src/infrastructure';
+import { ReviewTypeEnum } from 'src/shared';
 
 @Injectable()
 export class ReviewService {
   constructor(
-    @InjectModel(Review)
-    private reviewModel: typeof Review,
+    @InjectModel(ReviewModel)
+    private reviewModel: typeof ReviewModel,
   ) { }
 
   async create(
     createReviewDto: CreateReviewDto,
     userId: number,
-  ): Promise<Review> {
+  ): Promise<ReviewModel> {
     return await this.reviewModel.create({
       ...createReviewDto,
       user_id: userId,
@@ -32,12 +31,12 @@ export class ReviewService {
     entity_id?: number;
     user_id?: number;
     is_approved?: boolean;
-    type?: ReviewType;
+    type?: ReviewTypeEnum;
     limit?: number;
     offset?: number;
     sort?: string;
     order?: 'ASC' | 'DESC';
-  }): Promise<{ data: Review[]; total: number }> {
+  }): Promise<{ data: ReviewModel[]; total: number }> {
     const where: any = {};
 
     if (options?.entity_type) where.entity_type = options.entity_type;
@@ -64,10 +63,10 @@ export class ReviewService {
     return { data: rows, total: count };
   }
 
-  async findOne(id: number): Promise<Review> {
+  async findOne(id: number): Promise<ReviewModel> {
     const review = await this.reviewModel.findByPk(id);
     if (!review) {
-      throw new NotFoundException(`Review with ID ${id} not found`);
+      throw new NotFoundException(`ReviewModel with ID ${id} not found`);
     }
     return review;
   }
@@ -76,7 +75,7 @@ export class ReviewService {
     id: number,
     updateReviewDto: UpdateReviewDto,
     userId?: number,
-  ): Promise<Review> {
+  ): Promise<ReviewModel> {
     const review = await this.findOne(id);
 
     if (userId && review.user_id !== userId) {
@@ -97,7 +96,7 @@ export class ReviewService {
     await review.destroy();
   }
 
-  async approve(id: number, approvedBy: number): Promise<Review> {
+  async approve(id: number, approvedBy: number): Promise<ReviewModel> {
     const review = await this.findOne(id);
     await review.update({
       is_approved: true,
@@ -107,7 +106,7 @@ export class ReviewService {
     return review;
   }
 
-  async reject(id: number, approvedBy: number): Promise<Review> {
+  async reject(id: number, approvedBy: number): Promise<ReviewModel> {
     const review = await this.findOne(id);
     await review.update({
       is_approved: false,
@@ -117,13 +116,13 @@ export class ReviewService {
     return review;
   }
 
-  async markHelpful(id: number): Promise<Review> {
+  async markHelpful(id: number): Promise<ReviewModel> {
     const review = await this.findOne(id);
     await review.increment('helpful_count');
     return review;
   }
 
-  async markNotHelpful(id: number): Promise<Review> {
+  async markNotHelpful(id: number): Promise<ReviewModel> {
     const review = await this.findOne(id);
     await review.increment('not_helpful_count');
     return review;
@@ -138,7 +137,7 @@ export class ReviewService {
     pending_reviews: number;
     average_rating?: number;
     helpfulness_rate: number;
-    recent_reviews: Review[];
+    recent_reviews: ReviewModel[];
   }> {
     const total = await this.reviewModel.count({
       where: { entity_type, entity_id },
@@ -185,7 +184,7 @@ export class ReviewService {
     entity_type: string,
     entity_id: number,
     user_id: number,
-  ): Promise<Review | null> {
+  ): Promise<ReviewModel | null> {
     return await this.reviewModel.findOne({
       where: { entity_type, entity_id, user_id },
     });

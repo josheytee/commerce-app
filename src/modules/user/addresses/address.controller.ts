@@ -8,24 +8,24 @@ import {
   Body,
 } from '@nestjs/common';
 import { AddressService } from './address.service';
-import { Address } from './address.model';
+import { AddressModel } from 'src/infrastructure';
 
 @Controller('addresses')
 export class AddressController {
-  constructor(private readonly addressService: AddressService) {}
+  constructor(private readonly addressService: AddressService) { }
 
   @Post()
-  async create(@Body() createAddressDto: any): Promise<Address> {
+  async create(@Body() createAddressDto: any): Promise<AddressModel> {
     return this.addressService.createAddress(createAddressDto);
   }
 
   @Get()
-  async findAll(): Promise<Address[]> {
+  async findAll(): Promise<AddressModel[]> {
     return this.addressService.findAllAddresses();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Address> {
+  async findOne(@Param('id') id: string): Promise<AddressModel> {
     return this.addressService.findAddressById(id);
   }
 
@@ -33,7 +33,7 @@ export class AddressController {
   async update(
     @Param('id') id: string,
     @Body() updateAddressDto: any,
-  ): Promise<Address> {
+  ): Promise<AddressModel> {
     return this.addressService.updateAddress(id, updateAddressDto);
   }
 

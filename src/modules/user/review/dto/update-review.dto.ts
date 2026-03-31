@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateReviewDto } from './create-review.dto';
-import { ReviewType } from '../model/review-type.enum';
+import { ReviewTypeEnum } from 'src/shared';
 
 export class UpdateReviewDto extends PartialType(CreateReviewDto) {
     @IsOptional()
@@ -25,8 +25,8 @@ export class UpdateReviewDto extends PartialType(CreateReviewDto) {
     content?: string;
 
     @IsOptional()
-    @IsEnum(ReviewType)
-    entity_type?: ReviewType;
+    @IsEnum(ReviewTypeEnum)
+    entity_type?: ReviewTypeEnum;
 
     @IsOptional()
     @IsInt()

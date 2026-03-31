@@ -1,25 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Session } from './session.model';
 import { Op } from 'sequelize';
-import { User } from 'src/modules/user/user/models/user.model';
+import { SessionModel, UserModel } from 'src/infrastructure';
 
 @Injectable()
 export class SessionService {
   constructor(
-    @InjectModel(Session)
-    private readonly sessionModel: typeof Session,
+    @InjectModel(SessionModel)
+    private readonly sessionModel: typeof SessionModel,
   ) { }
 
-  async findSessionByToken(token: string): Promise<Session | null> {
-    return this.sessionModel.findOne({ where: { token }, include: [User] });
+  async findSessionByToken(token: string): Promise<SessionModel | null> {
+    return this.sessionModel.findOne({
+      where: { token },
+      include: [UserModel],
+    });
   }
 
   async createSession(
     userId: number,
     token: string,
     expiresAt: Date,
-  ): Promise<Session> {
+  ): Promise<SessionModel> {
     return this.sessionModel.create({
       user_id: userId,
       token,
@@ -27,14 +29,14 @@ export class SessionService {
     });
   }
 
-  async findAll(): Promise<Session[]> {
+  async findAll(): Promise<SessionModel[]> {
     return this.sessionModel.findAll();
   }
 
-  async findOne(id: number): Promise<Session> {
+  async findOne(id: number): Promise<SessionModel> {
     return this.sessionModel.findByPk(id);
   }
-  async findByUserId(user_id: number): Promise<Session[]> {
+  async findByUserId(user_id: number): Promise<SessionModel[]> {
     const now = new Date();
     return this.sessionModel.findAll({
       where: {
@@ -46,11 +48,11 @@ export class SessionService {
     });
   }
 
-  async create(session: Partial<Session>): Promise<Session> {
+  async create(session: Partial<SessionModel>): Promise<SessionModel> {
     return this.sessionModel.create(session);
   }
 
-  async update(id: number, session: Partial<Session>): Promise<[number]> {
+  async update(id: number, session: Partial<SessionModel>): Promise<[number]> {
     return this.sessionModel.update(session, { where: { id } });
   }
 

@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Section } from './section.model';
 import { SectionService } from './section.service';
 import { SectionController } from './section.controller';
 import { UserVendorRoleModule } from 'src/modules/user/user-vendor-role/user-vendor-role.module';
+import { SectionModel } from 'src/infrastructure';
 
 @Module({
-  imports: [UserVendorRoleModule, SequelizeModule.forFeature([Section])],
+  imports: [UserVendorRoleModule, SequelizeModule.forFeature([SectionModel])],
   providers: [SectionService],
   controllers: [SectionController],
   exports: [SectionService],

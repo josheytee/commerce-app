@@ -2,16 +2,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseRepository } from 'src/infrastructure/database/repositories/base.repository';
-import { Role } from '../role/models/role.model';
-import { UserVendorRole } from './user-vendor-role.model';
 import { CreateUserVendorRoleDto } from './dto';
-import { Permission } from '../permission/permission.model';
+import { PermissionModel, UserVendorRoleModel } from 'src/infrastructure';
 
 @Injectable()
-export class UserVendorRoleRepository extends BaseRepository<UserVendorRole> {
+export class UserVendorRoleRepository extends BaseRepository<UserVendorRoleModel> {
     constructor(
-        @InjectModel(UserVendorRole)
-        private userVendorRoleModel: typeof UserVendorRole,
+        @InjectModel(UserVendorRoleModel)
+        private userVendorRoleModel: typeof UserVendorRoleModel,
     ) {
         super(userVendorRoleModel);
     }
@@ -25,18 +23,20 @@ export class UserVendorRoleRepository extends BaseRepository<UserVendorRole> {
             where: { user_id: userId },
             include: [
                 {
-                    model: Permission,
+                    model: PermissionModel,
                     through: { attributes: [] }, // This removes the extra junction table attributes
                 },
             ],
         });
     }
 
-    public async getPermissionsForUser(userId: number): Promise<Permission[]> {
+    public async getPermissionsForUser(
+        userId: number,
+    ): Promise<PermissionModel[]> {
         const roles = await this.userVendorRoleModel.findAll({
             include: [
                 {
-                    model: Permission,
+                    model: PermissionModel,
                     through: { where: { user_id: userId } },
                 },
             ],
@@ -54,7 +54,7 @@ export class UserVendorRoleRepository extends BaseRepository<UserVendorRole> {
     // async assignPermissionToUserVendorRole(
     //     userVendorRoleId: number,
     //     permissionId: number,
-    // ): Promise<UserVendorRolePermission> {
+    // ): Promise<UserVendorRolePermissionModel> {
     //     const userVendorRolePermission =
     //         await this.userVendorRolePermissionModel.create({
     //             user_vendor_role_id: userVendorRoleId,

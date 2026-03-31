@@ -8,32 +8,32 @@ import {
   Delete,
 } from '@nestjs/common';
 import { CustomerService } from './customer.service';
-import { Customer } from './customer.model';
+import { CustomerModel } from 'src/infrastructure';
 
 @Controller('customers')
 export class CustomerController {
-  constructor(private readonly customerService: CustomerService) {}
+  constructor(private readonly customerService: CustomerService) { }
 
   @Post()
-  create(@Body() data: Partial<Customer>): Promise<Customer> {
+  create(@Body() data: Partial<CustomerModel>): Promise<CustomerModel> {
     return this.customerService.create(data);
   }
 
   @Get()
-  findAll(): Promise<Customer[]> {
+  findAll(): Promise<CustomerModel[]> {
     return this.customerService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number): Promise<Customer> {
+  findOne(@Param('id') id: number): Promise<CustomerModel> {
     return this.customerService.findOne(id);
   }
 
   @Patch(':id')
   update(
     @Param('id') id: number,
-    @Body() data: Partial<Customer>,
-  ): Promise<Customer> {
+    @Body() data: Partial<CustomerModel>,
+  ): Promise<CustomerModel> {
     return this.customerService.update(id, data);
   }
 

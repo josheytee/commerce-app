@@ -2,37 +2,40 @@ import { CreateCustomRoleDto } from './dtos/create-custom-role.dto';
 import { Body, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { CreateRoleDto } from './dtos/create-role.dto';
-import { Role } from './models/role.model';
-import { Vendor } from '../../vendor/onboarding/vendor.model';
-import { Permission } from '../permission/permission.model';
-import { UserVendorRolePermission } from '../permission/user-vendor-role-permission.model';
+import {
+  PermissionModel,
+  RoleModel,
+  VendorModel,
+  UserVendorRolePermissionModel,
+} from 'src/infrastructure';
 
 @Injectable()
 export class RoleService {
   constructor(
-    @InjectModel(Role)
-    private readonly roleModel: typeof Role,
-    @InjectModel(Vendor)
-    private readonly userVendorRolePermission: typeof UserVendorRolePermission,
-    @InjectModel(Permission) private permissionModel: typeof Permission,
+    @InjectModel(RoleModel)
+    private readonly roleModel: typeof RoleModel,
+    @InjectModel(VendorModel)
+    private readonly userVendorRolePermission: typeof UserVendorRolePermissionModel,
+    @InjectModel(PermissionModel)
+    private permissionModel: typeof PermissionModel,
   ) { }
 
-  async create(createRoleDto: Partial<CreateRoleDto>): Promise<Role> {
+  async create(createRoleDto: Partial<CreateRoleDto>): Promise<RoleModel> {
     return this.roleModel.create(createRoleDto);
   }
 
-  async findAll(): Promise<Role[]> {
+  async findAll(): Promise<RoleModel[]> {
     return this.roleModel.findAll({ include: { all: true } });
   }
 
-  async findByName(name: string): Promise<Role | null> {
+  async findByName(name: string): Promise<RoleModel | null> {
     return this.roleModel.findOne({ where: { name } });
   }
 
-  async findOne(id: number): Promise<Role> {
+  async findOne(id: number): Promise<RoleModel> {
     const role = await this.roleModel.findByPk(id, { include: { all: true } });
     if (!role) {
-      throw new NotFoundException('Role not found');
+      throw new NotFoundException('RoleModel not found');
     }
     return role;
   }
@@ -40,7 +43,7 @@ export class RoleService {
   async update(
     id: number,
     updateRoleDto: Partial<CreateRoleDto>,
-  ): Promise<Role> {
+  ): Promise<RoleModel> {
     const role = await this.findOne(id);
     return role.update(updateRoleDto);
   }
@@ -52,7 +55,7 @@ export class RoleService {
 
   // async createRoleWithPermissions(
   //   @Body() createCustomRoleDto: CreateCustomRoleDto,
-  // ): Promise<Role> {
+  // ): Promise<RoleModel> {
   //   const permissions = await this.permissionModel.findAll({
   //     where: { id: createCustomRoleDto.permissionIds },
   //   });

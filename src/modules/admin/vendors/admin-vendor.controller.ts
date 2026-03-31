@@ -10,7 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { VendorService } from '../../vendor/onboarding/vendor.service';
-import { Vendor } from '../../vendor/onboarding/vendor.model';
+import { VendorModel } from 'src/infrastructure/database/models/vendor.model';
 import { TokenAuthGuard } from '../../../modules/auth/token-auth.guard';
 import { AuthenticatedRequest } from '../../../modules/auth/interfaces/authenticated-request.interface';
 import { CreateVendorDto } from '../../vendor/onboarding/dto';
@@ -27,39 +27,39 @@ export class AdminVendorController {
   constructor(private readonly vendorService: VendorService) { }
 
   @Post()
-  @ApiSuccessResponse(Vendor)
+  @ApiSuccessResponse(VendorModel)
   create(
     @Body() data: CreateVendorDto,
     @Req() req: AuthenticatedRequest,
-  ): Promise<Vendor> {
+  ): Promise<VendorModel> {
     return this.vendorService.create({ ...data, ...{ user_id: req.user.id } });
   }
 
   @Get()
   @Permissions('vendor:view')
-  @ApiSuccessResponse(Vendor)
-  findAll(@Req() req: AuthenticatedRequest): Promise<Vendor[]> {
+  @ApiSuccessResponse(VendorModel)
+  findAll(@Req() req: AuthenticatedRequest): Promise<VendorModel[]> {
     const user_id = req.user.id; // Extract the user ID from the request
     return this.vendorService.findVendorsByUserId(user_id);
   }
 
   @Get(':id')
-  @ApiSuccessResponse(Vendor)
-  findOne(@Param('id') id: number): Promise<Vendor> {
+  @ApiSuccessResponse(VendorModel)
+  findOne(@Param('id') id: number): Promise<VendorModel> {
     return this.vendorService.findById(id);
   }
 
   @Patch(':id')
-  @ApiSuccessResponse(Vendor)
+  @ApiSuccessResponse(VendorModel)
   update(
     @Param('id') id: number,
-    @Body() data: Partial<Vendor>,
-  ): Promise<Vendor> {
+    @Body() data: Partial<VendorModel>,
+  ): Promise<VendorModel> {
     return this.vendorService.update(id, data);
   }
 
   @Delete(':id')
-  @ApiSuccessResponse(Vendor)
+  @ApiSuccessResponse(VendorModel)
   remove(@Param('id') id: number): Promise<void> {
     return this.vendorService.delete(id);
   }

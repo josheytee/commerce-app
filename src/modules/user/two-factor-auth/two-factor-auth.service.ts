@@ -1,30 +1,30 @@
 // src/services/two-factor-auth.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { TwoFactorAuth } from './two-factor-auth.model';
+import { TwoFactorAuthModel } from 'src/infrastructure';
 
 @Injectable()
 export class TwoFactorAuthService {
   constructor(
-    @InjectModel(TwoFactorAuth)
-    private readonly twoFactorAuthModel: typeof TwoFactorAuth,
-  ) {}
+    @InjectModel(TwoFactorAuthModel)
+    private readonly twoFactorAuthModel: typeof TwoFactorAuthModel,
+  ) { }
 
-  async findAll(): Promise<TwoFactorAuth[]> {
+  async findAll(): Promise<TwoFactorAuthModel[]> {
     return this.twoFactorAuthModel.findAll();
   }
 
-  async findOne(id: number): Promise<TwoFactorAuth> {
+  async findOne(id: number): Promise<TwoFactorAuthModel> {
     return this.twoFactorAuthModel.findByPk(id);
   }
 
-  async create(twoFactorAuth: Partial<TwoFactorAuth>): Promise<TwoFactorAuth> {
+  async create(twoFactorAuth: Partial<TwoFactorAuthModel>): Promise<TwoFactorAuthModel> {
     return this.twoFactorAuthModel.create(twoFactorAuth);
   }
 
   async update(
     id: number,
-    twoFactorAuth: Partial<TwoFactorAuth>,
+    twoFactorAuth: Partial<TwoFactorAuthModel>,
   ): Promise<[number]> {
     return this.twoFactorAuthModel.update(twoFactorAuth, {
       where: { id },

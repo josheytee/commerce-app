@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { Product } from './product.model';
+import { ProductModel } from 'src/infrastructure';
 
 import { JwtAuthGuard } from 'src/modules/auth/jwt-auth.guard';
 
@@ -19,21 +19,21 @@ import { ApiTags } from '@nestjs/swagger';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 
-@ApiTags('Vendor - Products')
+@ApiTags('VendorModel - Products')
 @Controller('products')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
   @Post()
-  @ApiSuccessResponse(Product)
+  @ApiSuccessResponse(ProductModel)
   @Permissions('product:create')
-  create(@Body() data: Partial<Product>): Promise<Product> {
+  create(@Body() data: Partial<ProductModel>): Promise<ProductModel> {
     return this.productService.create(data);
   }
 
   @Get('search')
-  @ApiSuccessResponse(Product)
+  @ApiSuccessResponse(ProductModel)
   async searchByAttributes(
     @Query('attributes') attributes: { attributeId: number; value: string }[],
   ) {
@@ -41,31 +41,31 @@ export class ProductController {
   }
 
   @Get()
-  @ApiSuccessResponse(Product)
+  @ApiSuccessResponse(ProductModel)
   @Permissions('product:view')
-  findAll(): Promise<Product[]> {
+  findAll(): Promise<ProductModel[]> {
     return this.productService.findAll();
   }
 
   @Get(':id')
   @Permissions('product:view')
-  @ApiSuccessResponse(Product)
-  findOne(@Param('id') id: number): Promise<Product> {
+  @ApiSuccessResponse(ProductModel)
+  findOne(@Param('id') id: number): Promise<ProductModel> {
     return this.productService.findOne(id);
   }
 
   @Patch(':id')
-  @ApiSuccessResponse(Product)
+  @ApiSuccessResponse(ProductModel)
   @Permissions('product:update')
   update(
     @Param('id') id: number,
-    @Body() data: Partial<Product>,
-  ): Promise<Product> {
+    @Body() data: Partial<ProductModel>,
+  ): Promise<ProductModel> {
     return this.productService.update(id, data);
   }
 
   @Delete(':id')
-  @ApiSuccessResponse(Product)
+  @ApiSuccessResponse(ProductModel)
   @Permissions('product:delete')
   remove(@Param('id') id: number): Promise<void> {
     return this.productService.remove(id);

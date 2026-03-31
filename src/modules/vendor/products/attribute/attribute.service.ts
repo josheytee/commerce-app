@@ -1,32 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Attribute } from './models/attribute.model';
+import { AttributeModel } from 'src/infrastructure';
 import { CreateAttributeDto } from './dto/create_attribute.dto';
 import { UpdateAttributeDto } from './dto/update_attribute.dto';
 
 @Injectable()
 export class AttributeService {
   constructor(
-    @InjectModel(Attribute)
-    private readonly attributeModel: typeof Attribute,
-  ) {}
+    @InjectModel(AttributeModel)
+    private readonly attributeModel: typeof AttributeModel,
+  ) { }
 
-  async create(createAttributeDto: CreateAttributeDto): Promise<Attribute> {
+  async create(
+    createAttributeDto: CreateAttributeDto,
+  ): Promise<AttributeModel> {
     return this.attributeModel.create(createAttributeDto);
   }
 
-  async findAll(): Promise<Attribute[]> {
+  async findAll(): Promise<AttributeModel[]> {
     return this.attributeModel.findAll();
   }
 
-  async findOne(id: number): Promise<Attribute> {
+  async findOne(id: number): Promise<AttributeModel> {
     return this.attributeModel.findByPk(id);
   }
 
   async update(
     id: number,
     updateAttributeDto: UpdateAttributeDto,
-  ): Promise<[number, Attribute[]]> {
+  ): Promise<[number, AttributeModel[]]> {
     return this.attributeModel.update(updateAttributeDto, {
       where: { id },
       returning: true,

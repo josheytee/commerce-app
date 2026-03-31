@@ -11,7 +11,7 @@ import { REGEX_PATTERNS } from 'src/shared/constants';
 
 export class CreateProductDto {
     @ApiProperty({
-        description: 'Product name',
+        description: 'ProductModel name',
         example: 'Premium Wireless Headphones',
         minLength: 3,
         maxLength: 255,
@@ -32,7 +32,7 @@ export class CreateProductDto {
     slug: string;
 
     @ApiProperty({
-        description: 'Product price in store currency',
+        description: 'ProductModel price in store currency',
         example: 99.99,
         minimum: 0,
         type: Number,
@@ -62,7 +62,7 @@ export class CreateProductDto {
     storeId: number;
 
     @ApiPropertyOptional({
-        description: 'Product section/category within store',
+        description: 'ProductModel section/category within store',
         example: 5,
         type: Number,
     })
@@ -82,7 +82,7 @@ export class CreateProductDto {
     stockQuantity?: number;
 
     @ApiPropertyOptional({
-        description: 'Product attributes for filtering',
+        description: 'ProductModel attributes for filtering',
         example: { color: 'black', material: 'plastic' },
         type: 'object',
         additionalProperties: true,

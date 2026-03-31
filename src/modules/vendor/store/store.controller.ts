@@ -10,7 +10,6 @@ import {
   Req,
 } from '@nestjs/common';
 import { StoreService } from './store.service';
-import { Store } from './models/store.model';
 
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
 import { AuthenticatedRequest } from 'src/modules/auth/interfaces/authenticated-request.interface';
@@ -19,6 +18,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/api.response';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
+import { StoreModel } from 'src/infrastructure';
 
 @Controller('stores')
 @ApiTags('Stores')
@@ -28,43 +28,43 @@ export class StoreController {
 
   @Post()
   @Permissions('store:create')
-  @ApiSuccessResponse(Store)
+  @ApiSuccessResponse(StoreModel)
   create(
     @Body() data: Partial<CreateStoreDto>,
     @Req() req: AuthenticatedRequest,
-  ): Promise<Store> {
+  ): Promise<StoreModel> {
 
     return this.storeService.create(data);
   }
 
   @Get()
   @Permissions('store:view')
-  @ApiSuccessResponse(Store)
-  findAll(@Req() req: AuthenticatedRequest): Promise<Store[]> {
+  @ApiSuccessResponse(StoreModel)
+  findAll(@Req() req: AuthenticatedRequest): Promise<StoreModel[]> {
     const userId = req.user.id;
     return this.storeService.findAllByUserId(userId);
   }
 
   @Get(':id')
   @Permissions('store:view')
-  @ApiSuccessResponse(Store)
-  findOne(@Param('id') id: number): Promise<Store> {
+  @ApiSuccessResponse(StoreModel)
+  findOne(@Param('id') id: number): Promise<StoreModel> {
     return this.storeService.findOne(id);
   }
 
   @Patch(':id')
   @Permissions('store:update')
-  @ApiSuccessResponse(Store)
+  @ApiSuccessResponse(StoreModel)
   update(
     @Param('id') id: number,
-    @Body() data: Partial<Store>,
-  ): Promise<Store> {
+    @Body() data: Partial<StoreModel>,
+  ): Promise<StoreModel> {
     return this.storeService.update(id, data);
   }
 
   @Delete(':id')
   @Permissions('store:delete')
-  @ApiSuccessResponse(Store)
+  @ApiSuccessResponse(StoreModel)
   remove(@Param('id') id: number): Promise<void> {
     return this.storeService.remove(id);
   }

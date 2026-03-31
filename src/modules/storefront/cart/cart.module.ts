@@ -2,12 +2,11 @@ import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { CartService } from './cart.service';
 import { CartController } from './cart.controller';
-import { Cart } from './models/cart.model';
-import { CartItem } from './models/cart-item.model';
+import { CartModel, CartItemModel } from 'src/infrastructure';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Cart, CartItem])],
+  imports: [SequelizeModule.forFeature([CartModel, CartItemModel])],
   providers: [CartService],
   controllers: [CartController],
 })
-export class CartModule {}
+export class CartModule { }

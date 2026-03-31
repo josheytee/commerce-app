@@ -1,35 +1,36 @@
 // src/database/database.module.ts
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Inventory } from 'src/modules/vendor/inventory/inventory.model';
+import { InventoryModel } from 'src/infrastructure/database/models/inventory.model';
 
-import { Section } from 'src/modules/vendor/section/section.model';
-import { City } from 'src/modules/user/addresses/city/city.model';
-import { State } from 'src/modules/user/addresses/state/state.model';
-import { Country } from 'src/modules/user/addresses/country/country.model';
-import { Address } from 'src/modules/user/addresses/address.model';
-import { Cart } from 'src/modules/storefront/cart/models/cart.model';
-import { ProductAttribute } from 'src/modules/vendor/products/attribute/models/product_attribute.model';
-import { Attribute } from 'src/modules/vendor/products/attribute/models/attribute.model';
-import { Rating } from 'src/modules/user/rating/models/rating.model';
-import { Review } from 'src/modules/user/review/model/review.model';
-import { Media } from 'src/modules/vendor/media/models/media.model';
-import { Role } from 'src/modules/user/role/models/role.model';
-import { User } from 'src/modules/user/user/models/user.model';
-import { Permission } from 'src/modules/user/permission/permission.model';
-import { Session } from 'src/modules/auth/session/session.model';
-import { PasswordReset } from 'src/modules/user/password-reset/password-reset.model';
-import { TwoFactorAuth } from 'src/modules/user/two-factor-auth/two-factor-auth.model';
-import { AuditLog } from 'src/modules/user/audit-log/audit-log.model';
-import { Category } from 'src/modules/storefront/categories/category.model';
-import { Store } from 'src/modules/vendor/store/models/store.model';
-import { StoreCustomer } from 'src/modules/vendor/store/models/store-customer.model';
-import { Customer } from 'src/modules/user/customer/customer.model';
-import { Vendor } from 'src/modules/vendor/onboarding/vendor.model';
-import { Product } from 'src/modules/vendor/products/product.model';
-import { UserStoreRole } from 'src/modules/vendor/store/models/user-store-role.model';
-import { UserVendorRole } from 'src/modules/user/user-vendor-role/user-vendor-role.model';
-import { UserVendorRolePermission } from 'src/modules/user/permission/user-vendor-role-permission.model';
+import { SectionModel } from 'src/infrastructure/database/models/section.model';
+import { CityModel } from 'src/infrastructure/database/models/city.model';
+import { StateModel } from 'src/infrastructure/database/models/state.model';
+import { CountryModel } from 'src/infrastructure/database/models/country.model';
+import { AddressModel } from 'src/infrastructure/database/models/address.model';
+import { CartModel } from 'src/infrastructure/database/models/cart.model';
+import { ProductAttributeModel } from 'src/infrastructure/database/models/product-attribute.model';
+import { AttributeModel } from 'src/infrastructure/database/models/attribute.model';
+import { RatingModel } from 'src/infrastructure/database/models/rating.model';
+import { ReviewModel } from 'src/infrastructure/database/models/review.model';
+import { MediaModel } from 'src/infrastructure/database/models/media.model';
+import { RoleModel } from 'src/infrastructure/database/models/role.model';
+import { UserModel } from 'src/infrastructure/database/models/user.model';
+import { PermissionModel } from 'src/infrastructure/database/models/permission.model';
+import { SessionModel } from 'src/infrastructure/database/models/session.model';
+import { PasswordResetModel } from 'src/infrastructure/database/models/password-reset.model';
+import { TwoFactorAuthModel } from 'src/infrastructure/database/models/two-factor-auth.model';
+import { AuditLogModel } from 'src/infrastructure/database/models/audit-log.model';
+import { CategoryModel } from 'src/infrastructure/database/models/category.model';
+import { StoreModel } from 'src/infrastructure/database/models/store.model';
+import { StoreCustomer } from 'src/infrastructure/database/models/store-customer.model';
+import { CustomerModel } from 'src/infrastructure/database/models/customer.model';
+import { VendorModel } from 'src/infrastructure/database/models/vendor.model';
+import { ProductModel } from 'src/infrastructure/database/models/product.model';
+import { UserStoreRoleModel } from 'src/infrastructure/database/models/user-store-role.model';
+import { UserVendorRoleModel } from 'src/infrastructure/database/models/user-vendor-role.model';
+import { UserVendorRolePermissionModel } from 'src/infrastructure/database/models/user-vendor-role-permission.model';
+import { OrderItemModel, OrderModel } from './models';
 
 @Module({
     imports: [
@@ -51,36 +52,36 @@ import { UserVendorRolePermission } from 'src/modules/user/permission/user-vendo
             // },
             // logging: console.log,
             models: [
-                City,
-                State,
-                Country,
-                Address,
-                User,
-                Role,
-                Permission,
-                Session,
-                PasswordReset,
-                TwoFactorAuth,
-                AuditLog,
-                Category,
-                Store,
+                CityModel,
+                StateModel,
+                CountryModel,
+                AddressModel,
+                UserModel,
+                RoleModel,
+                PermissionModel,
+                SessionModel,
+                PasswordResetModel,
+                TwoFactorAuthModel,
+                AuditLogModel,
+                CategoryModel,
+                StoreModel,
                 StoreCustomer,
-                Customer,
-                Section,
-                Vendor,
-                Inventory,
-                Media,
-                Review,
-                Rating,
-                Product,
-                Order,
-                Cart,
-                Attribute,
-                ProductAttribute,
+                CustomerModel,
+                SectionModel,
+                VendorModel,
+                InventoryModel,
+                MediaModel,
+                ReviewModel,
+                RatingModel,
+                ProductModel,
+                OrderModel,
+                CartModel,
+                AttributeModel,
+                ProductAttributeModel,
                 OrderItemModel,
-                UserStoreRole,
-                UserVendorRole,
-                UserVendorRolePermission,
+                UserStoreRoleModel,
+                UserVendorRoleModel,
+                UserVendorRolePermissionModel,
             ],
         }),
     ],

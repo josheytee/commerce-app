@@ -10,7 +10,6 @@ import {
   Req,
 } from '@nestjs/common';
 import { VendorService } from '../vendor.service';
-import { Vendor } from '../vendor.model';
 import { CreateVendorDto } from '../dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/api.response';
@@ -18,48 +17,49 @@ import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { AuthenticatedRequest } from 'src/modules/auth/interfaces';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
+import { VendorModel } from 'src/infrastructure';
 
 @ApiBearerAuth()
-@ApiTags('Vendor - Onboarding')
+@ApiTags('VendorModel - Onboarding')
 @Controller('vendors')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class VendorOnboardingController {
   constructor(private readonly vendorService: VendorService) { }
 
   @Post()
-  @ApiSuccessResponse(Vendor)
+  @ApiSuccessResponse(VendorModel)
   create(
     @Body() data: CreateVendorDto,
     @Req() req: AuthenticatedRequest,
-  ): Promise<Vendor> {
+  ): Promise<VendorModel> {
     return this.vendorService.create({ ...data, ...{ user_id: req.user.id } });
   }
 
   @Get()
   @Permissions('vendor:view')
-  @ApiSuccessResponse(Vendor)
-  findAll(@Req() req: AuthenticatedRequest): Promise<Vendor[]> {
+  @ApiSuccessResponse(VendorModel)
+  findAll(@Req() req: AuthenticatedRequest): Promise<VendorModel[]> {
     const user_id = req.user.id; // Extract the user ID from the request
     return this.vendorService.findVendorsByUserId(user_id);
   }
 
   @Get(':id')
-  @ApiSuccessResponse(Vendor)
-  findOne(@Param('id') id: number): Promise<Vendor> {
+  @ApiSuccessResponse(VendorModel)
+  findOne(@Param('id') id: number): Promise<VendorModel> {
     return this.vendorService.findById(id);
   }
 
   @Patch(':id')
-  @ApiSuccessResponse(Vendor)
+  @ApiSuccessResponse(VendorModel)
   update(
     @Param('id') id: number,
-    @Body() data: Partial<Vendor>,
-  ): Promise<Vendor> {
+    @Body() data: Partial<VendorModel>,
+  ): Promise<VendorModel> {
     return this.vendorService.update(id, data);
   }
 
   @Delete(':id')
-  @ApiSuccessResponse(Vendor)
+  @ApiSuccessResponse(VendorModel)
   remove(@Param('id') id: number): Promise<void> {
     return this.vendorService.delete(id);
   }

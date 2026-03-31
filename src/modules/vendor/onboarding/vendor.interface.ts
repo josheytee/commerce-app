@@ -1,3 +1,3 @@
-export interface Vendor {
+export interface VendorModel {
   name: string;
 }
