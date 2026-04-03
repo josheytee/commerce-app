@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import {
+  MediaModel,
   ProductModel,
   ProductVariantModel,
   UserVendorRoleModel,
@@ -14,6 +15,8 @@ import {
 } from 'src/infrastructure/database/repositories';
 import { InventoryModule } from '../inventory/inventory.module';
 import { PricingService } from './services/pricing.service';
+import { ProductMediaController } from './product-media.controller';
+import { MediaUploadService } from '../media/services';
 
 @Module({
   imports: [
@@ -21,6 +24,7 @@ import { PricingService } from './services/pricing.service';
     UserVendorRoleModule,
     SequelizeModule.forFeature([
       ProductModel,
+      MediaModel,
       ProductVariantModel,
       UserVendorRoleModel,
     ]),
@@ -31,7 +35,8 @@ import { PricingService } from './services/pricing.service';
     VariantRepository,
     // ProductVariantModelRepository,
     PricingService,
+    MediaUploadService
   ],
-  controllers: [ProductController],
+  controllers: [ProductController, ProductMediaController],
 })
 export class ProductModule { }
