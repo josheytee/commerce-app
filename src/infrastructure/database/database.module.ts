@@ -30,7 +30,7 @@ import { ProductModel } from 'src/infrastructure/database/models/product.model';
 import { UserStoreRoleModel } from 'src/infrastructure/database/models/user-store-role.model';
 import { UserVendorRoleModel } from 'src/infrastructure/database/models/user-vendor-role.model';
 import { UserVendorRolePermissionModel } from 'src/infrastructure/database/models/user-vendor-role-permission.model';
-import { OrderItemModel, OrderModel } from './models';
+import { DiscountModel, OrderItemModel, OrderModel, ProductVariantModel, TagModel } from './models';
 import { SectionRepository } from './repositories';
 
 @Module({
@@ -74,7 +74,10 @@ import { SectionRepository } from './repositories';
                 MediaModel,
                 ReviewModel,
                 RatingModel,
+                ProductVariantModel,
                 ProductModel,
+                DiscountModel,
+                TagModel,
                 OrderModel,
                 CartModel,
                 AttributeModel,

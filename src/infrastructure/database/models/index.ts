@@ -24,11 +24,13 @@ export * from './permission.model';
 export * from './session.model';
 export * from './password-reset.model';
 export * from './two-factor-auth.model';
-export * from './rating.model';
 export * from './review.model';
 export * from './user-store-role.model';
 export * from './user-vendor-role.model';
 export * from './user-vendor-role-permission.model';
 export * from './product-attribute.model';
 export * from './category.model';
+export * from './discount.model';
+export * from './product-variant.model';
+export * from './tag.model';
 

@@ -8,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { StoreModel } from 'src/infrastructure';
+import { StringUtils } from 'src/shared';
 // import { VendorRepository } from '../onboarding/vendor.repository';
 @Injectable()
 export class StoreService {
@@ -23,6 +24,7 @@ export class StoreService {
     try {
       const store = await this.storeRepository.createWithTransaction(
         {
+          slug: createStoreDto.slug || StringUtils.slugify(createStoreDto.name),
           ...createStoreDto,
         },
         transaction,
