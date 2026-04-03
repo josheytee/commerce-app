@@ -19,3 +19,44 @@ export const SUCCESS_MESSAGES = {
     DELETED: 'Resource deleted successfully',
     FETCHED: 'Resource fetched successfully',
 };
+
+
+export enum ProductStatusEnum {
+    DRAFT = 'draft',
+    PENDING = 'pending',
+    PUBLISHED = 'published',
+    OUT_OF_STOCK = 'out_of_stock',
+    DISCONTINUED = 'discontinued',
+    ARCHIVED = 'archived',
+}
+
+export enum ProductTypeEnum {
+    SIMPLE = 'simple',
+    VARIABLE = 'variable',
+    DIGITAL = 'digital',
+    SERVICE = 'service',
+    BUNDLE = 'bundle',
+}
+
+export enum StockStatusEnum {
+    IN_STOCK = 'in_stock',
+    OUT_OF_STOCK = 'out_of_stock',
+    BACKORDER = 'backorder',
+    PRE_ORDER = 'pre_order',
+    LOW_STOCK = 'low_stock',
+}
+
+export enum DiscountTypeEnum {
+    PERCENTAGE = 'percentage',
+    FIXED = 'fixed',
+    BUY_X_GET_Y = 'buy_x_get_y',
+    FREE_SHIPPING = 'free_shipping',
+}
+
+export enum DiscountAppliesToEnum {
+    PRODUCT = 'product',
+    VARIANT = 'variant',
+    CATEGORY = 'category',
+    CART = 'cart',
+    CUSTOMER = 'customer',
+}

@@ -44,7 +44,9 @@ export class CreateStoreDto {
     description: 'Unique store slug (URL friendly)',
   })
   @IsString()
-  slug: string;
+  @IsOptional()
+  @ApiHideProperty()
+  slug?: string;
 
   @ApiPropertyOptional({
     example: 'Best Tech Store in Nigeria',

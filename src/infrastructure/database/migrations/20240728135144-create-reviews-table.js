@@ -1,12 +1,19 @@
+// migrations/YYYYMMDDHHMMSS-create-reviews-table.js
 'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    // Create ENUM for review types
+    await queryInterface.sequelize.query(`
+      CREATE TYPE "enum_reviews_entity_type" AS ENUM ('product', 'vendor', 'store', 'service');
+    `);
+
     await queryInterface.createTable('reviews', {
       id: {
         type: Sequelize.INTEGER,
-        autoIncrement: true,
         primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
       },
       title: {
         type: Sequelize.STRING(255),
@@ -17,7 +24,7 @@ module.exports = {
         allowNull: false,
       },
       entity_type: {
-        type: Sequelize.ENUM('vendor', 'product', 'store', 'service'),
+        type: Sequelize.ENUM('product', 'vendor', 'store', 'service'),
         allowNull: false,
       },
       entity_id: {
@@ -27,18 +34,16 @@ module.exports = {
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
-      pros: {
-        type: Sequelize.JSONB,
-        allowNull: true,
-      },
-      cons: {
-        type: Sequelize.JSONB,
-        allowNull: true,
-      },
-      images: {
-        type: Sequelize.JSONB,
-        allowNull: true,
+      rating: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
       },
       helpful_count: {
         type: Sequelize.INTEGER,
@@ -48,7 +53,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         defaultValue: 0,
       },
-      is_verified_purchase: {
+      is_verified: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
       },
@@ -80,24 +85,22 @@ module.exports = {
       },
     });
 
+    // Add indexes
     await queryInterface.addIndex('reviews', ['entity_type', 'entity_id'], {
       name: 'reviews_entity_index',
     });
-
-    await queryInterface.addConstraint('reviews', {
-      fields: ['user_id'],
-      type: 'foreign key',
-      name: 'fk_reviews_user_id',
-      references: {
-        table: 'users',
-        field: 'id',
-      },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
+    await queryInterface.addIndex('reviews', ['user_id'], {
+      name: 'reviews_user_index',
+    });
+    await queryInterface.addIndex('reviews', ['is_approved'], {
+      name: 'reviews_approved_index',
     });
   },
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('reviews');
+    await queryInterface.sequelize.query(
+      'DROP TYPE IF EXISTS "enum_reviews_entity_type";',
+    );
   },
 };

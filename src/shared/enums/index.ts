@@ -54,7 +54,11 @@ export enum ReviewTypeEnum {
     VENDOR = 'vendor',
     PRODUCT = 'product',
     STORE = 'store',
-    SERVICE = 'service',
+}
+export enum TagTypeEnum {
+    VENDOR = 'vendor',
+    PRODUCT = 'product',
+    STORE = 'store',
 }
 
 export enum BusinessTypeEnum {
@@ -96,4 +100,10 @@ export enum AddressTypeEnum {
     POSTAL = 'postal',
     WAREHOUSE = 'warehouse',
     RETURNS = 'returns',
+}
+
+export enum VariantStockStatusEnum {
+    IN_STOCK = 'in_stock',
+    OUT_OF_STOCK = 'out_of_stock',
+    BACKORDER = 'backorder',
 }

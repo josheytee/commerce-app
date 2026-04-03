@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+    ApiHideProperty,
+    ApiProperty,
+    ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class CreateSectionDto {
@@ -8,6 +12,7 @@ export class CreateSectionDto {
 
     @ApiProperty({ example: 'electronics' })
     @IsString()
+    @ApiHideProperty()
     slug: string;
 
     @ApiPropertyOptional({

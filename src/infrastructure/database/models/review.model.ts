@@ -8,6 +8,7 @@ import {
     CreatedAt,
     UpdatedAt,
     Index,
+    Default,
 } from 'sequelize-typescript';
 import { ReviewTypeEnum } from 'src/shared';
 
@@ -66,23 +67,10 @@ export class ReviewModel extends Model<ReviewModel> {
     })
     user_id: number;
 
-    @Column({
-        type: DataType.JSONB,
-        allowNull: true,
-    })
-    pros: string[];
 
-    @Column({
-        type: DataType.JSONB,
-        allowNull: true,
-    })
-    cons: string[];
-
-    @Column({
-        type: DataType.JSONB,
-        allowNull: true,
-    })
-    images: string[];
+    @Default(0)
+    @Column({ type: DataType.INTEGER })
+    rating: number;
 
     @Column({
         type: DataType.INTEGER,
@@ -100,12 +88,10 @@ export class ReviewModel extends Model<ReviewModel> {
         type: DataType.BOOLEAN,
         defaultValue: false,
     })
-    is_verified_purchase: boolean;
+    is_verified: boolean;
 
-    @Column({
-        type: DataType.BOOLEAN,
-        defaultValue: false,
-    })
+    @Default(false)
+    @Column({ type: DataType.BOOLEAN })
     is_approved: boolean;
 
     @Column({

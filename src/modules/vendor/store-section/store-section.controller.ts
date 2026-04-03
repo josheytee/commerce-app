@@ -28,8 +28,15 @@ export class StoreSectionController {
   @Post()
   @Permissions('section:create')
   @ApiSuccessResponse(SectionModel)
-  async create(@Body() data: CreateSectionDto): Promise<SectionModel> {
-    return await this.sectionService.create(data);
+  async create(
+    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('vendorId', ParseIntPipe) vendorId: number,
+    @Body() data: CreateSectionDto,
+  ): Promise<SectionModel> {
+    return await this.sectionService.create({
+      ...data,
+      store_id: storeId,
+    });
   }
 
   @Get()

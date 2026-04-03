@@ -2,13 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSectionDto, UpdateSectionDto } from './dto';
 import { SectionModel } from 'src/infrastructure';
 import { SectionRepository } from 'src/infrastructure/database/repositories';
+import { StringUtils } from 'src/shared/utils';
 
 @Injectable()
 export class StoreSectionService {
   constructor(private readonly sectionRepository: SectionRepository) { }
 
   async create(data: CreateSectionDto): Promise<SectionModel> {
-    return this.sectionRepository.create(data);
+    return this.sectionRepository.create({
+      ...data,
+      slug: data.slug || StringUtils.slugify(data.name),
+    });
   }
 
   async findOneByStore(
