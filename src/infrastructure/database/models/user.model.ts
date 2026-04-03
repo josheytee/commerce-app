@@ -9,6 +9,7 @@ import {
   Unique,
   HasMany,
   BelongsToMany,
+  HasOne,
 } from 'sequelize-typescript';
 import { IUser } from 'src/shared';
 import { SessionModel } from './session.model';
@@ -20,6 +21,7 @@ import { RoleModel } from './role.model';
 import { StoreModel } from './store.model';
 import { UserStoreRoleModel } from './user-store-role.model';
 import { TwoFactorAuthModel } from './two-factor-auth.model';
+import { CustomerModel } from './customer.model';
 
 @Table({
   timestamps: true,
@@ -86,6 +88,9 @@ export class UserModel extends Model<UserModel> implements IUser {
 
   @BelongsToMany(() => VendorModel, () => UserVendorRoleModel)
   vendors: VendorModel[];
+
+  @HasOne(() => CustomerModel)
+  customer: CustomerModel;
 
   @BelongsToMany(() => RoleModel, () => UserVendorRoleModel)
   roles: RoleModel[];

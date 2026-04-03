@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
-import { SessionModel, UserModel } from 'src/infrastructure';
+import {
+  CustomerModel,
+  RoleModel,
+  SessionModel,
+  StoreModel,
+  UserModel,
+  VendorModel,
+} from 'src/infrastructure';
 
 @Injectable()
 export class SessionService {
@@ -13,7 +20,34 @@ export class SessionService {
   async findSessionByToken(token: string): Promise<SessionModel | null> {
     return this.sessionModel.findOne({
       where: { token },
-      include: [UserModel],
+      include: [
+        {
+          model: UserModel,
+          as: 'user',
+          include: [
+            {
+              model: VendorModel,
+              as: 'vendors',
+              through: { attributes: [] },
+              include: [
+                {
+                  model: StoreModel,
+                  as: 'stores',
+                },
+              ],
+            },
+            {
+              model: CustomerModel,
+              as: 'customer',
+            },
+            {
+              model: RoleModel,
+              as: 'roles',
+              through: { attributes: [] },
+            },
+          ],
+        },
+      ],
     });
   }
 

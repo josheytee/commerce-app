@@ -1,6 +1,7 @@
 import { RoleModel } from 'src/infrastructure/database/models/role.model';
 import { VendorModel } from 'src/infrastructure/database/models/vendor.model';
 import { StoreModel } from 'src/infrastructure/database/models/store.model';
+import { CustomerModel } from 'src/infrastructure';
 
 
 export interface AuthenticatedUser {
@@ -15,6 +16,7 @@ export interface AuthenticatedUser {
     verified_at?: string;
     last_login?: string;
     vendors?: VendorModel[];
+    customer?: CustomerModel;
     roles?: RoleModel[];
     stores?: StoreModel[];
     // Add any other fields you need from the User model
