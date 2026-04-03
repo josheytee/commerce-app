@@ -48,4 +48,10 @@ export abstract class BaseRepository<T extends Model> {
     ): Promise<T> {
         return this.model.create(data as any, { transaction });
     }
+    async bulkCreateWithTransaction(
+        data: Partial<T>[],
+        transaction: Transaction,
+    ): Promise<T[]> {
+        return this.model.bulkCreate(data as any, { transaction });
+    }
 }

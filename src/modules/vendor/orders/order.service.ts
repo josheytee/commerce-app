@@ -1,10 +1,23 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
 import { OrderSearchCriteria } from './order-search-criteria.interface';
 import { PaymentService } from 'src/infrastructure/payment/payment.service';
 import { CustomerService } from 'src/modules/user/customer/customer.service';
 import { OrderItemModel, OrderModel } from 'src/infrastructure';
+import { CreateOrderDto } from './dto';
+import { Sequelize } from 'sequelize-typescript';
+import {
+  OrderRepository,
+  VariantRepository,
+} from 'src/infrastructure/database/repositories';
+import { InventoryService } from '../inventory/inventory.service';
 // import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
@@ -16,6 +29,10 @@ export class OrderService {
     private orderItemModel: typeof OrderItemModel,
     private readonly paymentService: PaymentService,
     private readonly customerService: CustomerService,
+    private readonly _variantRepository: VariantRepository,
+    private readonly _inventoryService: InventoryService,
+    private readonly _orderRepository: OrderRepository,
+    private readonly _sequelize: Sequelize,
   ) { }
 
   async create(
@@ -80,6 +97,46 @@ export class OrderService {
     return { order, paymentUrl };
   }
 
+  async createOrder(dto: CreateOrderDto) {
+    return this._sequelize.transaction(async (t) => {
+      let total = 0;
+
+      const items = [];
+
+      for (const item of dto.items) {
+        const variant = await this._variantRepository.findById(item.variant_id);
+
+        // 🔥 reserve stock
+        await this._inventoryService.reserve(item.variant_id, item.quantity);
+
+        total += variant.price * item.quantity;
+
+        items.push({
+          product_variant_id: item.variant_id,
+          quantity: item.quantity,
+          price: variant.price,
+          store_id: item.store_id,
+        });
+      }
+
+      const order = await this._orderRepository.createWithTransaction(
+        {
+          customer_id: dto.customer_id,
+          total_amount: total,
+          status: 'pending',
+        },
+        t,
+      );
+
+      await this._orderRepository.bulkCreateWithTransaction(
+        items.map((i) => ({ ...i, order_id: order.id })),
+        t,
+      );
+
+      return order;
+    });
+  }
+
   async handlePaymentCallback(data: any): Promise<void> {
     await this.paymentService.handleCallback('order', data);
   }
@@ -97,7 +154,10 @@ export class OrderService {
   //   return paymentResponse;
   // }
 
-  async updateOrderStatus(orderId: number, status: string): Promise<OrderModel> {
+  async updateOrderStatus(
+    orderId: number,
+    status: string,
+  ): Promise<OrderModel> {
     const order = await this.orderModel.findByPk(orderId);
     if (!order) {
       throw new Error('OrderModel not found');
@@ -106,49 +166,6 @@ export class OrderService {
     order.status = status;
     await order.save();
     return order;
-  }
-
-  async findAll(): Promise<OrderModel[]> {
-    return this.orderModel.findAll({ include: [OrderItemModel] });
-  }
-
-  async find(criteria: OrderSearchCriteria): Promise<OrderModel | null> {
-    return this.orderModel.findOne({ where: criteria as any });
-  }
-
-  async findOne(id: number): Promise<OrderModel> {
-    const order = await this.orderModel.findByPk(id, {
-      include: [OrderItemModel],
-    });
-    if (!order) {
-      throw new NotFoundException('OrderModel not found');
-    }
-    return order;
-  }
-
-  async update(
-    id: number,
-    data: Partial<OrderModel>,
-    items: Partial<OrderItemModel>[],
-  ): Promise<OrderModel> {
-    const order = await this.findOne(id);
-    await order.update(data);
-
-    // Delete old items
-    await this.orderItemModel.destroy({ where: { order_id: id } });
-
-    // Add new items
-    for (const item of items) {
-      await this.orderItemModel.create({ ...item, order_id: order.id });
-    }
-
-    return order;
-  }
-
-  async remove(id: number): Promise<void> {
-    const order = await this.findOne(id);
-    await this.orderItemModel.destroy({ where: { order_id: id } });
-    await order.destroy();
   }
 
   async confirmOrder(paymentReference: string) {
@@ -179,5 +196,86 @@ export class OrderService {
     const orderReference = `${prefix}|${customerId}|${dateString}|${randomString}`;
 
     return orderReference;
+  }
+
+  async findAllByVendorId(id: number): Promise<OrderModel[]> {
+    try {
+      // Validate input
+      if (!id || id <= 0) {
+        throw new BadRequestException('Invalid vendor ID');
+      }
+
+      // Direct query through associations
+      const stores = await this._orderRepository.findAllByVendorId(id);
+      console.log(`Found ${stores.orders.length} stores for vendor ID: ${id}`);
+
+      return stores.orders;
+    } catch (error) {
+      console.error(`Error finding stores for vendor ${id}:`, error.message);
+      throw new InternalServerErrorException('Failed to retrieve stores');
+    }
+  }
+
+  async findOneByVendorId(vendorId: number, id: number): Promise<OrderModel> {
+    try {
+      // Validate input
+      if (!id || id <= 0) {
+        throw new BadRequestException('Invalid vendor ID');
+      }
+
+      // Direct query through associations
+      const stores = await this._orderRepository.findOneByVendorId(
+        vendorId,
+        id,
+      );
+
+      return stores;
+    } catch (error) {
+      console.error(`Error finding stores for vendor ${id}:`, error.message);
+      throw new InternalServerErrorException('Failed to retrieve stores');
+    }
+  }
+
+  async findOneByCriteria(criteria: OrderSearchCriteria): Promise<OrderModel> {
+    // Build where clause dynamically based on criteria
+    const where: any = {};
+
+    if (criteria.id) {
+      where.id = criteria.id;
+    }
+    if (criteria.orderReference) {
+      where.order_number = criteria.orderReference;
+    }
+    // if (criteria.userId) {
+    //   where.user_id = criteria.userId;
+    // }
+    // if (criteria.status) {
+    //   where.status = criteria.status;
+    // }
+    // if (criteria.paymentStatus) {
+    //   where.payment_status = criteria.paymentStatus;
+    // }
+    // if (criteria.email) {
+    //   where.email = criteria.email;
+    // }
+    // if (criteria.phone) {
+    //   where.phone = criteria.phone;
+    // }
+
+    const order = await this._orderRepository.findOne({
+      where,
+      include: [
+        {
+          model: OrderItemModel,
+          as: 'items',
+          required: false,
+        },
+      ],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return order;
   }
 }

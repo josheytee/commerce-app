@@ -2,12 +2,31 @@ import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { InventoryService } from './inventory.service';
 import { InventoryController } from './inventory.controller';
-import { InventoryModel } from 'src/infrastructure';
-import { InventoryRepository } from 'src/infrastructure/database/repositories';
+import {
+  InventoryModel,
+  OrderModel,
+  ProductVariantModel,
+} from 'src/infrastructure';
+import {
+  InventoryRepository,
+  OrderRepository,
+  VariantRepository,
+} from 'src/infrastructure/database/repositories';
 
 @Module({
-  imports: [SequelizeModule.forFeature([InventoryModel])],
-  providers: [InventoryService, InventoryRepository],
+  imports: [
+    SequelizeModule.forFeature([
+      InventoryModel,
+      OrderModel,
+      ProductVariantModel,
+    ]),
+  ],
+  providers: [
+    InventoryService,
+    InventoryRepository,
+    OrderRepository,
+    VariantRepository,
+  ],
   controllers: [InventoryController],
   exports: [InventoryService],
 })

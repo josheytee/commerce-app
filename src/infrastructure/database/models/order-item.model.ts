@@ -8,9 +8,11 @@ import {
   UpdatedAt,
   PrimaryKey,
   AutoIncrement,
+  DataType,
 } from 'sequelize-typescript';
 import { OrderModel } from './order.model';
-import { ProductModel } from './product.model';
+import { ProductVariantModel } from './product-variant.model';
+import { VendorModel } from './vendor.model';
 @Table({
   timestamps: true,
   underscored: true,
@@ -30,12 +32,22 @@ export class OrderItemModel extends Model<OrderItemModel> {
   @BelongsTo(() => OrderModel)
   order: OrderModel;
 
-  @ForeignKey(() => ProductModel)
-  @Column
-  product_id: number;
+  @ForeignKey(() => VendorModel)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  vendor_id: number;
 
-  @BelongsTo(() => ProductModel)
-  product: ProductModel;
+  @BelongsTo(() => VendorModel)
+  vendor: VendorModel;
+
+  @BelongsTo(() => ProductVariantModel)
+  variant: ProductVariantModel;
+
+  @ForeignKey(() => ProductVariantModel)
+  @Column
+  product_variant_id: number;
 
   @Column
   quantity: number;

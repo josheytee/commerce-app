@@ -9,6 +9,14 @@ module.exports = {
         autoIncrement: true,
         allowNull: false,
       },
+      vendor_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'vendors',
+          key: 'id',
+        },
+      },
       customer_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
