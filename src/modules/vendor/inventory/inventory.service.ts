@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Sequelize } from 'sequelize-typescript';
 import { InventoryModel } from 'src/infrastructure';
-import { InventoryRepository } from 'src/infrastructure/database/repositories/inventory.repository';
+import {
+  OrderRepository,
+  VariantRepository,
+  InventoryRepository,
+} from 'src/infrastructure/database/repositories';
 import { StockStatusEnum } from 'src/shared';
 
 @Injectable()
@@ -9,7 +14,10 @@ export class InventoryService {
   constructor(
     @InjectModel(InventoryModel)
     private inventoryModel: typeof InventoryModel,
-    private readonly _inventoryRepo: InventoryRepository,
+    private readonly _inventoryRepository: InventoryRepository,
+    private readonly _orderRepository: OrderRepository,
+    private readonly _variantRepository: VariantRepository,
+    private readonly _sequelize: Sequelize,
   ) { }
 
   async getStock(productId: number) {
@@ -24,7 +32,7 @@ export class InventoryService {
   }
 
   async getRepo() {
-    return this._inventoryRepo;
+    return this._inventoryRepository;
   }
 
   async updateStock(productId: number, quantity: number) {
@@ -33,6 +41,7 @@ export class InventoryService {
       { where: { product_id: productId } },
     );
   }
+
   async isInStock(productId: number): Promise<boolean> {
     const inventory = await InventoryModel.findOne({
       where: { product_id: productId },
@@ -44,7 +53,7 @@ export class InventoryService {
   }
 
   async reserve(productVariantId: number, qty: number) {
-    const inventory = await this._inventoryRepo.findOne({
+    const inventory = await this._inventoryRepository.findOne({
       where: { product_variant_id: productVariantId },
     });
 
@@ -57,7 +66,7 @@ export class InventoryService {
   }
 
   async confirm(productVariantId: number, qty: number) {
-    const inventory = await this._inventoryRepo.findOne({
+    const inventory = await this._inventoryRepository.findOne({
       where: { product_variant_id: productVariantId },
     });
 
@@ -69,7 +78,7 @@ export class InventoryService {
 
   // release if payment fails or order is cancelled
   async release(productVariantId: number, qty: number) {
-    const inventory = await this._inventoryRepo.findOne({
+    const inventory = await this._inventoryRepository.findOne({
       where: { product_variant_id: productVariantId },
     });
 
@@ -78,9 +87,8 @@ export class InventoryService {
     await inventory.save();
   }
 
-
   async getAvailableStock(variantId: number) {
-    const inv = await this._inventoryRepo.findOne({
+    const inv = await this._inventoryRepository.findOne({
       where: { product_variant_id: variantId },
     });
 

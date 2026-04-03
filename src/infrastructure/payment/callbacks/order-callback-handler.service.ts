@@ -9,7 +9,7 @@ export class OrderCallbackHandlerService implements CallbackHandler {
   async handleCallback(data: any): Promise<void> {
     const { transactionId, status } = data;
     // Validate payment and update order status
-    const order = await this.orderService.find({
+    const order = await this.orderService.findOneByCriteria({
       orderReference: transactionId,
     });
     if (order) {

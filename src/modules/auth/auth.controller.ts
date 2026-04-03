@@ -51,4 +51,20 @@ export class AuthController {
   async getProfile(@GetUser() user: AuthenticatedUser) {
     return user;
   }
+
+  @ApiBearerAuth()
+  @Get('profile/vendors')
+  @UseGuards(TokenAuthGuard)
+  async getVendorProfile(@GetUser() user: AuthenticatedUser) {
+    console.log('Authenticated user ven:', user.vendors);
+    return user.vendors;
+  }
+
+  @ApiBearerAuth()
+  @Get('profile/customer')
+  @UseGuards(TokenAuthGuard)
+  async getCustomerProfile(@GetUser() user: AuthenticatedUser) {
+    console.log('Authenticated user cus:', user.customer);
+    return user.customer;
+  }
 }
