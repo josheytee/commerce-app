@@ -20,7 +20,7 @@ import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 import { VendorModel } from 'src/infrastructure';
 
 @ApiBearerAuth()
-@ApiTags('VendorModel - Onboarding')
+@ApiTags('Vendor - Onboarding')
 @Controller('vendors')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class VendorOnboardingController {
