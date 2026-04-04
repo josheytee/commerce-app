@@ -116,7 +116,7 @@ export class OrderRepository extends BaseRepository<OrderModel> {
                 },
                 {
                     model: OrderItemModel,
-                    as: 'items',
+                    as: 'orderItems',
                     required: false,
                 },
             ],

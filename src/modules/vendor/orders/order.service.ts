@@ -14,10 +14,12 @@ import { OrderItemModel, OrderModel } from 'src/infrastructure';
 import { CreateOrderDto } from './dto';
 import { Sequelize } from 'sequelize-typescript';
 import {
+  FulfillmentRepository,
   OrderRepository,
   VariantRepository,
 } from 'src/infrastructure/database/repositories';
 import { InventoryService } from '../inventory/inventory.service';
+import { FulfillmentStatusEnum } from 'src/shared';
 // import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
@@ -32,6 +34,7 @@ export class OrderService {
     private readonly _variantRepository: VariantRepository,
     private readonly _inventoryService: InventoryService,
     private readonly _orderRepository: OrderRepository,
+    private readonly _fulfillmentRepository: FulfillmentRepository,
     private readonly _sequelize: Sequelize,
   ) { }
 
@@ -121,6 +124,7 @@ export class OrderService {
 
       const order = await this._orderRepository.createWithTransaction(
         {
+          order_reference: this.generateOrderReference(dto.customer_id),
           customer_id: dto.customer_id,
           total_amount: total,
           status: 'pending',
@@ -133,7 +137,24 @@ export class OrderService {
         t,
       );
 
-      return order;
+      //payment
+      const customer = await this.customerService.findOne(dto.customer_id);
+      const paymentUrl = await this.paymentService.initializePayment(
+        order.total_amount,
+        'NGN',
+        {
+          refrence: order.order_reference,
+          redirectUrl: '/orders/callback',
+          customer: {
+            id: dto.customer_id,
+            email: customer.user.email,
+            phonenumber: customer.user.phone_number,
+            name: customer.user.first_name + ' ' + customer.user.last_name,
+          },
+        },
+      );
+
+      return { order, paymentUrl };
     });
   }
 
@@ -160,7 +181,7 @@ export class OrderService {
   ): Promise<OrderModel> {
     const order = await this.orderModel.findByPk(orderId);
     if (!order) {
-      throw new Error('OrderModel not found');
+      throw new Error('Order not found');
     }
 
     order.status = status;
@@ -168,14 +189,65 @@ export class OrderService {
     return order;
   }
 
-  async confirmOrder(paymentReference: string) {
-    // const paymentVerified =
-    //   await this.paymentService.verifyPayment(paymentReference);
-    // if (paymentVerified) {
-    //   // Complete the order
-    // } else {
-    //   // Handle payment failure
-    // }
+  async cancelOrder(orderId: number) {
+    const order = await this._orderRepository.findById(orderId, {
+      include: ['orderItems'],
+    });
+
+    for (const item of order.orderItems) {
+      await this._inventoryService.release(
+        item.product_variant_id,
+        item.quantity,
+      );
+    }
+
+    await order.update({ status: 'cancelled' });
+  }
+
+  async confirmOrder(orderId: number) {
+    const order = await this._orderRepository.findById(orderId, {
+      include: ['orderItems'],
+    });
+
+    for (const item of order.orderItems) {
+      await this._inventoryService.confirm(
+        item.product_variant_id,
+        item.quantity,
+      );
+    }
+
+    await order.update({ status: 'paid' });
+
+    await this.createFulfillments(order);
+  }
+
+  async createFulfillments(order: OrderModel) {
+    const grouped = {};
+
+    for (const item of order.orderItems) {
+      if (!grouped[item.store_id]) {
+        grouped[item.store_id] = [];
+      }
+      grouped[item.store_id].push(item);
+    }
+
+    for (const storeId of Object.keys(grouped)) {
+      const fulfillment = await this._fulfillmentRepository.create({
+        order_id: order.id,
+        store_id: Number(storeId),
+        status: FulfillmentStatusEnum.PENDING,
+      });
+
+      const items = grouped[storeId];
+
+      await this._fulfillmentRepository.bulkCreate(
+        items.map((item) => ({
+          fulfillment_id: fulfillment.id,
+          order_item_id: item.id,
+          quantity: item.quantity,
+        })),
+      );
+    }
   }
 
   generateOrderReference(customerId: number | string): string {
@@ -207,6 +279,7 @@ export class OrderService {
 
       // Direct query through associations
       const stores = await this._orderRepository.findAllByVendorId(id);
+      console.log('stores', stores)
       console.log(`Found ${stores.orders.length} stores for vendor ID: ${id}`);
 
       return stores.orders;

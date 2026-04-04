@@ -53,6 +53,10 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: true,
       },
+      is_default: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
       status: {
         type: Sequelize.ENUM('pending', 'active', 'suspended', 'inactive'),
         defaultValue: 'pending',

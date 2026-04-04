@@ -156,6 +156,11 @@ export class CreateVendorDto {
   @IsOptional()
   is_verified?: boolean;
 
+  @ApiPropertyOptional({ example: false })
+  @IsBoolean()
+  @IsOptional()
+  is_default?: boolean;
+
   @ApiPropertyOptional({ example: 'TIN123456' })
   @IsString()
   @IsOptional()

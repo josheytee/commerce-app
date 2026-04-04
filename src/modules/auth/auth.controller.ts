@@ -56,7 +56,6 @@ export class AuthController {
   @Get('profile/vendors')
   @UseGuards(TokenAuthGuard)
   async getVendorProfile(@GetUser() user: AuthenticatedUser) {
-    console.log('Authenticated user ven:', user.vendors);
     return user.vendors;
   }
 
@@ -64,7 +63,6 @@ export class AuthController {
   @Get('profile/customer')
   @UseGuards(TokenAuthGuard)
   async getCustomerProfile(@GetUser() user: AuthenticatedUser) {
-    console.log('Authenticated user cus:', user.customer);
     return user.customer;
   }
 }
