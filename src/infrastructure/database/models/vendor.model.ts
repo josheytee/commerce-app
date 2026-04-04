@@ -92,6 +92,10 @@ export class VendorModel extends Model<VendorModel> {
 
   @Default(false)
   @Column({ type: DataType.BOOLEAN })
+  is_default: boolean;
+
+  @Default(false)
+  @Column({ type: DataType.BOOLEAN })
   is_verified: boolean;
 
   @Column({ type: DataType.DATE })

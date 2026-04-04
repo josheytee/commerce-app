@@ -16,6 +16,7 @@ import {
 import { StoreSectionModule } from './store-section/store-section.module';
 import { StoreModule } from './store/store.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
+import { OrderModule } from './orders/order.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
     OnboardingModule,
     MediaModule,
     UserVendorRoleModule,
+    OrderModule,
     SequelizeModule.forFeature([
       RoleModel,
       VendorModel,

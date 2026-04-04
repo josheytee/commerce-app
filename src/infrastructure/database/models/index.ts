@@ -33,4 +33,5 @@ export * from './category.model';
 export * from './discount.model';
 export * from './product-variant.model';
 export * from './tag.model';
-
+export * from './fulfillment.model';
+export * from './fulfillment-item.model';

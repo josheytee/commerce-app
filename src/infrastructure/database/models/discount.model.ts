@@ -16,8 +16,6 @@ import {
 } from 'sequelize-typescript';
 import { DiscountTypeEnum } from 'src/shared';
 
-
-
 @Table({
     timestamps: true,
     underscored: true,

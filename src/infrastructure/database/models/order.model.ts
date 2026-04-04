@@ -9,9 +9,11 @@ import {
   UpdatedAt,
   PrimaryKey,
   AutoIncrement,
+  DataType,
 } from 'sequelize-typescript';
 import { OrderItemModel } from './order-item.model';
 import { CustomerModel } from 'src/infrastructure/database/models/customer.model';
+import { VendorModel } from './vendor.model';
 
 @Table({
   timestamps: true,
@@ -34,6 +36,16 @@ export class OrderModel extends Model<OrderModel> {
 
   @BelongsTo(() => CustomerModel)
   customer: CustomerModel;
+
+  @ForeignKey(() => VendorModel)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  vendor_id: number;
+
+  @BelongsTo(() => VendorModel)
+  vendor: VendorModel;
 
   @Column
   total_amount: number;

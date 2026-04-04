@@ -12,7 +12,7 @@ import {
 } from 'sequelize-typescript';
 import { OrderModel } from './order.model';
 import { ProductVariantModel } from './product-variant.model';
-import { VendorModel } from './vendor.model';
+import { StoreModel } from './store.model';
 @Table({
   timestamps: true,
   underscored: true,
@@ -32,15 +32,15 @@ export class OrderItemModel extends Model<OrderItemModel> {
   @BelongsTo(() => OrderModel)
   order: OrderModel;
 
-  @ForeignKey(() => VendorModel)
+  @ForeignKey(() => StoreModel)
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
-  vendor_id: number;
+  store_id: number;
 
-  @BelongsTo(() => VendorModel)
-  vendor: VendorModel;
+  @BelongsTo(() => StoreModel)
+  store: StoreModel;
 
   @BelongsTo(() => ProductVariantModel)
   variant: ProductVariantModel;

@@ -3,5 +3,6 @@ export * from './product.repository';
 export * from './inventory.repository';
 export * from './variant.repository';
 export * from './order.repository';
+export * from './fulfillment.repository';
 // export * from './store.repository';
 // export * from './vendor.repository';

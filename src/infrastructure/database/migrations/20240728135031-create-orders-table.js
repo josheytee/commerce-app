@@ -30,6 +30,10 @@ module.exports = {
         allowNull: true,
         defaultValue: 0.0,
       },
+      order_reference: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       status: {
         type: Sequelize.STRING,
         allowNull: false,

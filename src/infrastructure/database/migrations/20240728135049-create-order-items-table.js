@@ -19,6 +19,14 @@ module.exports = {
             key: 'id',
           },
         },
+        store_id: {
+          type: Sequelize.INTEGER,
+          allowNull: false,
+          references: {
+            model: 'stores',
+            key: 'id',
+          },
+        },
         product_id: {
           type: Sequelize.INTEGER,
           allowNull: false,

@@ -1,5 +1,9 @@
 // Pattern: <DescriptiveName>Enum (PascalCase, values in UPPER_SNAKE_CASE)
 
+export * from './order.enums';
+export * from './discount.enums';
+export * from './fulfillment.enums';
+
 export enum VendorStatusEnum {
     PENDING = 'pending',
     ACTIVE = 'active',
@@ -8,15 +12,6 @@ export enum VendorStatusEnum {
     REJECTED = 'rejected',
 }
 
-export enum OrderStatusEnum {
-    PENDING = 'pending',
-    CONFIRMED = 'confirmed',
-    PROCESSING = 'processing',
-    SHIPPED = 'shipped',
-    DELIVERED = 'delivered',
-    CANCELLED = 'cancelled',
-    REFUNDED = 'refunded',
-}
 
 export enum UserRoleEnum {
     SUPER_ADMIN = 'super_admin',
@@ -106,4 +101,29 @@ export enum VariantStockStatusEnum {
     IN_STOCK = 'in_stock',
     OUT_OF_STOCK = 'out_of_stock',
     BACKORDER = 'backorder',
+}
+
+export enum ProductStatusEnum {
+    DRAFT = 'draft',
+    PENDING = 'pending',
+    PUBLISHED = 'published',
+    OUT_OF_STOCK = 'out_of_stock',
+    DISCONTINUED = 'discontinued',
+    ARCHIVED = 'archived',
+}
+
+export enum ProductTypeEnum {
+    SIMPLE = 'simple',
+    VARIABLE = 'variable',
+    DIGITAL = 'digital',
+    SERVICE = 'service',
+    BUNDLE = 'bundle',
+}
+
+export enum StockStatusEnum {
+    IN_STOCK = 'in_stock',
+    OUT_OF_STOCK = 'out_of_stock',
+    BACKORDER = 'backorder',
+    PRE_ORDER = 'pre_order',
+    LOW_STOCK = 'low_stock',
 }

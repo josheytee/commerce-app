@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -23,14 +24,14 @@ export class VendorService {
     private roleRepository: RoleRepository,
     private mediaRepository: MediaRepository,
     private userVendorRoleRepository: UserVendorRoleRepository,
-    private sequelize: Sequelize,
+    private _sequelize: Sequelize,
   ) { }
 
   async create(
     createVendorDto: Partial<CreateVendorDto>,
   ): Promise<VendorModel> {
     // Check if vendor already exists
-    const transaction = await this.sequelize.transaction();
+    const transaction = await this._sequelize.transaction();
     try {
       // const existingVendor = await this.vendorRepository.findByUserId(
       //   createVendorDto.user_id,
@@ -39,7 +40,6 @@ export class VendorService {
       // if (existingVendor.length) {
       //   throw new Error('User already has a vendor account');
       // }
-      console.log('createVendorDto', createVendorDto);
       const vendorData = {
         //   business_name: createVendorDto.business_name,
         //   business_phone: createVendorDto.business_phone,
@@ -126,11 +126,45 @@ export class VendorService {
     return vendor;
   }
 
+  async setAsDefault(userId: number, vendorId: number): Promise<VendorModel> {
+    // Check if vendor exists and belongs to user
+    const vendor = await this.vendorRepository.findById(vendorId);
+
+    if (!vendor) {
+      throw new NotFoundException(`Vendor with ID ${vendorId} not found`);
+    }
+
+    if (vendor.user_id !== userId) {
+      throw new ForbiddenException('You do not own this vendor');
+    }
+
+    // If it's already default, just return it
+    if (vendor.is_default) {
+      return vendor;
+    }
+
+    // Set as default
+    const updatedVendor = await this.vendorRepository.setAsDefault(
+      userId,
+      vendorId,
+    );
+
+    if (!updatedVendor) {
+      throw new Error('Failed to set vendor as default');
+    }
+
+    return updatedVendor;
+  }
+
+  async getDefaultVendor(userId: number): Promise<VendorModel | null> {
+    return this.vendorRepository.getDefaultVendor(userId);
+  }
+
   async findVendorsByUserId(userId: number): Promise<VendorModel[]> {
     const vendors = await this.vendorRepository.findByUserId(userId);
-    if (!vendors) {
-      throw new NotFoundException('Vendors not found');
-    }
+    // if (!vendors) {
+    //   throw new NotFoundException('Vendors not found');
+    // }
     return vendors;
   }
 
@@ -145,7 +179,7 @@ export class VendorService {
     });
 
     if (!vendor) {
-      throw new NotFoundException('VendorModel not found');
+      throw new NotFoundException('Vendor not found');
     }
 
     return vendor; // Returns VendorModel with vendor.logo (single object)
@@ -174,7 +208,7 @@ export class VendorService {
     vendorData: Partial<VendorModel>,
     storesData: any[],
   ): Promise<VendorModel> {
-    const transaction = await this.sequelize.transaction();
+    const transaction = await this._sequelize.transaction();
 
     try {
       // Create vendor within transaction
