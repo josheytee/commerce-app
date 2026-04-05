@@ -9,8 +9,10 @@ import {
 } from '@nestjs/common';
 import { AddressService } from './address.service';
 import { AddressModel } from 'src/infrastructure';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('addresses')
+@ApiTags('Addresses')
 export class AddressController {
   constructor(private readonly addressService: AddressService) { }
 

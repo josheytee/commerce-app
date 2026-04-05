@@ -14,7 +14,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
-import { AuthenticatedRequest, AuthenticatedUser } from 'src/modules/auth/interfaces';
+import {
+  AuthenticatedRequest,
+  AuthenticatedUser,
+} from 'src/modules/auth/interfaces';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 import { VendorModel } from 'src/infrastructure';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -53,7 +56,7 @@ export class VendorController {
   @ApiSuccessResponse(VendorModel)
   setAsDefault(
     @Param('id') id: number,
-    @GetUser() user: AuthenticatedUser
+    @GetUser() user: AuthenticatedUser,
   ): Promise<VendorModel> {
     return this.vendorService.setAsDefault(user.id, id);
   }

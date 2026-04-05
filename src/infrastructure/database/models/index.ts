@@ -35,3 +35,5 @@ export * from './product-variant.model';
 export * from './tag.model';
 export * from './fulfillment.model';
 export * from './fulfillment-item.model';
+export * from './rider.model';
+export * from './delivery-tracking.model';

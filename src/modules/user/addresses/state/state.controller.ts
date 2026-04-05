@@ -1,9 +1,11 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { StateService } from './state.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Addresses')
 @Controller('states')
 export class StateController {
-  constructor(private readonly stateService: StateService) {}
+  constructor(private readonly stateService: StateService) { }
 
   @Post()
   create(@Body() data: { name: string; country_id: number }) {

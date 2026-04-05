@@ -7,7 +7,7 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
-import { DeliveryService } from './delivery.service';
+import { DeliveryService } from '../services';
 
 @Controller('delivery')
 export class DeliveryController {

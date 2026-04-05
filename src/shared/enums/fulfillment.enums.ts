@@ -3,5 +3,6 @@ export enum FulfillmentStatusEnum {
     PROCESSING = 'processing',
     SHIPPED = 'shipped',
     DELIVERED = 'delivered',
+    ASSIGNED = 'assigned',
 }
 

@@ -3,6 +3,7 @@
 export * from './order.enums';
 export * from './discount.enums';
 export * from './fulfillment.enums';
+export * from './product.enum';
 
 export enum VendorStatusEnum {
     PENDING = 'pending',
@@ -11,7 +12,6 @@ export enum VendorStatusEnum {
     INACTIVE = 'inactive',
     REJECTED = 'rejected',
 }
-
 
 export enum UserRoleEnum {
     SUPER_ADMIN = 'super_admin',
@@ -64,14 +64,14 @@ export enum BusinessTypeEnum {
 export enum DocumentTypeEnum {
     ID_CARD = 'id_card',
     PASSPORT = 'passport',
-    CAC = 'cac',  // Corporate Affairs Commission
+    CAC = 'cac', // Corporate Affairs Commission
     UTILITY_BILL = 'utility_bill',
 }
 
 export enum PromotionTypeEnum {
     PERCENTAGE = 'percentage',
     FIXED = 'fixed',
-    BOGO = 'bogo',  // Buy One Get One
+    BOGO = 'bogo', // Buy One Get One
 }
 
 export enum PaymentStatusEnum {
@@ -103,22 +103,6 @@ export enum VariantStockStatusEnum {
     BACKORDER = 'backorder',
 }
 
-export enum ProductStatusEnum {
-    DRAFT = 'draft',
-    PENDING = 'pending',
-    PUBLISHED = 'published',
-    OUT_OF_STOCK = 'out_of_stock',
-    DISCONTINUED = 'discontinued',
-    ARCHIVED = 'archived',
-}
-
-export enum ProductTypeEnum {
-    SIMPLE = 'simple',
-    VARIABLE = 'variable',
-    DIGITAL = 'digital',
-    SERVICE = 'service',
-    BUNDLE = 'bundle',
-}
 
 export enum StockStatusEnum {
     IN_STOCK = 'in_stock',
@@ -126,4 +110,16 @@ export enum StockStatusEnum {
     BACKORDER = 'backorder',
     PRE_ORDER = 'pre_order',
     LOW_STOCK = 'low_stock',
+}
+
+export enum StoreStatusEnum {
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+    SUSPENDED = 'suspended',
+}
+
+export enum RiderStatusEnum {
+    AVAILABLE = 'available',
+    BUSY = 'busy',
+    OFFLINE = 'offline',
 }
