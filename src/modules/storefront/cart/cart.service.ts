@@ -11,6 +11,10 @@ export class CartService {
     private cartModel: typeof CartModel,
   ) { }
 
+  //   - addToCart()
+  // - removeItem()
+  // - clearExpired()
+
   async create(createCartDto: CreateCartDto): Promise<CartModel> {
     return this.cartModel.create(createCartDto);
   }
