@@ -9,4 +9,7 @@ export class FulfillmentService {
     async createFulfillment(data: any): Promise<FulfillmentModel> {
         return this._fulfillmentRepository.create(data);
     }
+    async updateStatus(data: any): Promise<FulfillmentModel> {
+        return this._fulfillmentRepository.create(data);
+    }
 }

@@ -38,6 +38,11 @@ export class OrderService {
     private readonly _sequelize: Sequelize,
   ) { }
 
+  //   OrderService
+  // - createFromCart()
+  // - confirmOrder()
+  // - cancelOrder()
+
   async create(
     customerId: number,
     items: any[],

@@ -53,6 +53,12 @@ export class OrderModel extends Model<OrderModel> {
   @Column
   status: string;
 
+  @Column(DataType.JSONB)
+  shipping_address: any; // snapshot
+
+  @Column(DataType.DECIMAL)
+  delivery_fee: number;
+
   @HasMany(() => OrderItemModel)
   orderItems: OrderItemModel[];
 

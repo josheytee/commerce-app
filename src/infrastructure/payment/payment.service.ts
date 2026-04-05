@@ -21,6 +21,11 @@ export class PaymentService {
     // this.callbackHandlers.set('inventory', this.inventoryCallbackHandler);
   }
 
+  //   PaymentService
+  // - initializePayment()
+  // - verifyPayment()
+  // - handleWebhook()
+
   async initializePayment(
     amount: number,
     currency: string,
