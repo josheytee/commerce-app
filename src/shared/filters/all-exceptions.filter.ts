@@ -27,15 +27,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
     let details: string | undefined;
-    console.log('Exception caught by AllExceptionsFilter:', {
-      name: (exception as any)?.name,
-      message: (exception as any)?.message,
-      stack: (exception as any)?.stack,
-      ...(exception instanceof HttpException && {
-        statusCode: exception.getStatus(),
-        response: exception.getResponse(),
-      }),
-    });
+    let errors: any[] = [];
+    // console.log('Exception caught by AllExceptionsFilter:', {
+    //   name: (exception as any)?.name,
+    //   message: (exception as any)?.message,
+    //   stack: (exception as any)?.stack,
+    //   ...(exception instanceof HttpException && {
+    //     statusCode: exception.getStatus(),
+    //     response: exception.getResponse(),
+    //   }),
+    // });
     // 🔐 Handle NestJS HTTP Exceptions
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -52,7 +53,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // 🧾 Sequelize Validation Error
     else if (exception instanceof ValidationError) {
       status = HttpStatus.BAD_REQUEST;
-      message = exception.errors.map((err) => err.message);
+      message = exception.message;
+      errors = exception.errors;
+      // message = exception.errors.map((err) => err.message);
     }
 
     // 🧱 Foreign Key Error
@@ -90,6 +93,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         method: request.method,
         requestId,
         details,
+        errors
       },
     };
 

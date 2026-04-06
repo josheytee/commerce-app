@@ -5,5 +5,7 @@ export * from './variant.repository';
 export * from './order.repository';
 export * from './fulfillment.repository';
 export * from './rider.repository';
+export * from './user.repository';
+export * from './customer.repository';
 // export * from './store.repository';
 // export * from './vendor.repository';

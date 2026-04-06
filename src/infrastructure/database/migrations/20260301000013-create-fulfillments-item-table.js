@@ -3,11 +3,7 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     // Create ENUM types
-    await queryInterface.sequelize.query(`
-      CREATE TYPE "enum_fulfillments_type" AS ENUM ('pending', 'processing', 'shipped', 'delivered', 'assigned');
-    `);
-
-    await queryInterface.createTable('fulfillments', {
+    await queryInterface.createTable('fulfillment_items', {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -29,7 +25,7 @@ module.exports = {
         ),
         allowNull: false,
       },
-      order_id: {
+      fulfillment_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
@@ -39,17 +35,7 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      vendor_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'vendors',
-          key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-      },
-      store_id: {
+      order_item_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {

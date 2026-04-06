@@ -9,11 +9,13 @@ import { JwtStrategy } from './jwt.strategy';
 import { TokenStrategy } from './token.strategy';
 import { UserModule } from '../user/user.module';
 import { SessionModule } from './session/session.module';
+import { CustomerModule } from '../user/customer/customer.module';
 
 @Module({
   imports: [
     UserModule,
     SessionModule,
+    CustomerModule,
     PassportModule.register({ session: false }), // Disable sessions
     JwtModule.register({
       secret: jwtConstants.secret,

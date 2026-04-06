@@ -5,6 +5,11 @@ export * from './discount.enums';
 export * from './fulfillment.enums';
 export * from './product.enum';
 
+export enum GenderEnum {
+    MALE = 'male',
+    FEMALE = 'female',
+}
+
 export enum VendorStatusEnum {
     PENDING = 'pending',
     ACTIVE = 'active',

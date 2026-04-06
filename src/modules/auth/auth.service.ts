@@ -5,16 +5,22 @@ import { VendorService } from '../vendor/onboarding/vendor.service';
 import { SessionService } from './session/session.service';
 import { UserService } from '../user/user.service';
 import { User } from '../user/interfaces/user.interface';
+import { CustomerService } from '../user/customer/customer.service';
+import { Sequelize } from 'sequelize-typescript';
+import { UserRepository } from 'src/infrastructure/database/repositories';
+import { CustomerRepository } from 'src/infrastructure/database/repositories/customer.repository';
 
 @Injectable()
 export class AuthService {
   private readonly JWT_SECRET = 'your-jwt-secret';
 
   constructor(
-    private readonly usersService: UserService,
+    private readonly _userRepository: UserRepository,
     private readonly jwtService: JwtService,
     // private readonly vendorService: VendorService,
+    private readonly _customerRepository: CustomerRepository,
     private readonly sessionService: SessionService,
+    private readonly _sequelize: Sequelize,
   ) { }
 
   async validateToken(token: string): Promise<any> {
@@ -68,7 +74,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     // Find user by email instead of username
-    const user = await this.usersService.findOne({ email });
+    const user = await this._userRepository.findOne({ where: { email } });
     if (user && (await this.comparePassword(password, user.password_hash))) {
       const { password_hash, ...result } = user.dataValues;
       return result;
@@ -93,11 +99,45 @@ export class AuthService {
     };
   }
   async register(user: any) {
-    const hashedPassword = await bcrypt.hash(user.password, 10);
-    const newUser = await this.usersService.create({
-      ...user,
-      password_hash: hashedPassword,
-    });
-    return newUser;
+    const transaction = await this._sequelize.transaction();
+
+    try {
+      const hashedPassword = await bcrypt.hash(user.password, 10);
+      const newUser = await this._userRepository.createWithTransaction(
+        {
+          ...user,
+          password_hash: hashedPassword,
+        },
+        transaction,
+      );
+
+      console.log('newUser', newUser, newUser.id);
+
+      // Verify user was created successfully
+      if (!newUser || !newUser.id) {
+        throw new Error('User creation failed - no ID returned');
+      }
+
+      const newCustomer = await this._customerRepository.createWithTransaction(
+        {
+          user_id: newUser.id,
+          // You can also pass other data from newUser if needed
+          status: 'active',
+        },
+        transaction,
+      );
+
+      await transaction.commit();
+
+      // Return combined data if needed
+      return {
+        user: newUser,
+        customer: newCustomer,
+      };
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Transaction failed:', error);
+      throw new Error(`Database transaction failed: ${error.message}`);
+    }
   }
 }
