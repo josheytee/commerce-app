@@ -52,9 +52,9 @@ export class InventoryService {
     );
   }
 
-  async reserve(productVariantId: number, qty: number) {
+  async reserve(productVariantId: number, storeId: number, qty: number) {
     const inventory = await this._inventoryRepository.findOne({
-      where: { product_variant_id: productVariantId },
+      where: { product_variant_id: productVariantId, store_id: storeId },
     });
 
     if (inventory.quantity - inventory.reserved_quantity < qty) {
@@ -77,9 +77,9 @@ export class InventoryService {
   }
 
   // release if payment fails or order is cancelled
-  async release(productVariantId: number, qty: number) {
+  async release(productVariantId: number, storeId: number, qty: number) {
     const inventory = await this._inventoryRepository.findOne({
-      where: { product_variant_id: productVariantId },
+      where: { product_variant_id: productVariantId, store_id: storeId },
     });
 
     inventory.reserved_quantity -= qty;

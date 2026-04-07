@@ -7,7 +7,7 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { OrderService } from './order.service';
+import { OrderService } from '../order.service';
 
 import { ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
@@ -33,7 +33,7 @@ export class OrderController {
     return { message: 'Callback handled successfully' };
   }
 
-  @Post('update-status/:orderId')
+  @Post(':id/update-status')
   @ApiSuccessResponse(OrderModel)
   async updateOrderStatus(
     @Param('orderId') orderId: number,

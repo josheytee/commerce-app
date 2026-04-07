@@ -1,8 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { OrderService } from './order.service';
-import { OrderController } from './order.controller';
-
 import { PaymentModule } from 'src/infrastructure/payment/payment.module';
 import { CustomerModule } from 'src/modules/user/customer/customer.module';
 import {
@@ -17,18 +15,21 @@ import {
   FulfillmentRepository,
 } from 'src/infrastructure/database/repositories';
 import { InventoryModule } from '../inventory/inventory.module';
+import { CustomerOrderController, OrderController } from './controllers';
+import { CartModule } from 'src/modules/storefront/cart/cart.module';
 
 @Module({
   imports: [
-    InventoryModule,
+    forwardRef(() => CartModule),
+    forwardRef(() => InventoryModule),
+    forwardRef(() => PaymentModule),
+    forwardRef(() => CustomerModule),
     SequelizeModule.forFeature([
       OrderModel,
       OrderItemModel,
       ProductVariantModel,
       FulfillmentModel,
     ]),
-    forwardRef(() => PaymentModule), // Use forwardRef to resolve circular dependency
-    forwardRef(() => CustomerModule), // Use forwardRef to resolve circular dependency
   ],
   providers: [
     OrderService,
@@ -36,7 +37,7 @@ import { InventoryModule } from '../inventory/inventory.module';
     VariantRepository,
     FulfillmentRepository,
   ],
-  controllers: [OrderController],
-  exports: [OrderService],
+  controllers: [OrderController, CustomerOrderController],
+  exports: [OrderService, OrderRepository],
 })
 export class OrderModule { }

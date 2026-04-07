@@ -10,7 +10,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { OrderSearchCriteria } from './order-search-criteria.interface';
 import { PaymentService } from 'src/infrastructure/payment/payment.service';
 import { CustomerService } from 'src/modules/user/customer/customer.service';
-import { OrderItemModel, OrderModel } from 'src/infrastructure';
+import { CartItemModel, OrderItemModel, OrderModel } from 'src/infrastructure';
 import { CreateOrderDto } from './dto';
 import { Sequelize } from 'sequelize-typescript';
 import {
@@ -20,6 +20,7 @@ import {
 } from 'src/infrastructure/database/repositories';
 import { InventoryService } from '../inventory/inventory.service';
 import { FulfillmentStatusEnum } from 'src/shared';
+import { CartRepository } from 'src/infrastructure/database/repositories/cart.repository';
 // import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
@@ -32,6 +33,7 @@ export class OrderService {
     private readonly paymentService: PaymentService,
     private readonly customerService: CustomerService,
     private readonly _variantRepository: VariantRepository,
+    private readonly _cartRepository: CartRepository,
     private readonly _inventoryService: InventoryService,
     private readonly _orderRepository: OrderRepository,
     private readonly _fulfillmentRepository: FulfillmentRepository,
@@ -105,6 +107,62 @@ export class OrderService {
     return { order, paymentUrl };
   }
 
+  async createOrderFromCart(cartId: number) {
+    const cart = await this._cartRepository.findOne({ where: { id: cartId } });
+    if (!cart) {
+      throw new NotFoundException('Cart not found');
+    }
+
+    return this._sequelize.transaction(async (t) => {
+      let total = 0;
+
+      const cartItems = cart.items as CartItemModel[];
+      const orderItems = [];
+
+      for (const item of cartItems) {
+        const variant = await this._variantRepository.findById(
+          item.product_variant_id,
+        );
+
+        // 🔥 reserve stock
+        await this._inventoryService.reserve(
+          item.product_variant_id,
+          item.store_id,
+          item.quantity,
+        );
+
+        total += variant.price * item.quantity;
+
+        orderItems.push({
+          product_variant_id: item.product_variant_id,
+          quantity: item.quantity,
+          price: variant.price,
+          store_id: item.store_id,
+        });
+      }
+
+      const order = await this._orderRepository.createWithTransaction(
+        {
+          order_reference: this.generateOrderReference(cart.customer_id),
+          customer_id: cart.customer_id,
+          total_amount: total,
+          status: 'pending',
+        },
+        t,
+      );
+
+      await this._orderRepository.bulkCreateWithTransaction(
+        orderItems.map((i) => ({ ...i, order_id: order.id })),
+        t,
+      );
+
+      const paymentUrl =
+        await this.paymentService.initializeOrderPayment(order);
+
+      return { order, paymentUrl };
+    });
+  }
+
   async createOrder(dto: CreateOrderDto) {
     return this._sequelize.transaction(async (t) => {
       let total = 0;
@@ -115,7 +173,7 @@ export class OrderService {
         const variant = await this._variantRepository.findById(item.variant_id);
 
         // 🔥 reserve stock
-        await this._inventoryService.reserve(item.variant_id, item.quantity);
+        await this._inventoryService.reserve(item.variant_id, item.store_id, item.quantity);
 
         total += variant.price * item.quantity;
 
@@ -202,6 +260,7 @@ export class OrderService {
     for (const item of order.orderItems) {
       await this._inventoryService.release(
         item.product_variant_id,
+        item.store_id,
         item.quantity,
       );
     }
@@ -284,7 +343,7 @@ export class OrderService {
 
       // Direct query through associations
       const stores = await this._orderRepository.findAllByVendorId(id);
-      console.log('stores', stores)
+      console.log('stores', stores);
       console.log(`Found ${stores.orders.length} stores for vendor ID: ${id}`);
 
       return stores.orders;

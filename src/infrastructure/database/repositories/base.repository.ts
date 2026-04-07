@@ -34,8 +34,12 @@ export abstract class BaseRepository<T extends Model> {
         });
     }
 
-    async delete(id: number): Promise<number> {
+    async deleteById(id: number): Promise<number> {
         return this.model.destroy({ where: { id } as WhereOptions });
+    }
+
+    async delete(options: FindOptions): Promise<number> {
+        return this.model.destroy(options);
     }
 
     async bulkCreate(data: Partial<T>[]): Promise<T[]> {

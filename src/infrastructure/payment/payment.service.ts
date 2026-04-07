@@ -26,6 +26,21 @@ export class PaymentService {
   // - verifyPayment()
   // - handleWebhook()
 
+  async initializeOrderPayment(order: any): Promise<any> {
+    // return this.paymentProvider.initializePayment(amount, currency, metaData);
+    const paymentUrl = await this.initializePayment(order.total_amount, 'NGN', {
+      refrence: order.order_reference,
+      redirectUrl: '/orders/callback',
+      customer: {
+        id: order.customer_id,
+        email: order.user.email,
+        phonenumber: order.user.phone_number,
+        name: order.user.first_name + ' ' + order.user.last_name,
+      },
+    });
+    return paymentUrl;
+  }
+
   async initializePayment(
     amount: number,
     currency: string,

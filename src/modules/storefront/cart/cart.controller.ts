@@ -1,51 +1,48 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
+import { AddToCartDto, UpdateCartItemDto } from './dto';
 import { CartService } from './cart.service';
-import { CreateCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
-import { CartModel } from 'src/infrastructure';
 
 @ApiTags('Storefront - Cart')
-@Controller('carts')
+@ApiBearerAuth()
+@UseGuards(TokenAuthGuard)
+@Controller('cart')
 export class CartController {
-  constructor(private readonly cartService: CartService) { }
+  constructor(private cartService: CartService) { }
 
   @Post()
-  @ApiSuccessResponse(CartModel)
-  create(@Body() createCartDto: CreateCartDto) {
-    return this.cartService.create(createCartDto);
+  addToCart(@Req() req, @Body() dto: AddToCartDto) {
+    return this.cartService.addToCart(req.user.id, dto);
   }
 
   @Get()
-  @ApiSuccessResponse(CartModel)
-  findAll() {
-    return this.cartService.findAll();
+  getCart(@Req() req) {
+    return this.cartService.getCart(req.user.id);
   }
 
-  @Get(':id')
-  @ApiSuccessResponse(CartModel)
-  findOne(@Param('id') id: string) {
-    return this.cartService.findOne(id);
+  @Patch('items/:id')
+  updateItem(@Param('id') id: number, @Body() dto: UpdateCartItemDto) {
+    return this.cartService.updateItem(id, dto.quantity);
   }
 
-  @Patch(':id')
-  @ApiSuccessResponse(CartModel)
-  update(@Param('id') id: string, @Body() updateCartDto: UpdateCartDto) {
-    return this.cartService.update(id, updateCartDto);
+  @Delete('items/:id')
+  removeItem(@Param('id') id: number) {
+    return this.cartService.removeItem(id);
   }
 
-  @Delete(':id')
-  @ApiSuccessResponse(CartModel)
-  remove(@Param('id') id: string) {
-    return this.cartService.remove(id);
+  @Delete()
+  clearCart(@Req() req) {
+    return this.cartService.clearCart(req.user.id);
   }
 }

@@ -7,5 +7,7 @@ export * from './fulfillment.repository';
 export * from './rider.repository';
 export * from './user.repository';
 export * from './customer.repository';
+export * from './cart.repository';
+export * from './cart-item.repository';
 // export * from './store.repository';
 // export * from './vendor.repository';

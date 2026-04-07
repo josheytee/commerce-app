@@ -5,8 +5,12 @@ import {
   ForeignKey,
   BelongsTo,
   DataType,
+  HasMany,
+  AutoIncrement,
+  PrimaryKey,
 } from 'sequelize-typescript';
 import { CustomerModel } from 'src/infrastructure/database/models/customer.model';
+import { CartItemModel } from './cart-item.model';
 
 @Table({
   tableName: 'carts',
@@ -14,25 +18,23 @@ import { CustomerModel } from 'src/infrastructure/database/models/customer.model
   timestamps: true,
 })
 export class CartModel extends Model<CartModel> {
-  @Column({
-    type: DataType.UUID,
-    defaultValue: DataType.UUIDV4,
-    primaryKey: true,
-  })
-  id: string;
+  @PrimaryKey
+  @AutoIncrement
+  @Column
+  id: number;
 
   @ForeignKey(() => CustomerModel)
-  @Column({
-    type: DataType.UUID,
-    allowNull: false,
-  })
-  customer_id: string;
+  @Column
+  customer_id: number;
 
   @Column({
     type: DataType.JSONB,
     allowNull: true,
   })
   items: object;
+
+  @HasMany(() => CartItemModel)
+  cartItems: CartItemModel[];
 
   @BelongsTo(() => CustomerModel)
   customer: CustomerModel;
