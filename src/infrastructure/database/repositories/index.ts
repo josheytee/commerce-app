@@ -9,5 +9,6 @@ export * from './user.repository';
 export * from './customer.repository';
 export * from './cart.repository';
 export * from './cart-item.repository';
-// export * from './store.repository';
+export * from './address.repository';
+export * from './store.repository';
 // export * from './vendor.repository';

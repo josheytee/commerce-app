@@ -27,6 +27,12 @@ export abstract class BaseRepository<T extends Model> {
         return this.model.findAll(options);
     }
 
+    async findAndCountAll(
+        options?: FindOptions,
+    ): Promise<{ rows: T[]; count: number }> {
+        return this.model.findAndCountAll(options);
+    }
+
     async update(id: number, data: Partial<T>): Promise<[number, T[]]> {
         return this.model.update(data as any, {
             where: { id } as WhereOptions,

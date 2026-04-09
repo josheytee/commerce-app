@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UserSearchCriteria } from './interfaces/user-search-criteria.interface';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JartException } from 'src/shared/filters/all-exceptions.filter';
 import { UserModel } from 'src/infrastructure';
+import { UserEmailAlreadyExistException } from 'src/shared';
 
 @Injectable()
 export class UserService {
@@ -27,8 +27,7 @@ export class UserService {
     const found = await this.findOne({ email: userPayload.email });
 
     if (found && found !== null)
-      throw new JartException('Email already exists, Kindly use another email');
-
+      throw new UserEmailAlreadyExistException(userPayload.email);
     if (userPayload.password) {
       const saltRounds = 10;
       user.password_hash = await bcrypt.hash(user.password, saltRounds);
