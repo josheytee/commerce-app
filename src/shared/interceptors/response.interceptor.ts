@@ -9,6 +9,7 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Request, Response } from 'express';
+import { isArray } from 'class-validator';
 // import { PaginatedResponse } from '../interfaces/paginated-response.interface';
 
 @Injectable()
@@ -69,10 +70,14 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
     // Handle paginated responses from service layer
     if (data && typeof data === 'object' && 'items' in data && 'meta' in data) {
       const { items, meta, ...rest } = data;
-      return {
-        ...items,
-        ...rest,
-      };
+      if (isArray(items)) {
+        return [...items];
+      } else {
+        return {
+          ...items,
+          ...rest,
+        };
+      }
     }
 
     // Handle Sequelize pagination (fallback)
