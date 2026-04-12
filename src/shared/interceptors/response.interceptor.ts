@@ -1,3 +1,4 @@
+// interceptors/response.interceptor.ts
 import {
   Injectable,
   NestInterceptor,
@@ -8,6 +9,7 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Request, Response } from 'express';
+// import { PaginatedResponse } from '../interfaces/paginated-response.interface';
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
@@ -24,25 +26,24 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
     return next.handle().pipe(
       map((data) => {
         const formattedData = this.formatData(data);
+        const paginationMeta = this.extractPaginationMeta(data);
+        const customMessage = this.extractCustomMessage(data);
 
         const res = {
           success: true,
-          message: this.getMessage(method),
+          message: customMessage || this.getMessage(method),
           data: formattedData,
-
-          // optional meta (very useful)
           meta: {
             statusCode: response.statusCode,
             timestamp: new Date().toISOString(),
             path: request.url,
             method,
             responseTime: `${Date.now() - now}ms`,
+            ...(paginationMeta && { pagination: paginationMeta }),
           },
         };
 
-        // 🔍 Cleaner logging (avoid logging huge payloads in prod)
         this.logger.log(`${method} ${request.url} - ${res.meta.responseTime}`);
-
         return res;
       }),
     );
@@ -65,7 +66,16 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
   }
 
   private formatData(data: any): any {
-    // 🧠 Handle Sequelize pagination
+    // Handle paginated responses from service layer
+    if (data && typeof data === 'object' && 'items' in data && 'meta' in data) {
+      const { items, meta, ...rest } = data;
+      return {
+        ...items,
+        ...rest,
+      };
+    }
+
+    // Handle Sequelize pagination (fallback)
     if (data && typeof data === 'object' && 'rows' in data && 'count' in data) {
       return {
         total: data.count,
@@ -74,5 +84,28 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
     }
 
     return data;
+  }
+
+  private extractPaginationMeta(data: any): any {
+    // Extract pagination meta from service layer response
+    if (data && typeof data === 'object' && 'meta' in data) {
+      const { meta } = data;
+      if (meta && 'currentPage' in meta && 'totalPages' in meta) {
+        return {
+          currentPage: meta.currentPage,
+          totalPages: meta.totalPages,
+          totalItems: meta.totalItems,
+          itemsPerPage: meta.itemsPerPage,
+        };
+      }
+    }
+    return null;
+  }
+
+  private extractCustomMessage(data: any): string | null {
+    if (data && typeof data === 'object' && 'message' in data) {
+      return data.message;
+    }
+    return null;
   }
 }
