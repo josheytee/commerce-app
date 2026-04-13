@@ -60,6 +60,7 @@ export class FlutterwavePaymentProvider implements PaymentProvider {
 
     return response.json();
   }
+
   async handlePaymentCallback(module, queryParams: any): Promise<void> {
     const handler = this.callbackHandlers.get(module);
     if (handler) {

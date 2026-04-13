@@ -18,6 +18,7 @@ import { SectionModel } from './section.model';
 import { InventoryModel } from './inventory.model';
 import { RoleModel } from './role.model';
 import { UserStoreRoleModel } from './user-store-role.model';
+import { StoreStatusEnum } from 'src/shared';
 
 @Table({
   timestamps: true,
@@ -55,10 +56,10 @@ export class StoreModel extends Model<StoreModel> {
   tags: string[];
 
   @Column({
-    type: DataType.ENUM('active', 'inactive', 'suspended'),
+    type: DataType.ENUM(...Object.values(StoreStatusEnum)),
     defaultValue: 'inactive',
   })
-  status: 'active' | 'inactive' | 'suspended';
+  status: StoreStatusEnum;
 
   @Column({
     type: DataType.BOOLEAN,

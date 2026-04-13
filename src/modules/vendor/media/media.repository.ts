@@ -76,7 +76,7 @@ export class MediaRepository extends BaseRepository<MediaModel> {
         const entity = await this.findOne({
             where: { entity_type, entity_id },
         });
-        await this.delete(entity.id);
+        await this.deleteById(entity.id);
     }
 
     // async setPrimary(

@@ -1,4 +1,10 @@
-import { Column, ForeignKey, Model, Table } from 'sequelize-typescript';
+import {
+  BelongsTo,
+  Column,
+  ForeignKey,
+  Model,
+  Table,
+} from 'sequelize-typescript';
 import { FulfillmentModel } from './fulfillment.model';
 import { OrderItemModel } from './order-item.model';
 
@@ -10,9 +16,15 @@ export class FulfillmentItemModel extends Model<FulfillmentItemModel> {
   @Column
   fulfillment_id: number;
 
+  @BelongsTo(() => FulfillmentModel)
+  fulfillment: FulfillmentModel;
+
   @ForeignKey(() => OrderItemModel)
   @Column
   order_item_id: number;
+
+  @BelongsTo(() => OrderItemModel)
+  orderItem: OrderItemModel;
 
   @Column
   quantity: number;

@@ -27,38 +27,43 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
     let details: string | undefined;
-    console.log('Exception caught by AllExceptionsFilter:', {
-      name: (exception as any)?.name,
-      message: (exception as any)?.message,
-      stack: (exception as any)?.stack,
-      ...(exception instanceof HttpException && {
-        statusCode: exception.getStatus(),
-        response: exception.getResponse(),
-      }),
-    });
+    let errorCode: string | undefined;
+    let errors: any[] = [];
+    // console.log('Exception caught by AllExceptionsFilter:', {
+    //   name: (exception as any)?.name,
+    //   message: (exception as any)?.message,
+    //   stack: (exception as any)?.stack,
+    //   ...(exception instanceof HttpException && {
+    //     statusCode: exception.getStatus(),
+    //     response: exception.getResponse(),
+    //   }),
+    // });
     // 🔐 Handle NestJS HTTP Exceptions
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-
       const exceptionResponse = exception.getResponse();
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object') {
         const res: any = exceptionResponse;
         message = res.message || res.error || message;
+        errorCode = res?.errorCode;
       }
     }
 
     // 🧾 Sequelize Validation Error
     else if (exception instanceof ValidationError) {
       status = HttpStatus.BAD_REQUEST;
-      message = exception.errors.map((err) => err.message);
+      message = exception.message;
+      errors = exception.errors;
+      // message = exception.errors.map((err) => err.message);
     }
 
     // 🧱 Foreign Key Error
     else if (exception instanceof ForeignKeyConstraintError) {
       status = HttpStatus.CONFLICT;
-      message = 'Related resource not found or already in use';
+      message =
+        exception.message || 'Related resource not found or already in use';
     }
 
     // 🗄 General DB Error
@@ -66,12 +71,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = 'Database error occurred';
       details = exception.message;
-    }
-
-    // 🧠 Custom App Exception
-    else if (exception instanceof JartException) {
-      status = exception.statusCode || HttpStatus.INTERNAL_SERVER_ERROR;
-      message = exception.message;
     }
 
     // 🧾 Normalize message
@@ -85,11 +84,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
       data: null,
       meta: {
         statusCode: status,
+        errorCode,
         timestamp: new Date().toISOString(),
         path: request.url,
         method: request.method,
         requestId,
         details,
+        errors,
       },
     };
 
@@ -102,17 +103,5 @@ export class AllExceptionsFilter implements ExceptionFilter {
     );
 
     response.status(status).json(errorResponse);
-  }
-}
-
-export class JartException extends HttpException {
-  statusCode: number;
-
-  constructor(
-    message: string,
-    statusCode: number = HttpStatus.INTERNAL_SERVER_ERROR,
-  ) {
-    super(message, statusCode);
-    this.statusCode = statusCode;
   }
 }

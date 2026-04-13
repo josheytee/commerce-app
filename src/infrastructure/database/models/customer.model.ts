@@ -48,12 +48,6 @@ export class CustomerModel extends Model<CustomerModel> {
   @Column({ type: DataType.STRING })
   status: string;
 
-  @Column({ type: DataType.DATE, allowNull: false })
-  created_at: Date;
-
-  @Column({ type: DataType.DATE, allowNull: false })
-  updated_at: Date;
-
   // @Column({ type: DataType.JSONB })
   // metadata: Record<string, any>;
   @HasMany(() => AddressModel, {

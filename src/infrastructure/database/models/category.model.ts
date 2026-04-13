@@ -26,6 +26,30 @@ export class CategoryModel extends Model<CategoryModel> {
   @Column
   description: string;
 
+  @Column
+  icon: string;
+
+  @Column
+  image: string;
+
+  @Column
+  level: string;
+
+  @Column
+  sort_order: string;
+
+  @Column
+  is_active: string;
+
+  @Column
+  meta_title: string;
+
+  @Column
+  meta_description: string;
+
+  @Column
+  meta_keywords: string;
+
   @HasMany(() => VendorModel)
   vendors: VendorModel[];
 }

@@ -27,6 +27,12 @@ export abstract class BaseRepository<T extends Model> {
         return this.model.findAll(options);
     }
 
+    async findAndCountAll(
+        options?: FindOptions,
+    ): Promise<{ rows: T[]; count: number }> {
+        return this.model.findAndCountAll(options);
+    }
+
     async update(id: number, data: Partial<T>): Promise<[number, T[]]> {
         return this.model.update(data as any, {
             where: { id } as WhereOptions,
@@ -34,8 +40,12 @@ export abstract class BaseRepository<T extends Model> {
         });
     }
 
-    async delete(id: number): Promise<number> {
+    async deleteById(id: number): Promise<number> {
         return this.model.destroy({ where: { id } as WhereOptions });
+    }
+
+    async delete(options: FindOptions): Promise<number> {
+        return this.model.destroy(options);
     }
 
     async bulkCreate(data: Partial<T>[]): Promise<T[]> {

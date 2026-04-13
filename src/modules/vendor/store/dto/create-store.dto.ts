@@ -1,4 +1,9 @@
-import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
+
 import {
   IsString,
   IsNumber,
@@ -7,12 +12,7 @@ import {
   IsBoolean,
   IsEnum,
 } from 'class-validator';
-
-export enum StoreStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended',
-}
+import { StoreStatusEnum } from 'src/shared';
 
 export class CreateStoreDto {
   @ApiProperty({ example: 'Tech World Store' })
@@ -71,13 +71,13 @@ export class CreateStoreDto {
   tags?: string[];
 
   @ApiPropertyOptional({
-    enum: StoreStatus,
-    example: StoreStatus.INACTIVE,
+    enum: StoreStatusEnum,
+    example: StoreStatusEnum.INACTIVE,
     description: 'Store status (default is inactive)',
   })
-  @IsEnum(StoreStatus)
+  @IsEnum(StoreStatusEnum)
   @IsOptional()
-  status?: StoreStatus;
+  status?: StoreStatusEnum;
 
   @ApiPropertyOptional({
     example: false,

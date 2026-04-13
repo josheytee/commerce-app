@@ -3,20 +3,35 @@ import { CountryModule } from './country/country.module';
 import { StateModule } from './state/state.module';
 import { CityModule } from './city/city.module';
 import { AddressService } from './address.service';
-import { AddressController } from './address.controller';
+import { CustomerAddressController } from './customer-address.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { AddressRepository } from './address.repository';
-import { AddressModel } from 'src/infrastructure';
+import { AddressModel, CustomerModel, StoreModel } from 'src/infrastructure';
+import {
+  AddressRepository,
+  CustomerRepository,
+  StoreRepository,
+} from 'src/infrastructure/database/repositories';
+import { StoreAddressController } from './store-address.controller';
 
 @Module({
   imports: [
     CountryModule,
     StateModule,
     CityModule,
-    SequelizeModule.forFeature([AddressModel]),
+    SequelizeModule.forFeature([AddressModel, StoreModel, CustomerModel]),
   ],
-  providers: [AddressRepository, AddressService],
-  controllers: [AddressController],
-  exports: [AddressRepository, AddressService],
+  providers: [
+    AddressRepository,
+    AddressService,
+    StoreRepository,
+    CustomerRepository,
+  ],
+  controllers: [CustomerAddressController, StoreAddressController],
+  exports: [
+    AddressRepository,
+    CustomerRepository,
+    AddressService,
+    StoreRepository,
+  ],
 })
 export class AddressModule { }

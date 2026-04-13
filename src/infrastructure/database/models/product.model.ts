@@ -150,6 +150,18 @@ export class ProductModel extends Model<ProductModel> {
   @Column({ type: DataType.BOOLEAN })
   is_taxable: boolean;
 
+  @Default(0)
+  @Column({ type: DataType.INTEGER })
+  total_ratings: number;
+
+  @Default(0)
+  @Column({ type: DataType.INTEGER })
+  sales_count: number;
+
+  @Default(0)
+  @Column({ type: DataType.INTEGER })
+  views: number;
+
   // Dates
   @Column({ type: DataType.DATE })
   published_at: Date;

@@ -10,3 +10,4 @@ export * from './dto/responses/api-response.dto';
 export * from './decorators/current-user.decorator';
 export * from './pipes/validate-uuid.pipe';
 export * from './interceptors/transform.interceptor';
+export * from './exceptions';

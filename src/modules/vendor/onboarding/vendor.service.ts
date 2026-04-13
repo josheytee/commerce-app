@@ -197,7 +197,7 @@ export class VendorService {
   }
 
   async delete(id: number): Promise<void> {
-    const affectedCount = await this.vendorRepository.delete(id);
+    const affectedCount = await this.vendorRepository.deleteById(id);
     if (affectedCount === 0) {
       throw new NotFoundException('VendorModel not found');
     }

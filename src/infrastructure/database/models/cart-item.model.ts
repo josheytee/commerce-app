@@ -4,9 +4,12 @@ import {
   Table,
   ForeignKey,
   BelongsTo,
+  PrimaryKey,
+  AutoIncrement,
 } from 'sequelize-typescript';
 import { CartModel } from './cart.model';
-import { ProductModel } from 'src/infrastructure/database/models/product.model';
+import { ProductVariantModel } from './product-variant.model';
+import { StoreModel } from './store.model';
 
 @Table({
   tableName: 'cart_items',
@@ -14,13 +17,22 @@ import { ProductModel } from 'src/infrastructure/database/models/product.model';
   timestamps: true,
 })
 export class CartItemModel extends Model<CartItemModel> {
+  @PrimaryKey
+  @AutoIncrement
+  @Column
+  id: number;
+
   @ForeignKey(() => CartModel)
   @Column
   cart_id: number;
 
-  @ForeignKey(() => ProductModel)
+  @ForeignKey(() => ProductVariantModel)
   @Column
-  product_id: number;
+  product_variant_id: number;
+
+  @ForeignKey(() => StoreModel)
+  @Column
+  store_id: number;
 
   @Column
   quantity: number;
@@ -28,6 +40,9 @@ export class CartItemModel extends Model<CartItemModel> {
   @BelongsTo(() => CartModel)
   cart: CartModel;
 
-  @BelongsTo(() => ProductModel)
-  product: ProductModel;
+  @BelongsTo(() => StoreModel)
+  store: StoreModel;
+
+  @BelongsTo(() => ProductVariantModel)
+  product: ProductVariantModel;
 }

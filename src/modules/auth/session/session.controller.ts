@@ -10,8 +10,10 @@ import {
 } from '@nestjs/common';
 import { SessionService } from './session.service';
 import { SessionModel } from 'src/infrastructure';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('sessions')
+@Controller('auth/sessions')
+@ApiTags('User Authentication - Sessions')
 export class SessionController {
   constructor(private readonly sessionService: SessionService) { }
 
