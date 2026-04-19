@@ -15,7 +15,7 @@ import { ProductModel } from './product.model';
 @Table({
   timestamps: true,
   underscored: true,
-  // paranoid: true,
+  paranoid: true,
   tableName: 'sections',
 })
 export class SectionModel extends Model<SectionModel> {
@@ -35,6 +35,18 @@ export class SectionModel extends Model<SectionModel> {
 
   @Column
   description: string;
+
+  @Column
+  sort_order: number;
+
+  @Column
+  is_active: boolean;
+
+  @Column
+  meta_title: string;
+
+  @Column
+  meta_description: string;
 
   // @Column
   // status: string;

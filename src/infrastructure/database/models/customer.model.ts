@@ -10,6 +10,7 @@ import {
 import { AddressModel } from './address.model';
 import { CartModel } from './cart.model';
 import { UserModel } from './user.model';
+import { CartStatusEnum } from 'src/shared/enums';
 
 @Table({
   timestamps: true,
@@ -59,7 +60,12 @@ export class CustomerModel extends Model<CustomerModel> {
   })
   addresses: AddressModel[];
 
-  @HasMany(() => CartModel)
+  @HasMany(() => CartModel, {
+    foreignKey: 'customer_id',
+    scope: {
+      status: CartStatusEnum.ACTIVE,
+    },
+  })
   carts: CartModel[];
 
   async getDefaultAddress() {

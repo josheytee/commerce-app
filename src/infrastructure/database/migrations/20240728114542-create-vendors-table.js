@@ -21,6 +21,11 @@ module.exports = {
         autoIncrement: true,
         allowNull: false,
       },
+      slug: {
+        type: Sequelize.STRING(255),
+        allowNull: false,
+        unique: true,
+      },
       business_name: {
         type: Sequelize.STRING(255),
         allowNull: false,

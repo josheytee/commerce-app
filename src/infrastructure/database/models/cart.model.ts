@@ -11,6 +11,7 @@ import {
 } from 'sequelize-typescript';
 import { CustomerModel } from 'src/infrastructure/database/models/customer.model';
 import { CartItemModel } from './cart-item.model';
+import { CartStatusEnum } from 'src/shared';
 
 @Table({
   tableName: 'carts',
@@ -26,6 +27,13 @@ export class CartModel extends Model<CartModel> {
   @ForeignKey(() => CustomerModel)
   @Column
   customer_id: number;
+
+  @Column({
+    type: DataType.ENUM,
+    values: Object.values(CartStatusEnum),
+    defaultValue: CartStatusEnum.ACTIVE,
+  })
+  status: CartStatusEnum;
 
   @Column({
     type: DataType.JSONB,

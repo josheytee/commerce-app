@@ -4,7 +4,7 @@
 const roles = [
   // System Level Roles
   {
-    id: 1,
+    id: 4,
     name: 'super_admin',
     description:
       'Super Administrator with full system access across all vendors and stores',

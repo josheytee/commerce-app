@@ -17,28 +17,31 @@ export class PricingService {
             },
         });
 
-        let finalPrice = product.price;
+        let finalPrice = product.base_price;
 
         if (discount) {
             if (discount.type === 'percentage') {
-                finalPrice = product.price * (1 - discount.value / 100);
+                finalPrice = product.base_price * (1 - discount.value / 100);
             } else {
-                finalPrice = Math.max(0, product.price - discount.value);
+                finalPrice = Math.max(0, product.base_price - discount.value);
             }
         }
 
         let discountPercentage = 0;
 
         //   discount_percentage(): number {
-        if (product.compare_at_price && product.compare_at_price > product.price) {
+        if (
+            product.compare_at_price &&
+            product.compare_at_price > product.base_price
+        ) {
             discountPercentage =
-                ((product.compare_at_price - product.price) /
+                ((product.compare_at_price - product.base_price) /
                     product.compare_at_price) *
                 100;
         }
 
         return {
-            base_price: product.price,
+            base_price: product.base_price,
             final_price: finalPrice,
             discount,
             discount_percentage: discountPercentage,

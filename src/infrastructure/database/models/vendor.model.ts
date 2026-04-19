@@ -33,6 +33,7 @@ import { MediaTypeEnum } from 'src/shared';
     { fields: ['user_id'], name: 'vendors_user_id_idx' },
     { fields: ['category_id'], name: 'vendors_category_id_idx' },
     { fields: ['status'], name: 'vendors_status_idx' },
+    { fields: ['slug'], name: 'vendors_slug_idx' },
     { fields: ['is_verified'], name: 'vendors_is_verified_idx' },
   ],
 })
@@ -45,6 +46,10 @@ export class VendorModel extends Model<VendorModel> {
   @AllowNull(false)
   @Column({ type: DataType.STRING(255) })
   business_name: string;
+
+  @AllowNull(false)
+  @Column({ type: DataType.STRING(255) })
+  slug: string;
 
   @AllowNull(false)
   @Column({ type: DataType.STRING(20) })

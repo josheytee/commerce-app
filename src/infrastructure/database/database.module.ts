@@ -9,7 +9,6 @@ import { StateModel } from 'src/infrastructure/database/models/state.model';
 import { CountryModel } from 'src/infrastructure/database/models/country.model';
 import { AddressModel } from 'src/infrastructure/database/models/address.model';
 import { CartModel } from 'src/infrastructure/database/models/cart.model';
-import { ProductAttributeModel } from 'src/infrastructure/database/models/product-attribute.model';
 import { AttributeModel } from 'src/infrastructure/database/models/attribute.model';
 import { RatingModel } from 'src/infrastructure/database/models/rating.model';
 import { ReviewModel } from 'src/infrastructure/database/models/review.model';
@@ -30,7 +29,7 @@ import { ProductModel } from 'src/infrastructure/database/models/product.model';
 import { UserStoreRoleModel } from 'src/infrastructure/database/models/user-store-role.model';
 import { UserVendorRoleModel } from 'src/infrastructure/database/models/user-vendor-role.model';
 import { UserVendorRolePermissionModel } from 'src/infrastructure/database/models/user-vendor-role-permission.model';
-import { CartItemModel, DiscountModel, OrderItemModel, OrderModel, ProductVariantModel, TagModel } from './models';
+import { AttributeValueModel, CartItemModel, DiscountModel, OrderItemModel, OrderModel, ProductAttributeValueModel, ProductVariantAttributeValueModel, ProductVariantModel, SearchDocumentModel, TagModel } from './models';
 import { SectionRepository } from './repositories';
 
 @Module({
@@ -82,11 +81,14 @@ import { SectionRepository } from './repositories';
                 CartModel,
                 CartItemModel,
                 AttributeModel,
-                ProductAttributeModel,
+                AttributeValueModel,
+                ProductAttributeValueModel,
+                ProductVariantAttributeValueModel,
                 OrderItemModel,
                 UserStoreRoleModel,
                 UserVendorRoleModel,
                 UserVendorRolePermissionModel,
+                SearchDocumentModel,
             ],
         }),
     ],

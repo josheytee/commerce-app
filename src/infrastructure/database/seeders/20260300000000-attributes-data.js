@@ -1,0 +1,152 @@
+// seeders/001-demo-attributes.js
+'use strict';
+
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    const attributes = [
+      // Variant attributes (used for product variations)
+      {
+        name: 'Color',
+        code: 'color',
+        description: 'Product color options',
+        type: 'select',
+        sort_order: 1,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: true,
+        is_required: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: 'Size',
+        code: 'size',
+        description: 'Product size dimensions',
+        type: 'select',
+        sort_order: 2,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: true,
+        is_required: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: 'Material',
+        code: 'material',
+        description: 'Primary material composition',
+        type: 'select',
+        sort_order: 3,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: true,
+        is_required: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      // Product-level attributes (specifications)
+      {
+        name: 'Brand',
+        code: 'brand',
+        description: 'Manufacturer or brand name',
+        type: 'text',
+        sort_order: 4,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: false,
+        is_required: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: 'Warranty',
+        code: 'warranty',
+        description: 'Warranty period information',
+        type: 'text',
+        sort_order: 5,
+        is_filterable: false,
+        is_visible: true,
+        is_variant_attribute: false,
+        is_required: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: 'Country of Origin',
+        code: 'country_of_origin',
+        description: 'Manufacturing country',
+        type: 'select',
+        sort_order: 6,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: false,
+        is_required: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: 'Weight Capacity',
+        code: 'weight_capacity',
+        description: 'Maximum weight capacity in kg',
+        type: 'number',
+        sort_order: 7,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: false,
+        is_required: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: 'Water Resistant',
+        code: 'water_resistant',
+        description: 'Product is water resistant',
+        type: 'boolean',
+        sort_order: 8,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: false,
+        is_required: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: 'Features',
+        code: 'features',
+        description: 'Special product features',
+        type: 'multi',
+        sort_order: 9,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: false,
+        is_required: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        name: 'Style',
+        code: 'style',
+        description: 'Design style category',
+        type: 'select',
+        sort_order: 10,
+        is_filterable: true,
+        is_visible: true,
+        is_variant_attribute: false,
+        is_required: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ];
+
+    const insertedAttributes = await queryInterface.bulkInsert('attributes', attributes, {
+      returning: ['id', 'code'],
+    });
+
+    console.log(`Inserted ${insertedAttributes.length} attributes`);
+    return insertedAttributes;
+  },
+
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.bulkDelete('attributes', null, {});
+  },
+};

@@ -1,15 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import {
+    AttributeModel,
+    AttributeValueModel,
+    DiscountModel,
+    InventoryModel,
     MediaModel,
+    ProductAttributeValueModel,
     ProductModel,
+    ProductVariantAttributeValueModel,
+    ProductVariantModel,
     ReviewModel,
     SectionModel,
     StoreModel,
+    TagModel,
     VendorModel,
 } from 'src/infrastructure';
 import { BaseRepository } from './base.repository';
-import { MediaTypeEnum, ProductStatusEnum } from 'src/shared/enums';
+import {
+    MediaEntityTypeEnum,
+    MediaTypeEnum,
+    ProductStatusEnum,
+    TagTypeEnum,
+} from 'src/shared/enums';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 
@@ -18,6 +31,8 @@ export class ProductRepository extends BaseRepository<ProductModel> {
     constructor(
         @InjectModel(ProductModel)
         private productModel: typeof ProductModel,
+        @InjectModel(ProductVariantModel)
+        private productVariantModel: typeof ProductVariantModel,
     ) {
         super(productModel);
     }
@@ -112,35 +127,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         });
     }
 
-    async findBySlug(slug: string): Promise<ProductModel | null> {
-        return this.productModel.findOne({
-            where: { slug, deleted_at: null },
-            include: [
-                {
-                    model: SectionModel,
-                    as: 'section',
-                    attributes: ['id', 'name', 'slug'],
-                },
-                {
-                    model: StoreModel,
-                    as: 'store',
-                    attributes: ['id', 'name', 'slug'],
-                },
-                {
-                    model: VendorModel,
-                    as: 'vendor',
-                    attributes: ['id', 'business_name', 'total_ratings', 'is_verified'],
-                },
-                {
-                    model: MediaModel,
-                    as: 'gallery_images',
-                    where: { entity_type: 'product', type: MediaTypeEnum.PRODUCT_IMAGE },
-                    required: false,
-                },
-            ],
-        });
-    }
-
     async findFlashDeals(limit: number = 10): Promise<ProductModel[]> {
         return this.productModel.findAll({
             where: {
@@ -152,7 +138,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                 ],
                 [Op.and]: Sequelize.where(
                     Sequelize.literal(
-                        `(price < compare_at_price OR compare_at_price IS NOT NULL)`,
+                        `(base_price < compare_at_price OR compare_at_price IS NOT NULL)`,
                     ),
                     true,
                 ),
@@ -172,7 +158,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
             order: [
                 [
                     Sequelize.literal(
-                        `((compare_at_price - price) / compare_at_price * 100)`,
+                        `((compare_at_price - base_price) / compare_at_price * 100)`,
                     ),
                     'DESC',
                 ],
@@ -323,10 +309,10 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         let order = [];
         switch (sort) {
             case 'price_asc':
-                order = [['price', 'ASC']];
+                order = [['base_price', 'ASC']];
                 break;
             case 'price_desc':
-                order = [['price', 'DESC']];
+                order = [['base_price', 'DESC']];
                 break;
             case 'rating':
                 order = [['rating', 'DESC']];
@@ -408,6 +394,379 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         await this.productModel.increment('sales_count', {
             by: quantity,
             where: { id },
+        });
+    }
+
+    async findProductDetails(
+        productId?: number,
+        storeId?: number,
+        slug?: string,
+    ): Promise<ProductModel | null> {
+        const where: any = {
+            is_active: true,
+            // status: 'published',
+        };
+
+        if (productId) where.id = productId;
+        if (slug) where.slug = slug;
+        if (storeId) where.store_id = storeId;
+
+        // Phase 1: product
+        const product = await this.productModel.findOne({
+            where,
+            attributes: { exclude: ['deleted_at', 'search_keywords'] },
+            include: [
+                { model: StoreModel, attributes: ['id', 'name', 'slug'] },
+                { model: VendorModel, attributes: ['id', 'business_name', 'slug'] },
+                { model: SectionModel, attributes: ['id', 'name', 'slug'] },
+                {
+                    model: MediaModel,
+                    as: 'gallery_images',
+                    where: {
+                        entity_type: MediaEntityTypeEnum.PRODUCT,
+                        type: MediaTypeEnum.PRODUCT_IMAGE,
+                    },
+                    required: false,
+                },
+            ],
+        });
+        if (!product) return null;
+
+        // Phase 2: variants
+        const variants = await this.productVariantModel.findAll({
+            where: {
+                product_id: product.id,
+                // status: 'active',
+            },
+            include: [
+                { model: InventoryModel },
+                {
+                    model: MediaModel,
+                    as: 'gallery',
+                    where: { entity_type: MediaEntityTypeEnum.PRODUCT_VARIANT },
+                    required: false,
+                },
+                {
+                    model: ProductVariantAttributeValueModel,
+                    as: 'attribute_values',
+                    include: [
+                        { model: AttributeModel, as: 'attribute' },
+                        { model: AttributeValueModel, as: 'attribute_value' },
+                    ],
+                },
+            ],
+            order: [['id', 'ASC']],
+        });
+        // console.log('Variants for product', product.id, variants);
+        product.setDataValue('variants', variants);
+
+        return product;
+    }
+
+    /**
+     * Get complete product details for product page
+     */
+    // async findProductDetails(
+    //     productId: number | null,
+    //     storeId?: number,
+    //     slug?: string,
+    // ): Promise<ProductModel | null> {
+    //     const where: any = {
+    //         is_active: true,
+    //         status: 'published',
+    //     };
+
+    //     if (productId) {
+    //         where.id = productId;
+    //     }
+
+    //     if (slug) {
+    //         where.slug = slug;
+    //     }
+
+    //     if (storeId) {
+    //         where.store_id = storeId;
+    //     }
+
+    //     return this.productModel.findOne({
+    //         where,
+    //         attributes: {
+    //             exclude: ['deleted_at', 'search_keywords'],
+    //         },
+    //         include: [
+    //             // Basic relations
+    //             {
+    //                 model: StoreModel,
+    //                 attributes: ['id', 'name', 'slug'],
+    //             },
+    //             {
+    //                 model: VendorModel,
+    //                 attributes: ['id', 'business_name', 'slug'],
+    //             },
+    //             {
+    //                 model: SectionModel,
+    //                 attributes: ['id', 'name', 'slug'],
+    //             },
+
+    //             // Product-level attributes (specifications)
+    //             {
+    //                 model: ProductAttributeValueModel,
+    //                 as: 'attribute_values',
+    //                 include: [
+    //                     {
+    //                         model: AttributeModel,
+    //                         attributes: ['id', 'name', 'code', 'type'],
+    //                     },
+    //                     {
+    //                         model: AttributeValueModel,
+    //                         attributes: ['id', 'value', 'display_value'],
+    //                     },
+    //                 ],
+    //             },
+
+    //             // Variants with inventory and attributes
+    //             {
+    //                 model: ProductVariantModel,
+    //                 as: 'variants',
+    //                 where: {
+    //                     // status: 'active',
+    //                 },
+    //                 required: false,
+    //                 separate: true,
+    //                 include: [
+    //                     // Variant inventory
+    //                     {
+    //                         model: InventoryModel,
+    //                         attributes: [
+    //                             'id',
+    //                             'stock_quantity',
+    //                             'quantity',
+    //                             'reserved_quantity',
+    //                             'stock_status',
+    //                             'low_stock_threshold',
+    //                             'allow_backorders',
+    //                         ],
+    //                     },
+    //                     // Variant-defining attributes (color, size, etc.)
+    //                     {
+    //                         model: ProductVariantAttributeValueModel,
+    //                         as: 'attribute_values',
+    //                         include: [
+    //                             {
+    //                                 model: AttributeModel,
+    //                                 as: 'attribute', // 🔥 REQUIRED
+    //                             },
+
+    //                             {
+    //                                 model: AttributeValueModel,
+    //                                 as: 'attribute_value',
+    //                                 attributes: [
+    //                                     'id',
+    //                                     'value',
+    //                                     'display_value',
+    //                                     'color_code',
+    //                                     'image_url',
+    //                                 ],
+    //                                 // include: [
+    //                                 //     {
+    //                                 //         model: AttributeModel,
+    //                                 //         as: 'attribute', // Match the alias from AttributeValueModel
+    //                                 //         required: false,
+    //                                 //     }
+    //                                 // ]
+    //                             },
+    //                         ],
+    //                     },
+    //                     // Variant images
+    //                     {
+    //                         model: MediaModel,
+    //                         as: 'gallery',
+    //                         where: {
+    //                             entity_type: 'product_variant',
+    //                         },
+    //                         required: false,
+    //                         limit: 5,
+    //                     },
+    //                 ],
+    //             },
+
+    //             // Product media gallery
+    //             {
+    //                 model: MediaModel,
+    //                 as: 'gallery_images',
+    //                 where: {
+    //                     entity_type: 'product',
+    //                 },
+    //                 required: false,
+    //                 limit: 10,
+    //             },
+
+    //             // Featured image
+    //             {
+    //                 model: MediaModel,
+    //                 as: 'featured_image',
+    //                 where: {
+    //                     entity_type: 'product',
+    //                     is_primary: true,
+    //                 },
+    //                 required: false,
+    //             },
+
+    //             // Reviews with rating summary
+    //             {
+    //                 model: ReviewModel,
+    //                 as: 'reviews',
+    //                 where: {
+    //                     entity_type: 'product',
+    //                     is_approved: true,
+    //                 },
+    //                 required: false,
+    //                 limit: 5,
+    //                 order: [['created_at', 'DESC']],
+    //             },
+
+    //             // Active discounts
+    //             {
+    //                 model: DiscountModel,
+    //                 as: 'discounts',
+    //                 where: {
+    //                     entity_type: 'product',
+    //                     is_active: true,
+    //                     start_date: { [Op.lte]: new Date() },
+    //                     [Op.or]: [
+    //                         { end_date: null },
+    //                         { end_date: { [Op.gte]: new Date() } },
+    //                     ],
+    //                 },
+    //                 required: false,
+    //             },
+
+    //             // Tags
+    //             {
+    //                 model: TagModel,
+    //                 as: 'tags',
+    //                 where: {
+    //                     entity_type: TagTypeEnum.PRODUCT,
+    //                 },
+    //                 required: false,
+    //                 attributes: ['id', 'name', 'slug'],
+    //                 through: { attributes: [] }, // If using junction table
+    //             },
+    //         ],
+    //         order: [
+    //             [{ model: ProductVariantModel, as: 'variants' }, 'id', 'ASC'],
+    //             [
+    //                 { model: ProductVariantModel, as: 'variants' },
+    //                 { model: ProductVariantAttributeValueModel, as: 'attribute_values' },
+    //                 { model: AttributeModel, as: 'attribute' },
+    //                 'sort_order',
+    //                 'ASC',
+    //             ],
+    //         ],
+    //     });
+    // }
+
+    /**
+     * Get product by slug (for SEO-friendly URLs)
+     */
+    async findBySlug(
+        slug: string,
+        storeId: number | null = null,
+    ): Promise<ProductModel | null> {
+        return this.findProductDetails(null, storeId, slug);
+    }
+
+    /**
+     * Find product with variants optimized for quick view/preview
+     */
+    async findProductPreview(productId: number): Promise<ProductModel | null> {
+        return this.productModel.findOne({
+            where: {
+                id: productId,
+                is_active: true,
+            },
+            attributes: [
+                'id',
+                'name',
+                'slug',
+                'base_price',
+                'min_variant_price',
+                'max_variant_price',
+                'product_type',
+                'thumbnail_url',
+            ],
+            include: [
+                {
+                    model: ProductVariantModel,
+                    as: 'variants',
+                    where: { status: 'active' },
+                    required: false,
+                    attributes: ['id', 'sku', 'price', 'variant_name'],
+                    include: [
+                        {
+                            model: ProductVariantAttributeValueModel,
+                            include: [
+                                {
+                                    model: AttributeModel,
+                                    attributes: ['code'],
+                                },
+                                {
+                                    model: AttributeValueModel,
+                                    attributes: ['value', 'display_value'],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    model: MediaModel,
+                    as: 'featured_image',
+                    attributes: ['url', 'thumbnail_url'],
+                },
+            ],
+        });
+    }
+
+    /**
+     * Get variant details with inventory for add-to-cart
+     */
+    async findVariantForCart(
+        variantId: number,
+    ): Promise<ProductVariantModel | null> {
+        return ProductVariantModel.findOne({
+            where: {
+                id: variantId,
+                status: 'active',
+            },
+            include: [
+                {
+                    model: ProductModel,
+                    attributes: ['id', 'name', 'slug', 'product_type', 'is_taxable'],
+                },
+                {
+                    model: InventoryModel,
+                    attributes: [
+                        'stock_quantity',
+                        'quantity',
+                        'reserved_quantity',
+                        'stock_status',
+                        'allow_backorders',
+                    ],
+                },
+                {
+                    model: ProductVariantAttributeValueModel,
+                    include: [
+                        {
+                            model: AttributeModel,
+                            attributes: ['name', 'code'],
+                        },
+                        {
+                            model: AttributeValueModel,
+                            attributes: ['value', 'display_value'],
+                        },
+                    ],
+                },
+            ],
         });
     }
 }

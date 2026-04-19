@@ -9,6 +9,36 @@ module.exports = {
         autoIncrement: true,
         allowNull: false,
       },
+      store_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'stores',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      vendor_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'vendors',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      },
+      section_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'sections',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'RESTRICT',
+      },
       name: {
         type: Sequelize.STRING(255),
         allowNull: false,
@@ -23,72 +53,41 @@ module.exports = {
       short_description: {
         type: Sequelize.TEXT,
       },
+      search_keywords: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
       specification: {
         type: Sequelize.TEXT,
       },
-      price: {
-        type: Sequelize.DECIMAL(10, 2),
+      base_price: {
+        type: Sequelize.DECIMAL(12, 2),
         allowNull: false,
-        defaultValue: 0.0,
-      },
-      vendor_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'vendors',
-          key: 'id',
-        },
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-      },
-      store_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'stores',
-          key: 'id',
-        },
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-      },
-      section_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'sections',
-          key: 'id',
-        },
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-      },
-
-      mpn: {
-        type: Sequelize.STRING(100),
-        allowNull: true,
-      },
-
-      upc: {
-        type: Sequelize.STRING(100),
-        allowNull: true,
-      },
-
-      ean: {
-        type: Sequelize.STRING(100),
-        allowNull: true,
-      },
-
-      isbn: {
-        type: Sequelize.STRING(100),
-        allowNull: true,
-      },
-
-      cost_price: {
-        type: Sequelize.DECIMAL(10, 2),
-        allowNull: true,
+        defaultValue: 0,
       },
       compare_at_price: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(12, 2),
         allowNull: true,
+      },
+      cost_price: {
+        type: Sequelize.DECIMAL(12, 2),
+        allowNull: true,
+      },
+      // Denormalized search fields
+      min_variant_price: {
+        type: Sequelize.DECIMAL(12, 2),
+        allowNull: false,
+        defaultValue: 0,
+      },
+      max_variant_price: {
+        type: Sequelize.DECIMAL(12, 2),
+        allowNull: false,
+        defaultValue: 0,
+      },
+      total_stock_quantity: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
       },
       sales_count: {
         type: Sequelize.INTEGER,
@@ -104,6 +103,11 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
         defaultValue: 0,
+      },
+      in_stock: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
 
       meta_title: {
@@ -201,11 +205,48 @@ module.exports = {
 
     // Add unique constraint for vendor_id + sku
 
-    // Add indexes
-    await queryInterface.addIndex('products', ['store_id']);
-    await queryInterface.addIndex('products', ['section_id']);
-    await queryInterface.addIndex('products', ['name']);
-    await queryInterface.addIndex('products', ['price']);
+     // Indexes
+    await queryInterface.addIndex('products', ['store_id', 'vendor_id', 'slug'], {
+      unique: true,
+      name: 'products_store_vendor_slug_unique',
+    });
+    await queryInterface.addIndex('products', ['store_id', 'status'], {
+      name: 'products_store_status_idx',
+    });
+    await queryInterface.addIndex('products', ['vendor_id', 'status'], {
+      name: 'products_vendor_status_idx',
+    });
+    await queryInterface.addIndex('products', ['section_id'], {
+      name: 'products_section_idx',
+    });
+    await queryInterface.addIndex('products', ['status', 'is_active'], {
+      name: 'products_status_active_idx',
+    });
+    await queryInterface.addIndex('products', ['product_type'], {
+      name: 'products_type_idx',
+    });
+    await queryInterface.addIndex('products', ['base_price'], {
+      name: 'products_base_price_idx',
+    });
+    await queryInterface.addIndex('products', ['min_variant_price', 'max_variant_price'], {
+      name: 'products_variant_price_idx',
+    });
+    await queryInterface.addIndex('products', ['in_stock'], {
+      name: 'products_stock_idx',
+    });
+    await queryInterface.addIndex('products', ['created_at'], {
+      name: 'products_created_idx',
+    });
+
+    // Full-text search index (PostgreSQL)
+    await queryInterface.sequelize.query(`
+      CREATE INDEX products_fts_idx ON products 
+      USING GIN (to_tsvector('english', 
+        coalesce(name, '') || ' ' || 
+        coalesce(description, '') || ' ' || 
+        coalesce(search_keywords, '')
+      ));
+    `);
   },
 
   down: async (queryInterface, Sequelize) => {
