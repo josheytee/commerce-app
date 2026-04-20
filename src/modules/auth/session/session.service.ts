@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 import {
+  AddressModel,
   CustomerModel,
   RoleModel,
   SessionModel,
@@ -9,6 +10,7 @@ import {
   UserModel,
   VendorModel,
 } from 'src/infrastructure';
+import { AddressableTypeEnum } from 'src/shared';
 
 @Injectable()
 export class SessionService {
@@ -39,6 +41,13 @@ export class SessionService {
             {
               model: CustomerModel,
               as: 'customer',
+              include: [
+                {
+                  model: AddressModel,
+                  as: 'default_address',
+                  // attributes: ['label']
+                },
+              ],
             },
             {
               model: RoleModel,

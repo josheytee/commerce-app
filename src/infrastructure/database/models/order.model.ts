@@ -10,10 +10,13 @@ import {
   PrimaryKey,
   AutoIncrement,
   DataType,
+  Default,
 } from 'sequelize-typescript';
 import { OrderItemModel } from './order-item.model';
 import { CustomerModel } from 'src/infrastructure/database/models/customer.model';
 import { VendorModel } from './vendor.model';
+import { AddressModel } from './address.model';
+import { OrderStatusEnum } from 'src/shared/enums/order.enums';
 
 @Table({
   timestamps: true,
@@ -47,17 +50,20 @@ export class OrderModel extends Model<OrderModel> {
   @BelongsTo(() => VendorModel)
   vendor: VendorModel;
 
-  @Column
+  @Column(DataType.DECIMAL)
   total_amount: number;
 
+
+  @Default(OrderStatusEnum.PENDING)
+  @Column({ type: DataType.ENUM(...Object.values(OrderStatusEnum)) })
+  status: OrderStatusEnum;
+
   @Column
-  status: string;
+  @ForeignKey(() => AddressModel)
+  address_id: number;
 
-  // @Column(DataType.JSONB)
-  // shipping_address: any; // snapshot
-
-  // @Column(DataType.DECIMAL)
-  // delivery_fee: number;
+  @Column(DataType.DECIMAL)
+  delivery_fee: number;
 
   @HasMany(() => OrderItemModel)
   orderItems: OrderItemModel[];

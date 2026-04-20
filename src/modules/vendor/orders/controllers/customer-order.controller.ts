@@ -12,6 +12,7 @@ import { OrderService } from '../order.service';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { OrderModel } from 'src/infrastructure';
+import { CreateOrderDto, CreateOrderFromCartDto } from '../dto';
 
 @ApiTags('Customer - Orders')
 @Controller('customers/:customerId/orders')
@@ -20,9 +21,19 @@ export class CustomerOrderController {
 
   @Post()
   @ApiSuccessResponse(OrderModel)
-  async create(@Body() orderDto: any) {
-    const { customer_id, items } = orderDto;
-    return this.orderService.create(customer_id, items);
+  async create(@Body() orderDto: CreateOrderDto): Promise<OrderModel> {
+    const { customer_id, items, address_id } = orderDto;
+    return this.orderService.create(customer_id, items, address_id);
+  }
+
+  @Post('/from-cart')
+  @ApiSuccessResponse(OrderModel)
+  async createFromCart(
+    @Param('customerId', ParseIntPipe) customerId: number,
+    @Body() orderDto: CreateOrderFromCartDto,
+  ): Promise<OrderModel> {
+    const { address_id } = orderDto;
+    return this.orderService.createOrderFromCart(customerId, address_id);
   }
 
   @Get()

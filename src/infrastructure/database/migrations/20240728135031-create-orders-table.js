@@ -25,6 +25,19 @@ module.exports = {
           key: 'id',
         },
       },
+      address_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'addresses',
+          key: 'id',
+        },
+      },
+      delivery_fee: {
+        type: Sequelize.DECIMAL(10, 2),
+        allowNull: true,
+        defaultValue: 0.0,
+      },
       total_amount: {
         type: Sequelize.DECIMAL(10, 2),
         allowNull: true,

@@ -15,27 +15,25 @@ import { CreateOrderDto } from './dto';
 import { Sequelize } from 'sequelize-typescript';
 import {
   FulfillmentRepository,
+  OrderItemRepository,
   OrderRepository,
   VariantRepository,
 } from 'src/infrastructure/database/repositories';
 import { InventoryService } from '../inventory/inventory.service';
-import { FulfillmentStatusEnum } from 'src/shared';
+import { FulfillmentStatusEnum, OrderStatusEnum } from 'src/shared';
 import { CartRepository } from 'src/infrastructure/database/repositories/cart.repository';
 // import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
 export class OrderService {
   constructor(
-    @InjectModel(OrderModel)
-    private orderModel: typeof OrderModel,
-    @InjectModel(OrderItemModel)
-    private orderItemModel: typeof OrderItemModel,
-    private readonly paymentService: PaymentService,
-    private readonly customerService: CustomerService,
+    private readonly _paymentService: PaymentService,
+    private readonly _customerService: CustomerService,
     private readonly _variantRepository: VariantRepository,
     private readonly _cartRepository: CartRepository,
     private readonly _inventoryService: InventoryService,
     private readonly _orderRepository: OrderRepository,
+    private readonly _orderItemRepository: OrderItemRepository,
     private readonly _fulfillmentRepository: FulfillmentRepository,
     private readonly _sequelize: Sequelize,
   ) { }
@@ -48,15 +46,18 @@ export class OrderService {
   async create(
     customerId: number,
     items: any[],
+    addressId: number,
     // paymentDetails: any,
   ): Promise<any> {
     const orderReference = this.generateOrderReference(customerId);
     let totalAmount = 0;
     // console.log('order_reference', orderReference);
-    const order = await this.orderModel.create({
+
+    const order = await this._orderRepository.create({
       order_reference: orderReference,
       customer_id: customerId,
-      status: 'pending',
+      address_id: addressId,
+      status: OrderStatusEnum.PENDING,
       total_amount: totalAmount,
     });
 
@@ -70,12 +71,12 @@ export class OrderService {
       };
     });
 
-    await this.orderItemModel.bulkCreate(orderItems);
+    await this._orderItemRepository.bulkCreate(orderItems);
 
     order.total_amount = totalAmount;
 
     // Process payment
-    // const paymentResponse = await this.paymentService.initializePayment(
+    // const paymentResponse = await this._paymentService.initializePayment(
     //   totalAmount,
     //   paymentDetails.currency,
     //   paymentDetails.customerDetails,
@@ -88,8 +89,8 @@ export class OrderService {
     // }
 
     await order.save();
-    const customer = await this.customerService.findOne(customerId);
-    const paymentUrl = await this.paymentService.initializePayment(
+    const customer = await this._customerService.findOne(customerId);
+    const paymentUrl = await this._paymentService.initializePayment(
       order.total_amount,
       'NGN',
       {
@@ -107,7 +108,7 @@ export class OrderService {
     return { order, paymentUrl };
   }
 
-  async createOrderFromCart(cartId: number) {
+  async createOrderFromCart(cartId: number, addressId: number): Promise<any> {
     const cart = await this._cartRepository.findOne({ where: { id: cartId } });
     if (!cart) {
       throw new NotFoundException('Cart not found');
@@ -145,8 +146,9 @@ export class OrderService {
         {
           order_reference: this.generateOrderReference(cart.customer_id),
           customer_id: cart.customer_id,
+          address_id: addressId,
           total_amount: total,
-          status: 'pending',
+          status: OrderStatusEnum.PENDING,
         },
         t,
       );
@@ -157,7 +159,7 @@ export class OrderService {
       );
 
       const paymentUrl =
-        await this.paymentService.initializeOrderPayment(order);
+        await this._paymentService.initializeOrderPayment(order);
 
       return { order, paymentUrl };
     });
@@ -190,7 +192,7 @@ export class OrderService {
           order_reference: this.generateOrderReference(dto.customer_id),
           customer_id: dto.customer_id,
           total_amount: total,
-          status: 'pending',
+          status: OrderStatusEnum.PENDING,
         },
         t,
       );
@@ -201,8 +203,8 @@ export class OrderService {
       );
 
       //payment
-      const customer = await this.customerService.findOne(dto.customer_id);
-      const paymentUrl = await this.paymentService.initializePayment(
+      const customer = await this._customerService.findOne(dto.customer_id);
+      const paymentUrl = await this._paymentService.initializePayment(
         order.total_amount,
         'NGN',
         {
@@ -222,7 +224,7 @@ export class OrderService {
   }
 
   async handlePaymentCallback(data: any): Promise<void> {
-    await this.paymentService.handleCallback('order', data);
+    await this._paymentService.handleCallback('order', data);
   }
 
   // async processPayment(orderId: number, paymentMethod: string): Promise<any> {
@@ -231,7 +233,7 @@ export class OrderService {
   //   if (!order) {
   //     throw new Error('OrderModel not found');
   //   }
-  //   const paymentResponse = await this.paymentService.processPayment(
+  //   const paymentResponse = await this._paymentService.processPayment(
   //     orderId,
   //     paymentMethod,
   //   );
@@ -240,9 +242,9 @@ export class OrderService {
 
   async updateOrderStatus(
     orderId: number,
-    status: string,
+    status: OrderStatusEnum,
   ): Promise<OrderModel> {
-    const order = await this.orderModel.findByPk(orderId);
+    const order = await this._orderRepository.findById(orderId);
     if (!order) {
       throw new Error('Order not found');
     }
@@ -265,7 +267,7 @@ export class OrderService {
       );
     }
 
-    await order.update({ status: 'cancelled' });
+    await order.update({ status: OrderStatusEnum.CANCELLED });
   }
 
   async confirmOrder(orderId: number) {
@@ -280,7 +282,7 @@ export class OrderService {
       );
     }
 
-    await order.update({ status: 'paid' });
+    await order.update({ status: OrderStatusEnum.PAID });
 
     await this.createFulfillments(order);
   }

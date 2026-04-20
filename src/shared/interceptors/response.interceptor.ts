@@ -28,6 +28,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
       map((data) => {
         const formattedData = this.formatData(data);
         const paginationMeta = this.extractPaginationMeta(data);
+        const metaData = this.extractOtherMeta(data);
         const customMessage = this.extractCustomMessage(data);
 
         const res = {
@@ -40,6 +41,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
             path: request.url,
             method,
             responseTime: `${Date.now() - now}ms`,
+            ...metaData,
             ...(paginationMeta && { pagination: paginationMeta }),
           },
         };
@@ -88,7 +90,23 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
       };
     }
 
+    if (data && typeof data === 'object' && 'data' in data) {
+      return data.data;
+    }
+
     return data;
+  }
+
+  private extractOtherMeta(data: any): any {
+    // Extract pagination meta from service layer response
+    if (data && typeof data === 'object' && 'meta' in data) {
+      const { meta } = data;
+      return {
+        ...meta,
+      };
+    }
+
+    return null;
   }
 
   private extractPaginationMeta(data: any): any {

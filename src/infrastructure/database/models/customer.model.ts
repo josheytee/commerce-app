@@ -6,6 +6,7 @@ import {
   ForeignKey,
   DataType,
   HasMany,
+  HasOne,
 } from 'sequelize-typescript';
 import { AddressModel } from './address.model';
 import { CartModel } from './cart.model';
@@ -36,12 +37,6 @@ export class CustomerModel extends Model<CustomerModel> {
   @BelongsTo(() => UserModel)
   user: UserModel;
 
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: true,
-  })
-  default_address_id: number;
-
   // JSON or another format to store user preferences (e.g., preferred payment methods, saved items).
   // @Column({ type: DataType.JSONB })
   // preferences: Record<string, any>;
@@ -59,6 +54,16 @@ export class CustomerModel extends Model<CustomerModel> {
     },
   })
   addresses: AddressModel[];
+
+  @HasOne(() => AddressModel, {
+    foreignKey: 'addressable_id',
+    constraints: false,
+    scope: {
+      addressable_type: 'customer',
+      is_default: true,
+    },
+  })
+  default_address: AddressModel[];
 
   @HasMany(() => CartModel, {
     foreignKey: 'customer_id',

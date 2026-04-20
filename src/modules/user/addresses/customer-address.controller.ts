@@ -89,8 +89,11 @@ export class CustomerAddressController {
       { addressType, includeDeleted },
     );
     return {
-      data: addresses,
-      count: addresses.length,
+      message: 'Customer Address Fetched successfully!',
+      items: addresses,
+      meta: {
+        meta: { count: addresses.length },
+      },
     };
   }
 
@@ -110,7 +113,6 @@ export class CustomerAddressController {
       customerId,
     );
     return {
-      success: true,
       message: 'Default address retrieved successfully',
       data: address,
     };
@@ -130,10 +132,9 @@ export class CustomerAddressController {
     const addresses =
       await this.addressService.getCustomerBillingAddresses(customerId);
     return {
-      success: true,
       message: 'Billing addresses retrieved successfully',
       data: addresses,
-      count: addresses.length,
+      meta: { count: addresses.length },
     };
   }
 
@@ -151,10 +152,9 @@ export class CustomerAddressController {
     const addresses =
       await this.addressService.getCustomerShippingAddresses(customerId);
     return {
-      success: true,
       message: 'Shipping addresses retrieved successfully',
       data: addresses,
-      count: addresses.length,
+      meta: { count: addresses.length },
     };
   }
 
@@ -179,7 +179,6 @@ export class CustomerAddressController {
       addressId,
     );
     return {
-      success: true,
       message: 'Default address set successfully',
       data: address,
     };
@@ -211,7 +210,6 @@ export class CustomerAddressController {
       updateAddressDto,
     );
     return {
-      success: true,
       message: 'Customer address updated successfully',
       data: address,
     };
@@ -283,7 +281,6 @@ export class CustomerAddressController {
       addressesWithCustomer,
     );
     return {
-      success: true,
       message: `${results.length} addresses created successfully for customer ${customerId}`,
       data: results,
     };
