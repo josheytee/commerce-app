@@ -16,7 +16,12 @@ import { ProductModel } from './product.model';
 import { InventoryModel } from './inventory.model';
 import { MediaModel } from './media.model';
 import { DiscountModel } from './discount.model';
-import { VariantStockStatusEnum } from 'src/shared';
+import {
+    MediaEntityTypeEnum,
+    MediaTypeEnum,
+    VariantStockStatusEnum,
+} from 'src/shared';
+import { ProductVariantAttributeValueModel } from './product-variant-attribute-values.model';
 
 @Table({
     timestamps: true,
@@ -38,19 +43,24 @@ export class ProductVariantModel extends Model<ProductVariantModel> {
     @Column
     product_id: number;
 
+    // Unique identifiers
     @Unique
-    @Column({ type: DataType.STRING(100) })
-    sku: string;
-
-    @Column({ type: DataType.STRING(100) })
-    barcode: string;
-
-    @Column({ type: DataType.JSONB })
-    attributes: Record<string, any>; // { color: 'red', size: 'XL' }
-
     @AllowNull(false)
-    @Column({ type: DataType.DECIMAL(10, 2) })
-    price: number;
+    @Column({ type: DataType.STRING(100) })
+    sku: string; // "NIKE-AIR-MAX-RED-42"
+
+    @Column({ type: DataType.STRING(100) })
+    barcode: string; // EAN/UPC
+
+    @Column({ type: DataType.STRING(100) })
+    mpn: string; // Manufacturer Part Number
+
+    // Variant-specific overrides (null = inherit from product)
+    @Column({ type: DataType.STRING(255) })
+    variant_name: string; // "Red / Size 42" (auto-generated or custom)
+
+    @Column({ type: DataType.DECIMAL(12, 2) })
+    price: number; // Override base_price if set
 
     @Column({ type: DataType.DECIMAL(10, 2) })
     compare_at_price: number;
@@ -87,6 +97,15 @@ export class ProductVariantModel extends Model<ProductVariantModel> {
     @BelongsTo(() => ProductModel)
     product: ProductModel;
 
+    @Column({ type: DataType.ENUM(...Object.values(VariantStockStatusEnum)) })
+    status: VariantStockStatusEnum;
+
+    @HasMany(() => ProductVariantAttributeValueModel, {
+        foreignKey: 'variant_id',
+        as: 'attribute_values', // Explicit alias
+    })
+    attribute_values: ProductVariantAttributeValueModel[];
+
     @HasMany(() => InventoryModel)
     inventories: InventoryModel[];
 
@@ -94,10 +113,11 @@ export class ProductVariantModel extends Model<ProductVariantModel> {
         foreignKey: 'entity_id',
         constraints: false,
         scope: {
-            entity_type: 'product_variant',
+            entity_type: MediaEntityTypeEnum.PRODUCT_VARIANT,
+            type: MediaTypeEnum.VARIANT_IMAGE,
         },
     })
-    images: MediaModel[];
+    gallery: MediaModel[];
 
     @HasMany(() => DiscountModel, {
         foreignKey: 'entity_id',
@@ -107,7 +127,6 @@ export class ProductVariantModel extends Model<ProductVariantModel> {
         },
     })
     discounts: DiscountModel[];
-
 
     get discount_percentage(): number {
         if (this.compare_at_price && this.compare_at_price > this.price) {

@@ -206,6 +206,7 @@ export class AddressService {
       let result: AddressModel;
 
       if (entityType === AddressableTypeEnum.CUSTOMER) {
+
         result = await this.addressRepository.setCustomerDefaultAddress(
           entityId,
           addressId,

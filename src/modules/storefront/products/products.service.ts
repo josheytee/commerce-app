@@ -6,81 +6,15 @@ import { ProductResponseDto } from './dto/product-response.dto';
 import { ProductModel } from 'src/infrastructure';
 import { IndexPageResponseDto } from './dto/index-page-response.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductFormat } from './product-format.abstract';
 
 @Injectable()
-export class ProductService {
-    constructor(private readonly productRepository: ProductRepository) { }
-
-    private formatProductResponse(product: ProductModel): ProductResponseDto {
-        const compareAtPrice = product.compare_at_price || product.price;
-        const discountPercentage = product.compare_at_price
-            ? Math.round(
-                ((product.compare_at_price - product.price) /
-                    product.compare_at_price) *
-                100,
-            )
-            : 0;
-
-        const featuredImage =
-            product.gallery_images?.find((img) => img.is_primary)?.url ||
-            product.gallery_images?.[0]?.url ||
-            null;
-
-        const galleryImages = product.gallery_images?.map((img) => img.url) || [];
-
-        const averageRating = product.reviews?.length
-            ? product.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) /
-            product.reviews.length
-            : 0;
-
-        return {
-            id: product.id,
-            name: product.name,
-            slug: product.slug,
-            description: product.description,
-            short_description: product.short_description,
-            price: Number(product.price),
-            compare_at_price: product.compare_at_price
-                ? Number(product.compare_at_price)
-                : undefined,
-            cost_price: product.cost_price ? Number(product.cost_price) : undefined,
-            formatted_price: product.formatted_price,
-            discount_percentage: discountPercentage,
-            final_price: product.compare_at_price ? Number(product.price) : undefined,
-            // sku: product.sku,
-            status: product.status,
-            product_type: product.product_type,
-            is_featured: product.is_featured,
-            is_active: product.is_active,
-            rating: Math.round(averageRating * 10) / 10,
-            review_count: product.reviews?.length || 0,
-            // sales_count: product.sales_count || 0,
-            // stock_quantity: product.stock_quantity || 0,
-            featured_image: featuredImage,
-            gallery_images: galleryImages,
-            category: product.section
-                ? {
-                    id: product.section.id,
-                    name: product.section.name,
-                    slug: product.section.slug,
-                }
-                : null,
-            vendor: product.vendor
-                ? {
-                    id: product.vendor.id,
-                    name: product.vendor.business_name,
-                    rating: product.vendor.rating_average || 0,
-                    verified: product.vendor.is_verified || false,
-                }
-                : null,
-            recent_reviews: product.reviews?.slice(0, 5).map((review) => ({
-                rating: review.rating,
-                comment: review.content,
-            })),
-            created_at: product.created_at,
-            updated_at: product.updated_at,
-        };
+export class ProductService extends ProductFormat {
+    constructor(private readonly productRepository: ProductRepository) {
+        super();
     }
+
+
 
     async getIndexPageProducts(): Promise<IndexPageResponseDto> {
         const [
@@ -105,7 +39,7 @@ export class ProductService {
                 flash_deal_ends_at: product.available_to,
                 discount: product.compare_at_price
                     ? Math.round(
-                        ((product.compare_at_price - product.price) /
+                        ((product.compare_at_price - product.base_price) /
                             product.compare_at_price) *
                         100,
                     )
@@ -158,14 +92,14 @@ export class ProductService {
     }
 
     async getProductById(id: number): Promise<ProductResponseDto> {
-        const product = await this.productRepository.findById(id);
+        const product = await this.productRepository.findProductDetails(id);
+        // console.log('Fetched product details for ID:', id, product);
         if (!product) {
             throw new NotFoundException(`Product with ID ${id} not found`);
         }
 
         // Increment view count
         await this.productRepository.incrementViews(id);
-
         return this.formatProductResponse(product);
     }
 

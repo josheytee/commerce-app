@@ -1,28 +1,14 @@
 'use strict';
 
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  async up(queryInterface, Sequelize) {
     await queryInterface.createTable('sections', {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
-      },
-      name: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      slug: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      description: {
-        type: Sequelize.STRING,
-      },
-      cover: {
-        type: Sequelize.STRING,
-        allowNull: true,
       },
       parent_id: {
         type: Sequelize.INTEGER,
@@ -31,7 +17,8 @@ module.exports = {
           model: 'sections',
           key: 'id',
         },
-        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
       },
       store_id: {
         type: Sequelize.INTEGER,
@@ -41,10 +28,40 @@ module.exports = {
           key: 'id',
         },
       },
-      deleted_at: {
-        type: Sequelize.DATE,
+      name: {
+        type: Sequelize.STRING(100),
+        allowNull: false,
+      },
+      slug: {
+        type: Sequelize.STRING(100),
+        allowNull: false,
+        unique: true,
+      },
+      description: {
+        type: Sequelize.TEXT,
         allowNull: true,
-        defaultValue: null,
+      },
+      cover: {
+        type: Sequelize.STRING(500),
+        allowNull: true,
+      },
+      sort_order: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      is_active: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
+      meta_title: {
+        type: Sequelize.STRING(160),
+        allowNull: true,
+      },
+      meta_description: {
+        type: Sequelize.TEXT,
+        allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -56,10 +73,25 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
+      deleted_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+        defaultValue: null,
+      },
+    });
+
+    await queryInterface.addIndex('sections', ['parent_id'], {
+      name: 'sections_parent_idx',
+    });
+    await queryInterface.addIndex('sections', ['slug'], {
+      name: 'sections_slug_idx',
+    });
+    await queryInterface.addIndex('sections', ['is_active', 'sort_order'], {
+      name: 'sections_active_sort_idx',
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('sections');
   },
 };

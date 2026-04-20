@@ -29,15 +29,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let details: string | undefined;
     let errorCode: string | undefined;
     let errors: any[] = [];
-    // console.log('Exception caught by AllExceptionsFilter:', {
-    //   name: (exception as any)?.name,
-    //   message: (exception as any)?.message,
-    //   stack: (exception as any)?.stack,
-    //   ...(exception instanceof HttpException && {
-    //     statusCode: exception.getStatus(),
-    //     response: exception.getResponse(),
-    //   }),
-    // });
+    console.log('Exception caught by AllExceptionsFilter:', {
+      name: (exception as any)?.name,
+      message: (exception as any)?.message,
+      stack: (exception as any)?.stack,
+      ...(exception instanceof HttpException && {
+        statusCode: exception.getStatus(),
+        response: exception.getResponse(),
+      }),
+    });
     // 🔐 Handle NestJS HTTP Exceptions
     if (exception instanceof HttpException) {
       status = exception.getStatus();

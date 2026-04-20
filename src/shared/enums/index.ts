@@ -42,12 +42,23 @@ export enum MediaTypeEnum {
     VENDOR_COVER = 'vendor_cover',
     VENDOR_GALLERY = 'vendor_gallery',
     PRODUCT_IMAGE = 'product_image',
+    VARIANT_IMAGE = 'variant_image',
     PRODUCT_GALLERY = 'product_gallery',
     USER_AVATAR = 'user_avatar',
     USER_COVER = 'user_cover',
     SECTION_IMAGE = 'section_image',
     CATEGORY_IMAGE = 'category_image',
     REVIEW_IMAGE = 'review_image',
+}
+
+export enum MediaEntityTypeEnum {
+    VENDOR = 'vendor',
+    PRODUCT = 'product',
+    PRODUCT_VARIANT = 'product_variant',
+    USER = 'user',
+    SECTION = 'section',
+    CATEGORY = 'category',
+    REVIEW = 'review',
 }
 
 export enum ReviewTypeEnum {
@@ -106,6 +117,10 @@ export enum VariantStockStatusEnum {
     IN_STOCK = 'in_stock',
     OUT_OF_STOCK = 'out_of_stock',
     BACKORDER = 'backorder',
+    PRE_ORDER = 'pre_order',
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+    DISCONTINUED = 'discontinued',
 }
 
 
@@ -127,4 +142,18 @@ export enum RiderStatusEnum {
     AVAILABLE = 'available',
     BUSY = 'busy',
     OFFLINE = 'offline',
+}
+
+export enum AttributeTypeEnum {
+    SELECT = 'select', // Single choice (dropdown)
+    MULTI_SELECT = 'multi', // Multiple choices (checkboxes)
+    TEXT = 'text', // Free text input
+    BOOLEAN = 'boolean', // Yes/No
+    NUMBER = 'number', // Numeric value
+}
+
+export enum CartStatusEnum {
+    ACTIVE = 'active',
+    COMPLETED = 'completed',
+    ABANDONED = 'abandoned',
 }

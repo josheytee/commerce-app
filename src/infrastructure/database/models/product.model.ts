@@ -21,7 +21,6 @@ import {
 import { SectionModel } from './section.model';
 import { StoreModel } from './store.model';
 import { InventoryModel } from './inventory.model';
-import { ProductAttributeModel } from './product-attribute.model';
 import { ProductVariantModel } from './product-variant.model';
 import { MediaModel } from './media.model';
 import { VendorModel } from './vendor.model';
@@ -29,6 +28,8 @@ import { ReviewModel } from './review.model';
 import { DiscountModel } from './discount.model';
 import { TagModel } from './tag.model';
 import { MediaTypeEnum, ProductStatusEnum, ProductTypeEnum } from 'src/shared';
+import { SearchDocumentModel } from './search_documents.model';
+import { ProductAttributeValueModel } from './product-attribute-values.model';
 
 @Table({
   timestamps: true,
@@ -87,27 +88,10 @@ export class ProductModel extends Model<ProductModel> {
   @Column({ type: DataType.TEXT })
   specification: string;
 
-  // SKU & Identifiers
-
-  @Index({ unique: true })
-  @Column({ type: DataType.STRING(100), allowNull: true })
-  upc: string;
-
-  @Index({ unique: true })
-  @Column({ type: DataType.STRING(100), allowNull: true })
-  ean: string;
-
-  @Index({ unique: true })
-  @Column({ type: DataType.STRING(100), allowNull: true })
-  isbn: string;
-
-  @Column({ type: DataType.STRING(100), allowNull: true })
-  mpn: string;
-
   // Pricing
   @AllowNull(false)
   @Column({ type: DataType.DECIMAL(10, 2) })
-  price: number;
+  base_price: number;
 
   @Column({ type: DataType.DECIMAL(10, 2) })
   compare_at_price: number;
@@ -162,6 +146,15 @@ export class ProductModel extends Model<ProductModel> {
   @Column({ type: DataType.INTEGER })
   views: number;
 
+  // Denormalized for fast search/filtering (updated via hooks)
+  @Default(0)
+  @Column({ type: DataType.DECIMAL(12, 2) })
+  min_variant_price: number;
+
+  @Default(0)
+  @Column({ type: DataType.DECIMAL(12, 2) })
+  max_variant_price: number;
+
   // Dates
   @Column({ type: DataType.DATE })
   published_at: Date;
@@ -198,21 +191,19 @@ export class ProductModel extends Model<ProductModel> {
   @HasMany(() => InventoryModel)
   inventories: InventoryModel[];
 
-  @HasMany(() => ProductAttributeModel)
-  attributes: ProductAttributeModel[];
-
   // Media association (polymorphic)
   @HasMany(() => MediaModel, {
     foreignKey: 'entity_id',
     constraints: false,
     scope: {
       entity_type: 'product',
+      type: MediaTypeEnum.PRODUCT_IMAGE,
     },
   })
   gallery_images: MediaModel[];
 
   // Media
-  @HasMany(() => MediaModel, {
+  @HasOne(() => MediaModel, {
     foreignKey: 'entity_id',
     constraints: false,
     scope: {
@@ -221,10 +212,13 @@ export class ProductModel extends Model<ProductModel> {
       is_primary: true,
     },
   })
-  featured_image: string;
+  featured_image: MediaModel;
 
   // Variants association
-  @HasMany(() => ProductVariantModel)
+  @HasMany(() => ProductVariantModel, {
+    foreignKey: 'product_id',
+    as: 'variants',
+  })
   variants: ProductVariantModel[];
 
   // Reviews association
@@ -270,9 +264,34 @@ export class ProductModel extends Model<ProductModel> {
   @Column
   deleted_at: Date;
 
+  // Product-level attributes (applies to all variants)
+  @HasMany(() => ProductAttributeValueModel)
+  attribute_values: ProductAttributeValueModel[];
+
+  // Media gallery (polymorphic)
+  @HasMany(() => MediaModel, {
+    foreignKey: 'entity_id',
+    constraints: false,
+    scope: { entity_type: 'product' },
+  })
+  media: MediaModel[];
+
+  // Search index sync
+  @HasOne(() => SearchDocumentModel, {
+    foreignKey: 'entity_id',
+    constraints: false,
+    scope: { entity_type: 'product' },
+  })
+  search_document: SearchDocumentModel;
+
   // Virtual fields / computed properties
 
   get has_variants(): boolean {
+    return this.product_type === ProductTypeEnum.VARIABLE;
+  }
+
+  // Virtuals
+  get is_configurable(): boolean {
     return this.product_type === ProductTypeEnum.VARIABLE;
   }
 
@@ -280,6 +299,26 @@ export class ProductModel extends Model<ProductModel> {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(this.price);
+    }).format(this.base_price);
+  }
+
+  get display_price(): string {
+    if (
+      this.is_configurable &&
+      this.min_variant_price !== this.max_variant_price
+    ) {
+      return `$${this.min_variant_price} - $${this.max_variant_price}`;
+    }
+    return `$${this.base_price}`;
+  }
+
+  get attribute_combination_key(): string {
+    // "color:red|size:42" for fast lookup
+    return (
+      this.attribute_values
+        ?.sort((a, b) => a.attribute.code.localeCompare(b.attribute.code))
+        .map((av) => `${av.attribute.code}:${av.attribute_value.value}`)
+        .join('|') ?? ''
+    );
   }
 }

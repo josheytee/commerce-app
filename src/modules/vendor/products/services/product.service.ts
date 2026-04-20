@@ -47,7 +47,7 @@ export class ProductService {
     });
 
     if (!product.name) throw new Error('Name required');
-    if (!product.price) throw new Error('Price required');
+    if (!product.base_price) throw new Error('Price required');
 
     if (
       product.product_type === 'variable' &&
@@ -79,10 +79,11 @@ export class ProductService {
       if (variants?.length) {
         for (const variant of variants) {
           // 2️⃣ Create variant
+          const { attribute_values, ...variantData } = variant;
           const createdVariant =
             await this._variantRepositort.createWithTransaction(
               {
-                ...variant,
+                ...variantData,
                 product_id: product.id,
               },
               t,

@@ -3,3 +3,5 @@ export * from './update-product.dto';
 export * from './create-variant.dto';
 export * from './create-product-with-variants.dto';
 // export * from './product-detail-response.dto';
+export * from './product-variant-response.dto';
+export * from './product-response.dto';

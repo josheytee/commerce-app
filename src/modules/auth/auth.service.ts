@@ -89,6 +89,9 @@ export class AuthService {
   async login(user: User): Promise<{ access_token: string }> {
     // Create the JWT payload
     const token = await this.createToken(user);
+    user.last_login = new Date().toISOString();
+    await this._userRepository.update(user.id, { last_login: user.last_login });
+
 
     // find active sessions and expires them
     this.sessionService.deleteExpiredSessions(user.id);

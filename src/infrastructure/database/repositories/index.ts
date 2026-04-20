@@ -3,6 +3,7 @@ export * from './product.repository';
 export * from './inventory.repository';
 export * from './variant.repository';
 export * from './order.repository';
+export * from './order-item.repository';
 export * from './fulfillment.repository';
 export * from './rider.repository';
 export * from './user.repository';

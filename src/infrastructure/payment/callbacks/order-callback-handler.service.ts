@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CallbackHandler } from '../interfaces/callback-handler.interface';
 import { OrderService } from 'src/modules/vendor/orders/order.service';
+import { OrderStatusEnum } from 'src/shared';
 
 @Injectable()
 export class OrderCallbackHandlerService implements CallbackHandler {
@@ -13,7 +14,7 @@ export class OrderCallbackHandlerService implements CallbackHandler {
       orderReference: transactionId,
     });
     if (order) {
-      order.status = status === 'completed' ? 'paid' : 'failed';
+      order.status = status === 'completed' ? OrderStatusEnum.PAID : OrderStatusEnum.FAILED;
       await order.save();
     }
   }

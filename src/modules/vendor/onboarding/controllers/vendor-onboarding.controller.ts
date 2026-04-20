@@ -27,7 +27,7 @@ export class VendorOnboardingController {
   constructor(private readonly vendorService: VendorService) { }
 
   @Post()
-  @Permissions('vendor:create')
+  // @Permissions('vendor:create')
   @ApiSuccessResponse(VendorModel)
   create(
     @Body() data: CreateVendorDto,

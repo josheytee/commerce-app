@@ -34,20 +34,20 @@ export class StoreFrontProductController {
 
   // ==================== PUBLIC ENDPOINTS ====================
 
-  @Get('index')
-  @ApiOperation({
-    summary: 'Get all products for index page',
-    description:
-      'Returns flash deals, best sellers, most popular, top rated, new arrivals, and featured products in one request',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Index page data retrieved successfully',
-    type: IndexPageResponseDto,
-  })
-  async getIndexPageProducts(): Promise<IndexPageResponseDto> {
-    return this.productService.getIndexPageProducts();
-  }
+  // @Get('index')
+  // @ApiOperation({
+  //   summary: 'Get all products for index page',
+  //   description:
+  //     'Returns flash deals, best sellers, most popular, top rated, new arrivals, and featured products in one request',
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'Index page data retrieved successfully',
+  //   type: IndexPageResponseDto,
+  // })
+  // async getIndexPageProducts(): Promise<IndexPageResponseDto> {
+  //   return this.productService.getIndexPageProducts();
+  // }
 
   @Get('flash-deals')
   @ApiOperation({ summary: 'Get flash deals products' })

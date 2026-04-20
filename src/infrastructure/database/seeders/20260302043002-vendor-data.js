@@ -231,6 +231,7 @@ const generateVendors = (
 
     vendors.push({
       id: i,
+      slug: faker.helpers.slugify(businessName.toLowerCase()),
       business_name: businessName,
       business_phone: faker.phone.number('+234 80########'),
       business_email: faker.internet.email({

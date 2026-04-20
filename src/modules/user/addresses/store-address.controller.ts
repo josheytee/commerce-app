@@ -81,8 +81,8 @@ export class StoreAddressController {
     })
     async getStoreAddresses(
         @Param('storeId', ParseIntPipe) storeId: number,
-        @Query('onlyPrimary') onlyPrimary?: boolean,
-        @Query('includeInactive') includeInactive?: boolean,
+        // @Query('onlyPrimary') onlyPrimary?: boolean,
+        // @Query('includeInactive') includeInactive?: boolean,
     ) {
         const addresses = await this.addressService.getAddressesByEntity(
             AddressableTypeEnum.STORE,
@@ -91,7 +91,7 @@ export class StoreAddressController {
         );
         return {
             data: addresses,
-            count: addresses.length,
+            meta: { count: addresses.length },
         };
     }
 
@@ -111,7 +111,6 @@ export class StoreAddressController {
             storeId,
         );
         return {
-            success: true,
             message: 'Default address retrieved successfully',
             data: address,
         };
@@ -130,7 +129,6 @@ export class StoreAddressController {
     ) {
         const address = await this.addressService.getPrimaryStoreAddress(storeId);
         return {
-            success: true,
             message: 'Primary address retrieved successfully',
             data: address,
         };
@@ -152,10 +150,9 @@ export class StoreAddressController {
             'warehouse',
         );
         return {
-            success: true,
             message: 'Warehouse addresses retrieved successfully',
             data: addresses,
-            count: addresses.length,
+            meta: { count: addresses.length },
         };
     }
 
@@ -175,10 +172,9 @@ export class StoreAddressController {
             'retail',
         );
         return {
-            success: true,
             message: 'Retail addresses retrieved successfully',
-            data: addresses,
-            count: addresses.length,
+            items: addresses,
+            meta: { count: addresses.length },
         };
     }
 
@@ -203,7 +199,6 @@ export class StoreAddressController {
             addressId,
         );
         return {
-            success: true,
             message: 'Default address set successfully',
             data: address,
         };
@@ -227,7 +222,6 @@ export class StoreAddressController {
             addressId,
         );
         return {
-            success: true,
             message: 'Primary address set successfully',
             data: address,
         };
@@ -259,7 +253,6 @@ export class StoreAddressController {
             updateAddressDto,
         );
         return {
-            success: true,
             message: 'Store address updated successfully',
             data: address,
         };
@@ -330,7 +323,6 @@ export class StoreAddressController {
         const results =
             await this.addressService.bulkCreateAddresses(addressesWithStore);
         return {
-            success: true,
             message: `${results.length} addresses created successfully for store ${storeId}`,
             data: results,
         };

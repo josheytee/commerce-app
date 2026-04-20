@@ -27,6 +27,13 @@ export class CreateVendorDto {
   business_name: string;
 
   @ApiProperty({
+    example: 'tech-world',
+    description: 'Slug of the business',
+  })
+  @IsString()
+  slug: string;
+
+  @ApiProperty({
     example: '+2348012345678',
     description: 'Business phone number',
     maxLength: 20,

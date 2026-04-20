@@ -58,7 +58,7 @@ module.exports = {
 
       // Add check constraints
       await queryInterface.sequelize.query(
-        `ALTER TABLE products ADD CONSTRAINT check_price_positive CHECK (price >= 0)`,
+        `ALTER TABLE products ADD CONSTRAINT check_price_positive CHECK (base_price >= 0)`,
         { transaction },
       );
 

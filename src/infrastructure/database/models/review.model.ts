@@ -9,8 +9,11 @@ import {
     UpdatedAt,
     Index,
     Default,
+    BelongsTo,
 } from 'sequelize-typescript';
+import { User } from 'src/modules/user/interfaces/user.interface';
 import { ReviewTypeEnum } from 'src/shared';
+import { UserModel } from './user.model';
 
 @Table({
     tableName: 'reviews',
@@ -67,6 +70,8 @@ export class ReviewModel extends Model<ReviewModel> {
     })
     user_id: number;
 
+    @BelongsTo(() => UserModel, 'user_id')
+    user: UserModel;
 
     @Default(0)
     @Column({ type: DataType.INTEGER })

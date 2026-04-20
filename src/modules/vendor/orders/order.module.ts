@@ -12,6 +12,7 @@ import {
 import {
   VariantRepository,
   OrderRepository,
+  OrderItemRepository,
   FulfillmentRepository,
 } from 'src/infrastructure/database/repositories';
 import { InventoryModule } from '../inventory/inventory.module';
@@ -34,10 +35,11 @@ import { CartModule } from 'src/modules/storefront/cart/cart.module';
   providers: [
     OrderService,
     OrderRepository,
+    OrderItemRepository,
     VariantRepository,
     FulfillmentRepository,
   ],
   controllers: [OrderController, CustomerOrderController],
-  exports: [OrderService, OrderRepository],
+  exports: [OrderService, OrderItemRepository, OrderRepository],
 })
 export class OrderModule { }
