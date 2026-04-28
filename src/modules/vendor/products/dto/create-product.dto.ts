@@ -66,7 +66,7 @@ export class CreateProductDto {
   // 💰 PRICING (BASE PRICE ONLY)
   @ApiProperty({ example: 120000 })
   @IsNumber()
-  price: number;
+  base_price: number;
 
   @ApiPropertyOptional({ example: 150000 })
   @IsOptional()

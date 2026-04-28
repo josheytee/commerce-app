@@ -151,17 +151,19 @@ export class ProductService {
     }
     return product;
   }
+
   async findOneByVendor(vendorId: number, id: number): Promise<ProductModel> {
-    const product = await this.productModel.findOne({
-      where: {
-        id,
-        vendor_id: vendorId,
-      },
-    });
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
+    const product = await this.productRepo.findOneByVendorId(vendorId, id);
+
     return product;
+  }
+
+  async findAllByVendor(
+    vendorId: number,
+  ): Promise<{ rows: ProductModel[]; count: number }> {
+    const products = await this.productRepo.findByVendorId(vendorId);
+
+    return products;
   }
 
   async update(
