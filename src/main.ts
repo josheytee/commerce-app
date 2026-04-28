@@ -53,8 +53,8 @@ async function bootstrap() {
     .setDescription('Multi-vendor marketplace API')
     .setVersion('1.0')
     .addBearerAuth() // 🔐 for JWT
-    .addServer('http://localhost:3000')
-    .addServer('https://commerce-app-mv98.onrender.com') // change later
+    // .addServer('http://localhost:3000')
+    // .addServer('https://commerce-app-mv98.onrender.com') // change later
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

@@ -149,16 +149,23 @@ export class ProductController {
   @Get()
   @ApiSuccessResponse(ProductModel)
   @Permissions('product:view')
-  findAll(
-    @Param('vendorId', ParseIntPipe) vendorId: number,
-  ): Promise<ProductModel[]> {
-    return this.productService.findAll(vendorId);
+  async findAll(@Param('vendorId', ParseIntPipe) vendorId: number) {
+    const data = await this.productService.findAllByVendor(vendorId);
+
+    return {
+      items: data.rows,
+
+      meta: {
+        count: data.rows.length,
+      },
+    };
   }
 
   @Get(':id')
   @Permissions('product:view')
   @ApiSuccessResponse(ProductModel)
-  findOne(@Param('id') id: number,
+  findOne(
+    @Param('id') id: number,
     @Param('vendorId', ParseIntPipe) vendorId: number,
   ): Promise<ProductModel> {
     return this.productService.findOneByVendor(vendorId, id);

@@ -464,209 +464,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
     }
 
     /**
-     * Get complete product details for product page
-     */
-    // async findProductDetails(
-    //     productId: number | null,
-    //     storeId?: number,
-    //     slug?: string,
-    // ): Promise<ProductModel | null> {
-    //     const where: any = {
-    //         is_active: true,
-    //         status: 'published',
-    //     };
-
-    //     if (productId) {
-    //         where.id = productId;
-    //     }
-
-    //     if (slug) {
-    //         where.slug = slug;
-    //     }
-
-    //     if (storeId) {
-    //         where.store_id = storeId;
-    //     }
-
-    //     return this.productModel.findOne({
-    //         where,
-    //         attributes: {
-    //             exclude: ['deleted_at', 'search_keywords'],
-    //         },
-    //         include: [
-    //             // Basic relations
-    //             {
-    //                 model: StoreModel,
-    //                 attributes: ['id', 'name', 'slug'],
-    //             },
-    //             {
-    //                 model: VendorModel,
-    //                 attributes: ['id', 'business_name', 'slug'],
-    //             },
-    //             {
-    //                 model: SectionModel,
-    //                 attributes: ['id', 'name', 'slug'],
-    //             },
-
-    //             // Product-level attributes (specifications)
-    //             {
-    //                 model: ProductAttributeValueModel,
-    //                 as: 'attribute_values',
-    //                 include: [
-    //                     {
-    //                         model: AttributeModel,
-    //                         attributes: ['id', 'name', 'code', 'type'],
-    //                     },
-    //                     {
-    //                         model: AttributeValueModel,
-    //                         attributes: ['id', 'value', 'display_value'],
-    //                     },
-    //                 ],
-    //             },
-
-    //             // Variants with inventory and attributes
-    //             {
-    //                 model: ProductVariantModel,
-    //                 as: 'variants',
-    //                 where: {
-    //                     // status: 'active',
-    //                 },
-    //                 required: false,
-    //                 separate: true,
-    //                 include: [
-    //                     // Variant inventory
-    //                     {
-    //                         model: InventoryModel,
-    //                         attributes: [
-    //                             'id',
-    //                             'stock_quantity',
-    //                             'quantity',
-    //                             'reserved_quantity',
-    //                             'stock_status',
-    //                             'low_stock_threshold',
-    //                             'allow_backorders',
-    //                         ],
-    //                     },
-    //                     // Variant-defining attributes (color, size, etc.)
-    //                     {
-    //                         model: ProductVariantAttributeValueModel,
-    //                         as: 'attribute_values',
-    //                         include: [
-    //                             {
-    //                                 model: AttributeModel,
-    //                                 as: 'attribute', // 🔥 REQUIRED
-    //                             },
-
-    //                             {
-    //                                 model: AttributeValueModel,
-    //                                 as: 'attribute_value',
-    //                                 attributes: [
-    //                                     'id',
-    //                                     'value',
-    //                                     'display_value',
-    //                                     'color_code',
-    //                                     'image_url',
-    //                                 ],
-    //                                 // include: [
-    //                                 //     {
-    //                                 //         model: AttributeModel,
-    //                                 //         as: 'attribute', // Match the alias from AttributeValueModel
-    //                                 //         required: false,
-    //                                 //     }
-    //                                 // ]
-    //                             },
-    //                         ],
-    //                     },
-    //                     // Variant images
-    //                     {
-    //                         model: MediaModel,
-    //                         as: 'gallery',
-    //                         where: {
-    //                             entity_type: 'product_variant',
-    //                         },
-    //                         required: false,
-    //                         limit: 5,
-    //                     },
-    //                 ],
-    //             },
-
-    //             // Product media gallery
-    //             {
-    //                 model: MediaModel,
-    //                 as: 'gallery_images',
-    //                 where: {
-    //                     entity_type: 'product',
-    //                 },
-    //                 required: false,
-    //                 limit: 10,
-    //             },
-
-    //             // Featured image
-    //             {
-    //                 model: MediaModel,
-    //                 as: 'featured_image',
-    //                 where: {
-    //                     entity_type: 'product',
-    //                     is_primary: true,
-    //                 },
-    //                 required: false,
-    //             },
-
-    //             // Reviews with rating summary
-    //             {
-    //                 model: ReviewModel,
-    //                 as: 'reviews',
-    //                 where: {
-    //                     entity_type: 'product',
-    //                     is_approved: true,
-    //                 },
-    //                 required: false,
-    //                 limit: 5,
-    //                 order: [['created_at', 'DESC']],
-    //             },
-
-    //             // Active discounts
-    //             {
-    //                 model: DiscountModel,
-    //                 as: 'discounts',
-    //                 where: {
-    //                     entity_type: 'product',
-    //                     is_active: true,
-    //                     start_date: { [Op.lte]: new Date() },
-    //                     [Op.or]: [
-    //                         { end_date: null },
-    //                         { end_date: { [Op.gte]: new Date() } },
-    //                     ],
-    //                 },
-    //                 required: false,
-    //             },
-
-    //             // Tags
-    //             {
-    //                 model: TagModel,
-    //                 as: 'tags',
-    //                 where: {
-    //                     entity_type: TagTypeEnum.PRODUCT,
-    //                 },
-    //                 required: false,
-    //                 attributes: ['id', 'name', 'slug'],
-    //                 through: { attributes: [] }, // If using junction table
-    //             },
-    //         ],
-    //         order: [
-    //             [{ model: ProductVariantModel, as: 'variants' }, 'id', 'ASC'],
-    //             [
-    //                 { model: ProductVariantModel, as: 'variants' },
-    //                 { model: ProductVariantAttributeValueModel, as: 'attribute_values' },
-    //                 { model: AttributeModel, as: 'attribute' },
-    //                 'sort_order',
-    //                 'ASC',
-    //             ],
-    //         ],
-    //     });
-    // }
-
-    /**
      * Get product by slug (for SEO-friendly URLs)
      */
     async findBySlug(
@@ -768,5 +565,112 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                 },
             ],
         });
+    }
+
+    async findByVendorId(vendorId: number) {
+        return this.model.findAndCountAll({
+            where: {
+                vendor_id: vendorId,
+            },
+            include: [
+                {
+                    model: VendorModel,
+                    as: 'vendor',
+                    attributes: ['id', 'business_name', 'total_ratings', 'is_verified'],
+                    where: {
+                        id: vendorId,
+                    },
+                },
+                {
+                    model: StoreModel,
+                    as: 'store',
+                    attributes: ['id', 'name', 'description', 'slug'],
+
+                },
+                {
+                    model: ProductVariantModel,
+                    as: 'variants',
+                    include: [
+                        {
+                            model: ProductVariantAttributeValueModel,
+                            as: 'attribute_values',
+                            include: [
+                                { model: AttributeModel, as: 'attribute' },
+                                { model: AttributeValueModel, as: 'attribute_value' },
+                            ],
+                        },
+                    ]
+
+                },
+                { model: InventoryModel },
+                {
+                    model: MediaModel,
+                    as: 'gallery_images',
+                    where: { entity_type: MediaEntityTypeEnum.PRODUCT },
+                    required: false,
+                },
+                {
+                    model: MediaModel,
+                    as: 'featured_image',
+                    where: { is_primary: true, entity_type: MediaEntityTypeEnum.PRODUCT },
+                    required: false,
+                },
+
+            ]
+        })
+    }
+
+    async findOneByVendorId(vendorId: number, productId: number) {
+        return this.model.findOne({
+            where: {
+                id: productId,
+                vendor_id: vendorId,
+            },
+            include: [
+                {
+                    model: VendorModel,
+                    as: 'vendor',
+                    attributes: ['id', 'business_name', 'total_ratings', 'is_verified'],
+                    where: {
+                        id: vendorId,
+                    },
+                },
+                {
+                    model: StoreModel,
+                    as: 'store',
+                    attributes: ['id', 'name', 'description', 'slug'],
+
+                },
+                {
+                    model: ProductVariantModel,
+                    as: 'variants',
+                    include: [
+                        {
+                            model: ProductVariantAttributeValueModel,
+                            as: 'attribute_values',
+                            include: [
+                                { model: AttributeModel, as: 'attribute' },
+                                { model: AttributeValueModel, as: 'attribute_value' },
+                            ],
+                        },
+                    ]
+
+                },
+                { model: InventoryModel },
+                {
+                    model: MediaModel,
+                    as: 'gallery_images',
+                    where: { entity_type: MediaEntityTypeEnum.PRODUCT },
+                    required: false,
+                },
+                {
+                    model: MediaModel,
+                    as: 'featured_image',
+                    where: { is_primary: true, entity_type: MediaEntityTypeEnum.PRODUCT },
+                    required: false,
+                },
+
+            ]
+        })
     }
 }
