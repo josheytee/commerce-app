@@ -21,6 +21,7 @@ import {
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 import { VendorModel } from 'src/infrastructure';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Vendor Management')
@@ -38,6 +39,7 @@ export class VendorController {
   }
 
   @Get(':id')
+  @Public()
   @ApiSuccessResponse(VendorModel)
   findOne(@Param('id') id: number): Promise<VendorModel> {
     return this.vendorService.findById(id);

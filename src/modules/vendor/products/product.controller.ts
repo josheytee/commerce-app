@@ -27,6 +27,7 @@ import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard'
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 import { CreateProductWithVariantsDto, UpdateProductDto } from './dto';
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
+import { Public } from 'src/modules/auth/decorators/public.decorator';
 
 @ApiTags('Vendor - Products')
 @Controller('vendors/:vendorId/products')
@@ -149,6 +150,7 @@ export class ProductController {
   @Get()
   @ApiSuccessResponse(ProductModel)
   @Permissions('product:view')
+  @Public()
   async findAll(@Param('vendorId', ParseIntPipe) vendorId: number) {
     const data = await this.productService.findAllByVendor(vendorId);
 
