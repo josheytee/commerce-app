@@ -141,6 +141,7 @@ export class ProductController {
 
   @Get('search')
   @ApiSuccessResponse(ProductModel)
+  @Public()
   async searchByAttributes(
     @Query('attributes') attributes: { attributeId: number; value: string }[],
   ) {
@@ -165,6 +166,7 @@ export class ProductController {
 
   @Get(':id')
   @Permissions('product:view')
+  @Public()
   @ApiSuccessResponse(ProductModel)
   findOne(
     @Param('id') id: number,

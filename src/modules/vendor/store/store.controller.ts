@@ -20,6 +20,7 @@ import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 import { StoreModel } from 'src/infrastructure';
+import { Public } from 'src/modules/auth/decorators/public.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Vendor - Stores')
@@ -45,6 +46,7 @@ export class StoreController {
   @Get()
   @Permissions('store:view')
   @ApiSuccessResponse(StoreModel)
+  @Public()
   findAll(
     @Param('vendorId', ParseIntPipe) vendorId: number,
     @Req() req: AuthenticatedRequest,
@@ -54,6 +56,7 @@ export class StoreController {
 
   @Get(':id')
   @Permissions('store:view')
+  @Public()
   @ApiSuccessResponse(StoreModel)
   findOne(
     @Param('vendorId', ParseIntPipe) vendorId: number,
