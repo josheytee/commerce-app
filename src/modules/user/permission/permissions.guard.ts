@@ -8,6 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { UserVendorRoleService } from '../user-vendor-role/user-vendor-role.service';
 import { PERMISSIONS_KEY } from './permissions.decorator';
+import { IS_PUBLIC_KEY } from 'src/modules/auth/decorators/public.decorator';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -23,6 +24,15 @@ export class PermissionsGuard implements CanActivate {
       PERMISSIONS_KEY,
       context.getHandler(),
     );
+
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
 
     if (!requiredPermissions) {
       return true;
