@@ -673,4 +673,95 @@ export class ProductRepository extends BaseRepository<ProductModel> {
             ]
         })
     }
+
+    async findByStoreId(storeId: number) {
+        return this.model.findAndCountAll({
+            where: {
+                store_id: storeId,
+            },
+            include: [
+                {
+                    model: StoreModel,
+                    as: 'store',
+                    attributes: ['id', 'name', 'description', 'slug'],
+
+                },
+                {
+                    model: ProductVariantModel,
+                    as: 'variants',
+                    include: [
+                        {
+                            model: ProductVariantAttributeValueModel,
+                            as: 'attribute_values',
+                            include: [
+                                { model: AttributeModel, as: 'attribute' },
+                                { model: AttributeValueModel, as: 'attribute_value' },
+                            ],
+                        },
+                    ]
+
+                },
+                { model: InventoryModel },
+                {
+                    model: MediaModel,
+                    as: 'gallery_images',
+                    where: { entity_type: MediaEntityTypeEnum.PRODUCT },
+                    required: false,
+                },
+                {
+                    model: MediaModel,
+                    as: 'featured_image',
+                    where: { is_primary: true, entity_type: MediaEntityTypeEnum.PRODUCT },
+                    required: false,
+                },
+
+            ]
+        })
+    }
+
+    async findOneByStoreId(storeId: number, productId: number) {
+        return this.model.findOne({
+            where: {
+                id: productId,
+                store_id: storeId,
+            },
+            include: [
+                {
+                    model: StoreModel,
+                    as: 'store',
+                    attributes: ['id', 'name', 'description', 'slug'],
+
+                },
+                {
+                    model: ProductVariantModel,
+                    as: 'variants',
+                    include: [
+                        {
+                            model: ProductVariantAttributeValueModel,
+                            as: 'attribute_values',
+                            include: [
+                                { model: AttributeModel, as: 'attribute' },
+                                { model: AttributeValueModel, as: 'attribute_value' },
+                            ],
+                        },
+                    ]
+
+                },
+                { model: InventoryModel },
+                {
+                    model: MediaModel,
+                    as: 'gallery_images',
+                    where: { entity_type: MediaEntityTypeEnum.PRODUCT },
+                    required: false,
+                },
+                {
+                    model: MediaModel,
+                    as: 'featured_image',
+                    where: { is_primary: true, entity_type: MediaEntityTypeEnum.PRODUCT },
+                    required: false,
+                },
+
+            ]
+        })
+    }
 }

@@ -17,19 +17,36 @@ import {
   CategoryModel,
   PermissionModel,
   UserVendorRoleModel,
+  ProductModel,
+  ProductVariantModel,
+  InventoryModel,
+  OrderModel,
 } from 'src/infrastructure';
 
+import { ProductRepository } from 'src/infrastructure/database/repositories/product.repository';
+import { VariantRepository as ProductVariantRepository } from 'src/infrastructure/database/repositories/variant.repository';
+import { ProductsModule } from 'src/modules/storefront/products/products.module';
+import { PricingService, ProductService } from '../products/services';
+import { InventoryService } from '../inventory/inventory.service';
+import { InventoryRepository } from 'src/infrastructure/database/repositories/inventory.repository';
+import { OrderRepository } from 'src/infrastructure/database/repositories/order.repository';
+//TOdO: Review these imports and remove any unused ones
 @Module({
   imports: [
     forwardRef(() => VendorModule),
+    ProductsModule,
     UserVendorRoleModule,
     SequelizeModule.forFeature([
       RoleModel,
       StoreModel,
+      ProductModel,
+      ProductVariantModel,
       VendorModel,
       CategoryModel,
       PermissionModel,
       UserVendorRoleModel,
+      InventoryModel,
+      OrderModel,
     ]),
   ],
   providers: [
@@ -39,6 +56,13 @@ import {
     PermissionsGuard,
     RoleService,
     StoreRepository,
+    ProductRepository,
+    ProductVariantRepository,
+    InventoryRepository,
+    OrderRepository,
+    ProductService,
+    InventoryService,
+    PricingService
   ],
   controllers: [StoreController],
   exports: [StoreService, StoreRepository],
