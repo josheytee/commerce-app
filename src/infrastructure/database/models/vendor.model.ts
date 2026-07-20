@@ -23,6 +23,7 @@ import { RoleModel } from './role.model';
 import { StoreModel } from './store.model';
 import { MediaModel } from './media.model';
 import { MediaTypeEnum } from 'src/shared';
+import { OrderModel } from './order.model';
 
 @Table({
   timestamps: true,
@@ -150,6 +151,9 @@ export class VendorModel extends Model<VendorModel> {
 
   @HasMany(() => StoreModel)
   stores: StoreModel[];
+
+  @HasMany(() => OrderModel)
+  orders: OrderModel[];
 
   // MediaModel associations - using scopes for polymorphic relationship
   @HasMany(() => MediaModel, {

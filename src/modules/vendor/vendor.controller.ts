@@ -42,7 +42,7 @@ export class VendorController {
   @Public()
   @ApiSuccessResponse(VendorModel)
   findOne(@Param('id') id: number): Promise<VendorModel> {
-    return this.vendorService.findById(id);
+    return this.vendorService.getVendor(id);
   }
 
   @Patch(':id')
