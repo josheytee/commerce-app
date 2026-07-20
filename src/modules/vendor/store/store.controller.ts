@@ -19,15 +19,19 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
 import { Permissions } from 'src/modules/user/permission/permissions.decorator';
-import { StoreModel } from 'src/infrastructure';
+import { ProductModel, StoreModel } from 'src/infrastructure';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
+import { ProductService } from '../products/services';
 
 @ApiBearerAuth()
 @ApiTags('Vendor - Stores')
 @Controller('vendors/:vendorId/stores')
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class StoreController {
-  constructor(private readonly storeService: StoreService) { }
+  constructor(
+    private readonly storeService: StoreService,
+    private readonly productService: ProductService,
+  ) { }
 
   @Post()
   @Permissions('store:create')
@@ -60,9 +64,20 @@ export class StoreController {
   @ApiSuccessResponse(StoreModel)
   findOne(
     @Param('vendorId', ParseIntPipe) vendorId: number,
-    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('id', ParseIntPipe) storeId: number,
   ): Promise<StoreModel> {
     return this.storeService.findOneByVendorId(vendorId, storeId);
+  }
+
+  @Get(':id/products')
+  @Permissions('store:view')
+  @Public()
+  @ApiSuccessResponse(ProductModel)
+  async findOneProducts(
+    @Param('vendorId', ParseIntPipe) vendorId: number,
+    @Param('id', ParseIntPipe) storeId: number,
+  ): Promise<ProductModel[]> {
+    return (await this.productService.findAllByStore(storeId)).rows;
   }
 
   @Patch(':id')
@@ -70,7 +85,7 @@ export class StoreController {
   @ApiSuccessResponse(StoreModel)
   update(
     @Param('vendorId', ParseIntPipe) vendorId: number,
-    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('id', ParseIntPipe) storeId: number,
     @Body() data: UpdateStoreDto,
   ): Promise<StoreModel> {
     console.log('Updating store with data:', { vendorId, storeId, data });
@@ -82,7 +97,7 @@ export class StoreController {
   @ApiSuccessResponse(StoreModel)
   remove(
     @Param('vendorId', ParseIntPipe) vendorId: number,
-    @Param('storeId', ParseIntPipe) storeId: number,
+    @Param('id', ParseIntPipe) storeId: number,
   ): Promise<void> {
     return this.storeService.removeByVendorId(vendorId, storeId);
   }

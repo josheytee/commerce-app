@@ -166,6 +166,20 @@ export class ProductService {
     return products;
   }
 
+  async findOneByStore(storeId: number, id: number): Promise<ProductModel> {
+    const product = await this.productRepo.findOneByStoreId(storeId, id);
+
+    return product;
+  }
+
+  async findAllByStore(
+    storeId: number,
+  ): Promise<{ rows: ProductModel[]; count: number }> {
+    const products = await this.productRepo.findByStoreId(storeId);
+
+    return products;
+  }
+
   async update(
     vendorId: number,
     id: number,

@@ -33,7 +33,6 @@ import { MediaUploadService } from '../media/services';
     ProductService,
     ProductRepository,
     VariantRepository,
-    // ProductVariantModelRepository,
     PricingService,
     MediaUploadService
   ],
