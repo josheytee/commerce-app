@@ -17,10 +17,10 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
-      default_address_id: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-      },
+      // default_address_id: {
+      //   type: Sequelize.INTEGER,
+      //   allowNull: true,
+      // },
 
       preferences: {
         type: Sequelize.JSONB,

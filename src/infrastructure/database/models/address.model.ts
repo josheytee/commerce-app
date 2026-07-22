@@ -33,12 +33,6 @@ import { CustomerModel } from './customer.model';
   default: {
     where: { is_default: true },
   },
-  primaryStores: {
-    where: {
-      addressable_type: AddressableTypeEnum.STORE,
-      is_primary_store: true,
-    },
-  },
   withCoordinates: {
     where: {
       latitude: { [Op.ne]: null },
@@ -178,14 +172,6 @@ export class AddressModel extends Model<AddressModel> {
     comment: 'Default address for this entity',
   })
   is_default: boolean;
-
-  @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: false,
-    field: 'is_primary_store',
-    comment: 'For stores - is this the primary location',
-  })
-  is_primary_store: boolean;
 
   @Column({
     type: DataType.BOOLEAN,

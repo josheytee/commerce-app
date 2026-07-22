@@ -58,10 +58,6 @@ export class AddressRepository extends BaseRepository<AddressModel> {
         addressData: Partial<AddressModel>,
         transaction?: Transaction,
     ): Promise<AddressModel> {
-        // If this is set as primary store, unset any existing primary
-        if (addressData.is_primary_store) {
-            await this.unsetPrimaryStoreAddress(storeId, transaction);
-        }
 
         // If this is set as default, unset any existing default
         if (addressData.is_default) {
@@ -173,15 +169,9 @@ export class AddressRepository extends BaseRepository<AddressModel> {
         if (options?.isDefault !== undefined) {
             where.is_default = options.isDefault;
         }
-
-        if (options?.isPrimaryStore !== undefined) {
-            where.is_primary_store = options.isPrimaryStore;
-        }
-
         const query: any = {
             where,
             order: [
-                ['is_primary_store', 'DESC'],
                 ['is_default', 'DESC'],
                 ['created_at', 'DESC'],
             ],
@@ -206,21 +196,6 @@ export class AddressRepository extends BaseRepository<AddressModel> {
                 addressable_id: customerId,
                 addressable_type: AddressableTypeEnum.CUSTOMER,
                 is_default: true,
-            },
-            include: [
-                { model: CityModel, as: 'city' },
-                { model: StateModel, as: 'state' },
-                { model: CountryModel, as: 'country' },
-            ],
-        });
-    }
-
-    async findStorePrimaryAddress(storeId: number): Promise<AddressModel | null> {
-        return this.addressModel.findOne({
-            where: {
-                addressable_id: storeId,
-                addressable_type: AddressableTypeEnum.STORE,
-                is_primary_store: true,
             },
             include: [
                 { model: CityModel, as: 'city' },
@@ -283,11 +258,6 @@ export class AddressRepository extends BaseRepository<AddressModel> {
             );
         }
 
-        // Handle primary store logic
-        if (data.is_primary_store && !address.is_primary_store) {
-            await this.unsetPrimaryStoreAddress(address.addressable_id, transaction);
-        }
-
         await address.update(data, { transaction });
         return address.reload({ transaction });
     }
@@ -305,24 +275,6 @@ export class AddressRepository extends BaseRepository<AddressModel> {
         );
 
         address.is_default = true;
-        await address.save({ transaction });
-
-        return address;
-    }
-
-    async setAsPrimaryStore(
-        id: number,
-        transaction?: Transaction,
-    ): Promise<AddressModel> {
-        const address = await this.findByIdOrFail(id);
-
-        if (address.addressable_type !== AddressableTypeEnum.STORE) {
-            throw new Error('Only store addresses can be set as primary');
-        }
-
-        await this.unsetPrimaryStoreAddress(address.addressable_id, transaction);
-
-        address.is_primary_store = true;
         await address.save({ transaction });
 
         return address;
@@ -396,23 +348,6 @@ export class AddressRepository extends BaseRepository<AddressModel> {
                     addressable_id: entityId,
                     addressable_type: entityType,
                     is_default: true,
-                },
-                transaction,
-            },
-        );
-    }
-
-    private async unsetPrimaryStoreAddress(
-        storeId: number,
-        transaction?: Transaction,
-    ): Promise<void> {
-        await this.addressModel.update(
-            { is_primary_store: false },
-            {
-                where: {
-                    addressable_id: storeId,
-                    addressable_type: AddressableTypeEnum.STORE,
-                    is_primary_store: true,
                 },
                 transaction,
             },

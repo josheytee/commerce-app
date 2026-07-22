@@ -264,7 +264,6 @@ const generateStoreAddress = (storeId, vendorId, storeIndex) => {
         ? `PO Box ${Math.floor(Math.random() * 10000)}`
         : null,
     is_default: false,
-    is_primary_store: true,
     is_verified: Math.random() > 0.2,
     delivery_instructions: Math.random() > 0.5 ? 'Call before delivery' : null,
     latitude: faker.location.latitude(),
@@ -389,7 +388,9 @@ module.exports = {
       for (const store of stores) {
         const primaryAddress = addresses.find(
           (addr) =>
-            addr.addressable_id === store.id && addr.is_primary_store === true,
+            addr.addressable_id === store.id &&
+            addr.addressable_type == 'store' &&
+            addr.is_default,
         );
 
         if (primaryAddress) {

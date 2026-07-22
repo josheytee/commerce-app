@@ -98,11 +98,6 @@ module.exports = {
         defaultValue: false,
         comment: 'Default address for this entity',
       },
-      is_primary_store: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-        comment: 'For stores - is this the primary location',
-      },
       is_verified: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
@@ -171,12 +166,11 @@ module.exports = {
     // For store primary location
     await queryInterface.addIndex(
       'addresses',
-      ['addressable_id', 'addressable_type', 'is_primary_store'],
+      ['addressable_id', 'addressable_type'],
       {
         name: 'idx_addresses_store_primary',
         where: {
           addressable_type: 'store',
-          is_primary_store: true,
           deleted_at: null,
         },
       },

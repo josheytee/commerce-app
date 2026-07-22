@@ -223,7 +223,7 @@ const generateCustomers = (users, existingCustomerIds = []) => {
     customers.push({
       id: customerId++,
       user_id: user.id,
-      default_address_id: null, // Will be updated later if addresses exist
+      // default_address_id: null, // Will be updated later if addresses exist
       status: status,
       created_at: user.created_at,
       updated_at: new Date(),

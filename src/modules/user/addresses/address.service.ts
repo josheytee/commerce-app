@@ -141,9 +141,6 @@ export class AddressService {
     }
   }
 
-  async getPrimaryStoreAddress(storeId: number): Promise<AddressModel | null> {
-    return this.addressRepository.getStorePrimaryAddress(storeId);
-  }
 
   async getCustomerBillingAddresses(
     customerId: number,
@@ -222,26 +219,6 @@ export class AddressService {
         throw new BadRequestException(`Invalid entity type: ${entityType}`);
       }
 
-      await transaction.commit();
-      return result;
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
-  }
-
-  async setPrimaryStoreAddress(
-    storeId: number,
-    addressId: number,
-  ): Promise<AddressModel> {
-    const transaction = await this.sequelize.transaction();
-
-    try {
-      const result = await this.addressRepository.setStorePrimaryAddress(
-        storeId,
-        addressId,
-        transaction,
-      );
       await transaction.commit();
       return result;
     } catch (error) {

@@ -120,11 +120,6 @@ export class AddressResponseDto {
     })
     is_default: boolean;
 
-    @ApiProperty({
-        description: 'Is this the primary store address',
-        example: false,
-    })
-    is_primary_store: boolean;
 
     @ApiProperty({
         description: 'Is address verified',
