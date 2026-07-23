@@ -77,19 +77,15 @@ export class StoreAddressController {
         description: 'Returns store address',
         type: [AddressResponseDto],
     })
-    async getStoreAddresses(
-        @Param('storeId', ParseIntPipe) storeId: number,
-        // @Query('onlyPrimary') onlyPrimary?: boolean,
-        // @Query('includeInactive') includeInactive?: boolean,
-    ) {
+    async getStoreAddresses(@Param('storeId', ParseIntPipe) storeId: number) {
         const addresses = await this.addressService.getAddressesByEntity(
             AddressableTypeEnum.STORE,
             storeId,
-            // { onlyPrimary, includeInactive },
         );
+
         return {
             data: addresses,
-            meta: { count: addresses.length },
+            // meta: { count: addresses.length },
         };
     }
 
@@ -150,5 +146,4 @@ export class StoreAddressController {
 
         return this.addressService.deleteAddress(addressId);
     }
-
 }
