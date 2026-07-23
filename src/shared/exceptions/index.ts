@@ -7,3 +7,4 @@ export * from './order.exception';
 export * from './product.exception';
 export * from './vendor.exception';
 export * from './payment.exception';
+export * from './cart.exception';

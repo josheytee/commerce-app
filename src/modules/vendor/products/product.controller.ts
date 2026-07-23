@@ -189,7 +189,7 @@ export class ProductController {
   @Delete(':id')
   @ApiSuccessResponse(ProductModel)
   @Permissions('product:delete')
-  remove(@Param('id') id: number): Promise<void> {
-    return this.productService.remove(id);
+  async remove(@Param('id') id: number): Promise<void> {
+    await this.productService.deleteProduct(id);
   }
 }

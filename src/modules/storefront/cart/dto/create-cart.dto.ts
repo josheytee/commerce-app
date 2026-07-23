@@ -1,4 +1,8 @@
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -45,14 +49,44 @@ export class CreateCartDto {
 }
 
 export class AddToCartDto {
-  @ApiProperty()
-  product_variant_id: number;
+  @ApiProperty({
+    description: 'Product ID',
+    example: 123,
+  })
+  @IsInt()
+  @IsPositive()
+  product_id: number;
 
-  @ApiProperty()
-  store_id: number;
+  @ApiPropertyOptional({
+    description: 'Product variant ID (optional for simple products)',
+    example: 456,
+  })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  // @ValidateIf(
+  //   (o) => o.product_variant_id !== undefined && o.product_variant_id !== null,
+  // )
+  product_variant_id?: number;
 
-  @ApiProperty({ example: 2 })
+  @ApiProperty({
+    description: 'Quantity',
+    example: 2,
+    minimum: 1,
+  })
+  @IsInt()
+  @IsPositive()
+  @Min(1)
   quantity: number;
+
+  @ApiPropertyOptional({
+    description: 'Store ID',
+    example: 789,
+  })
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  store_id?: number;
 }
 
 export class UpdateCartQuantityDto {
@@ -75,3 +109,4 @@ export class UpdateCartQuantityDto {
   @Min(0)
   quantity: number;
 }
+

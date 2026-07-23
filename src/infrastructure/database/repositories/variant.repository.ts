@@ -12,7 +12,7 @@ export class VariantRepository extends BaseRepository<ProductVariantModel> {
         super(productVariantModel);
     }
 
-    async findByProduct(productId: number): Promise<ProductVariantModel[]> {
+    async findByProductId(productId: number): Promise<ProductVariantModel[]> {
         return this.findAll({
             where: { product_id: productId },
         });
@@ -23,6 +23,15 @@ export class VariantRepository extends BaseRepository<ProductVariantModel> {
         variantId: number,
     ): Promise<ProductVariantModel | null> {
         return this.findOne({
+            where: { id: variantId, product_id: productId },
+        });
+    }
+
+    async deleteByProductId(
+        productId: number,
+        variantId?: number,
+    ): Promise<number> {
+        return this.delete({
             where: { id: variantId, product_id: productId },
         });
     }

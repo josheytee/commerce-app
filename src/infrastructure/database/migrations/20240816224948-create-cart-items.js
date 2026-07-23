@@ -16,6 +16,14 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
+      product_variant_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      store_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
       quantity: {
         type: Sequelize.INTEGER,
         allowNull: false,

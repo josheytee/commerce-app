@@ -10,6 +10,7 @@ import {
 import { CartModel } from './cart.model';
 import { ProductVariantModel } from './product-variant.model';
 import { StoreModel } from './store.model';
+import { ProductModel } from './product.model';
 
 @Table({
   tableName: 'cart_items',
@@ -25,6 +26,10 @@ export class CartItemModel extends Model<CartItemModel> {
   @ForeignKey(() => CartModel)
   @Column
   cart_id: number;
+
+  @ForeignKey(() => ProductModel)
+  @Column
+  product_id: number;
 
   @ForeignKey(() => ProductVariantModel)
   @Column

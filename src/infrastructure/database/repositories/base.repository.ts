@@ -40,12 +40,34 @@ export abstract class BaseRepository<T extends Model> {
         });
     }
 
+    async updateWithTransaction(
+        id: number,
+        data: Partial<T>,
+        transaction: Transaction,
+    ): Promise<[number, T[]]> {
+        return this.model.update(data as any, {
+            where: { id } as WhereOptions,
+            returning: true,
+            transaction,
+        });
+    }
+
     async deleteById(id: number): Promise<number> {
         return this.model.destroy({ where: { id } as WhereOptions });
     }
 
     async delete(options: FindOptions): Promise<number> {
         return this.model.destroy(options);
+    }
+
+    async deleteByIdWithTransaction(
+        id: number,
+        // transaction: Transaction,
+    ): Promise<number> {
+        return this.model.destroy(
+            { where: { id } as WhereOptions },
+            //   { transaction },
+        );
     }
 
     async bulkCreate(data: Partial<T>[]): Promise<T[]> {

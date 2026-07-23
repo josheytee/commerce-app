@@ -1,6 +1,16 @@
 import { HttpStatus } from '@nestjs/common';
 import { BaseException } from './base.exception';
 
+export class ProductVariantNotFoundException extends BaseException {
+    constructor(productVariantId: number) {
+        super(
+            `Product variant with ID ${productVariantId} not found`,
+            'PROD_VARIANT_404_NOT_FOUND',
+            HttpStatus.NOT_FOUND,
+            { productVariantId },
+        );
+    }
+}
 export class ProductNotFoundException extends BaseException {
     constructor(productId: number) {
         super(

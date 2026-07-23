@@ -38,8 +38,8 @@ export class ProductRepository extends BaseRepository<ProductModel> {
     constructor(
         @InjectModel(ProductModel)
         private productModel: typeof ProductModel,
-        @InjectModel(ProductVariantModel)
-        private productVariantModel: typeof ProductVariantModel,
+        // @InjectModel(ProductVariantModel)
+        // private productVariantModel: typeof ProductVariantModel,
     ) {
         super(productModel);
     }

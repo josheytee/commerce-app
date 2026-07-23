@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { ProductModel } from 'src/infrastructure';
@@ -8,29 +8,38 @@ import {
 } from 'src/infrastructure/database/repositories';
 import { InventoryService } from '../../inventory/inventory.service';
 import { PricingService } from './pricing.service';
-import { ProductStatusEnum } from 'src/shared';
+import {
+  ProductNotFoundException,
+  ProductStatusEnum,
+  VariantStockStatusEnum,
+} from 'src/shared';
 import { CreateProductWithVariantsDto, UpdateProductDto } from '../dto';
 import { Sequelize } from 'sequelize-typescript';
 
 @Injectable()
-export class ProductService {
+export class ProductService implements OnModuleInit {
+  private _inventoryRepo: any;
   constructor(
     @InjectModel(ProductModel)
     private productModel: typeof ProductModel,
-    private readonly productRepo: ProductRepository,
-    private readonly inventoryService: InventoryService,
+    private readonly _productRepo: ProductRepository,
+    private readonly _inventoryService: InventoryService,
     private readonly pricingService: PricingService,
     private readonly _variantRepositort: VariantRepository,
     private _sequelize: Sequelize,
   ) { }
 
+  async onModuleInit() {
+    this._inventoryRepo = await this._inventoryService.getRepo();
+  }
+
   async getProductDetails(productId: number) {
-    const product = await this.productRepo.findOne({
+    const product = await this._productRepo.findOne({
       where: { id: productId },
     });
 
     const [stock, price] = await Promise.all([
-      this.inventoryService.getStock(productId),
+      this._inventoryService.getStock(productId),
       this.pricingService.getPrice(productId),
     ]);
 
@@ -42,7 +51,7 @@ export class ProductService {
   }
 
   async publishProduct(productId: number) {
-    const product = await this.productRepo.findById(productId, {
+    const product = await this._productRepo.findById(productId, {
       include: ['variants', 'gallery_images'],
     });
 
@@ -60,7 +69,7 @@ export class ProductService {
       throw new Error('At least one image required');
     }
 
-    return this.productRepo.update(productId, {
+    return this._productRepo.update(productId, {
       status: ProductStatusEnum.PUBLISHED,
       published_at: new Date(),
     });
@@ -71,14 +80,15 @@ export class ProductService {
       const { variants, ...productData } = data;
 
       // 1️⃣ Create product
-      const product = await this.productRepo.createWithTransaction(
+      const product = await this._productRepo.createWithTransaction(
         productData,
         t,
       );
 
+      // 2️⃣ Handle variants
       if (variants?.length) {
+        // Create all provided variants
         for (const variant of variants) {
-          // 2️⃣ Create variant
           const { attribute_values, ...variantData } = variant;
           const createdVariant =
             await this._variantRepositort.createWithTransaction(
@@ -89,21 +99,76 @@ export class ProductService {
               t,
             );
 
-          // 3️⃣ Create inventory (🔥 THIS IS THE LINK)
+          // Create inventory for each variant
           await (
-            await this.inventoryService.getRepo()
+            await this._inventoryService.getRepo()
           ).createWithTransaction(
             {
               product_variant_id: createdVariant.id,
+              stock_quantity: variant.initial_stock ?? 0,
               quantity: variant.initial_stock ?? 0,
             },
             t,
           );
         }
+      } else {
+        // ✅ PRODUCT HAS NO VARIANTS - CREATE DEFAULT VARIANT
+        await this.createDefaultVariant(product, t);
       }
 
       return product;
     });
+  }
+
+  /**
+   * Create a default variant for simple products (no variants)
+   */
+  private async createDefaultVariant(product: any, transaction: any) {
+    // Generate SKU if not provided
+    const sku = product.sku || `SIMPLE-${product.id}-${Date.now()}`;
+
+    // Create default variant
+    const defaultVariant = await this._variantRepositort.createWithTransaction(
+      {
+        product_id: product.id,
+        sku: sku,
+        price: product.base_price,
+        compare_at_price: product.compare_at_price || null,
+        cost_price: product.cost_price || null,
+        variant_name: 'Default',
+        status: VariantStockStatusEnum.ACTIVE,
+        // is_default: true,
+        // stock_quantity: product.stock_quantity || 0,
+        weight: product.weight || null,
+        length: product.length || null,
+        width: product.width || null,
+        height: product.height || null,
+        requires_shipping: product.requires_shipping ?? true,
+      },
+      transaction,
+    );
+
+    // Create inventory for default variant
+    await (
+      await this._inventoryService.getRepo()
+    ).createWithTransaction(
+      {
+        product_variant_id: defaultVariant.id,
+        quantity: product.stock_quantity || 0,
+      },
+      transaction,
+    );
+
+    // Optionally, update product to reference default variant
+    await this._productRepo.updateWithTransaction(
+      product.id,
+      {
+        // default_variant_id: defaultVariant.id,
+      },
+      transaction,
+    );
+
+    return defaultVariant;
   }
 
   async createWithAttributes(
@@ -153,7 +218,7 @@ export class ProductService {
   }
 
   async findOneByVendor(vendorId: number, id: number): Promise<ProductModel> {
-    const product = await this.productRepo.findOneByVendorId(vendorId, id);
+    const product = await this._productRepo.findOneByVendorId(vendorId, id);
 
     return product;
   }
@@ -161,13 +226,13 @@ export class ProductService {
   async findAllByVendor(
     vendorId: number,
   ): Promise<{ rows: ProductModel[]; count: number }> {
-    const products = await this.productRepo.findByVendorId(vendorId);
+    const products = await this._productRepo.findByVendorId(vendorId);
 
     return products;
   }
 
   async findOneByStore(storeId: number, id: number): Promise<ProductModel> {
-    const product = await this.productRepo.findOneByStoreId(storeId, id);
+    const product = await this._productRepo.findOneByStoreId(storeId, id);
 
     return product;
   }
@@ -175,7 +240,7 @@ export class ProductService {
   async findAllByStore(
     storeId: number,
   ): Promise<{ rows: ProductModel[]; count: number }> {
-    const products = await this.productRepo.findByStoreId(storeId);
+    const products = await this._productRepo.findByStoreId(storeId);
 
     return products;
   }
@@ -191,8 +256,31 @@ export class ProductService {
     return product.update(productData);
   }
 
-  async remove(id: number): Promise<void> {
-    const product = await this.findOne(id);
-    await product.destroy();
+  /**
+   * Delete product - cascade delete variants and inventory
+   */
+  async deleteProduct(id: number) {
+    return this._sequelize.transaction(async (t) => {
+      const product = await this._productRepo.findById(id);
+      if (!product) {
+        throw new ProductNotFoundException(id);
+      }
+
+      // Get all variants
+      const variants = await this._variantRepositort.findByProductId(id);
+
+      // Delete inventory for each variant
+      for (const variant of variants) {
+        await this._inventoryRepo.deleteByVariantId(variant.id, t);
+      }
+
+      // Delete all variants
+      await this._variantRepositort.deleteByProductId(id);
+
+      // Delete product
+      await this._productRepo.deleteById(id);
+
+      return { success: true, message: 'Product deleted successfully' };
+    });
   }
 }
