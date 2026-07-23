@@ -1,30 +1,37 @@
+// repositories/product.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Op } from 'sequelize';
+import { Sequelize } from 'sequelize-typescript';
 import {
+    ProductModel,
+    ProductVariantModel,
+    VendorModel,
+    StoreModel,
+    SectionModel,
+    MediaModel,
+    ReviewModel,
+    InventoryModel,
+    ProductVariantAttributeValueModel,
     AttributeModel,
     AttributeValueModel,
-    DiscountModel,
-    InventoryModel,
-    MediaModel,
-    ProductAttributeValueModel,
-    ProductModel,
-    ProductVariantAttributeValueModel,
-    ProductVariantModel,
-    ReviewModel,
-    SectionModel,
-    StoreModel,
-    TagModel,
-    VendorModel,
 } from 'src/infrastructure';
 import { BaseRepository } from './base.repository';
 import {
     MediaEntityTypeEnum,
     MediaTypeEnum,
     ProductStatusEnum,
-    TagTypeEnum,
 } from 'src/shared/enums';
-import { Op } from 'sequelize';
-import { Sequelize } from 'sequelize-typescript';
+
+interface ProductFilterOptions {
+    where?: any;
+    sortBy?: string;
+    sortOrder?: string;
+    limit?: number;
+    offset?: number;
+    fields?: string[];
+    include?: string[];
+}
 
 @Injectable()
 export class ProductRepository extends BaseRepository<ProductModel> {
@@ -35,6 +42,360 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         private productVariantModel: typeof ProductVariantModel,
     ) {
         super(productModel);
+    }
+
+    // ==================== ADVANCED PRODUCT QUERY ====================
+
+    async findProductsWithFilters(
+        options: ProductFilterOptions,
+    ): Promise<{ rows: ProductModel[]; count: number }> {
+        const { where, sortBy, sortOrder, limit, offset, fields, include } =
+            options;
+
+        // Build WHERE clause
+        const whereClause = this.buildWhereClause(where);
+
+        // Build ORDER clause
+        const orderClause = this.buildOrderClause(sortBy, sortOrder);
+
+        // Build SELECT clause (field selection)
+        const attributes = this.buildSelectClause(fields);
+
+        // Build INCLUDE clause (relations)
+        const includeClause = this.buildIncludeClause(include);
+
+        return this.productModel.findAndCountAll({
+            where: whereClause,
+            attributes,
+            order: orderClause,
+            limit,
+            offset,
+            include: includeClause,
+            distinct: true,
+            subQuery: false,
+        });
+    }
+
+    // ==================== WHERE CLAUSE BUILDER ====================
+
+    private buildWhereClause(conditions: any): any {
+        const where: any = {
+            deleted_at: null,
+            status: ProductStatusEnum.PUBLISHED,
+            is_active: true,
+        };
+
+        // Search
+        if (conditions.search) {
+            where[Op.or] = [
+                { name: { [Op.iLike]: `%${conditions.search}%` } },
+                { description: { [Op.iLike]: `%${conditions.search}%` } },
+                { short_description: { [Op.iLike]: `%${conditions.search}%` } },
+                { meta_keywords: { [Op.iLike]: `%${conditions.search}%` } },
+            ];
+        }
+
+        // Category
+        if (conditions.section_id) {
+            where.section_id = conditions.section_id;
+        }
+
+        // Vendor
+        if (conditions.vendor_id) {
+            where.vendor_id = conditions.vendor_id;
+        }
+
+        // Store
+        if (conditions.store_id) {
+            where.store_id = conditions.store_id;
+        }
+
+        // Featured
+        if (conditions.isFeatured) {
+            where.is_featured = true;
+        }
+
+        // Flash Deals
+        if (conditions.flashDeals) {
+            where[Op.and] = [
+                { compare_at_price: { [Op.ne]: null } },
+                Sequelize.literal(
+                    '"ProductModel"."base_price" < "ProductModel"."compare_at_price"',
+                ),
+            ];
+        }
+
+        // Best Sellers
+        if (conditions.bestSellers) {
+            // No additional where needed, just order by sales_count
+        }
+
+        // Most Popular
+        if (conditions.mostPopular) {
+            // No additional where needed, just order by views and sales
+        }
+
+        // Top Rated
+        if (conditions.topRated) {
+            // No additional where needed, just order by total_ratings
+        }
+
+        // New Arrivals
+        if (conditions.newArrivals) {
+            where.created_at = { [Op.gte]: conditions.newArrivals.since };
+        }
+
+        // Price Range
+        if (conditions.priceRange) {
+            const { min, max } = conditions.priceRange;
+            if (min !== undefined && max !== undefined) {
+                where.base_price = { [Op.between]: [min, max] };
+            } else if (min !== undefined) {
+                where.base_price = { [Op.gte]: min };
+            } else if (max !== undefined) {
+                where.base_price = { [Op.lte]: max };
+            }
+        }
+
+        // Min Rating
+        if (conditions.minRating) {
+            where.total_ratings = { [Op.gte]: conditions.minRating };
+        }
+
+        // In Stock
+        // if (conditions.inStock !== undefined) {
+        //     // This requires a subquery or join with inventory
+        //     where.inStock = conditions.inStock;
+        // }
+
+        return where;
+    }
+
+    // ==================== ORDER CLAUSE BUILDER ====================
+
+    private buildOrderClause(sortBy?: string, sortOrder?: string): any[] {
+        const order: any[] = [];
+
+        // Map sort field to database column
+        const sortFieldMap = {
+            name: 'name',
+            base_price: 'base_price',
+            created_at: 'created_at',
+            sales_count: 'sales_count',
+            views: 'views',
+            rating: 'total_ratings',
+            total_ratings: 'total_ratings',
+        };
+
+        const field = sortFieldMap[sortBy] || 'created_at';
+        const direction = sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+        // Special handling for certain sorts
+        if (sortBy === 'rating') {
+            // For rating, we might want to order by average rating
+            order.push([
+                Sequelize.literal(`total_ratings / NULLIF(total_reviews, 0)`),
+                direction,
+            ]);
+        } else if (sortBy === 'mostPopular') {
+            order.push(['views', 'DESC']);
+            order.push(['sales_count', 'DESC']);
+        } else {
+            order.push([field, direction]);
+        }
+
+        // Always add secondary sort
+        if (sortBy !== 'created_at') {
+            order.push(['created_at', 'DESC']);
+        }
+
+        return order;
+    }
+
+    // ==================== SELECT CLAUSE BUILDER ====================
+
+    private buildSelectClause(fields?: string[]): any {
+        if (!fields || fields.length === 0) {
+            // Exclude heavy fields by default
+            return {
+                exclude: ['deleted_at', 'search_keywords', 'description_full'],
+            };
+        }
+
+        // Map field names to database columns
+        const fieldMap = {
+            id: 'id',
+            name: 'name',
+            slug: 'slug',
+            description: 'description',
+            shortDescription: 'short_description',
+            basePrice: 'base_price',
+            compareAtPrice: 'compare_at_price',
+            minVariantPrice: 'min_variant_price',
+            maxVariantPrice: 'max_variant_price',
+            productType: 'product_type',
+            isActive: 'is_active',
+            isFeatured: 'is_featured',
+            isTaxable: 'is_taxable',
+            status: 'status',
+            views: 'views',
+            salesCount: 'sales_count',
+            totalRatings: 'total_ratings',
+            totalReviews: 'total_reviews',
+            thumbnailUrl: 'thumbnail_url',
+            metaTitle: 'meta_title',
+            metaDescription: 'meta_description',
+            metaKeywords: 'meta_keywords',
+            createdAt: 'created_at',
+            updatedAt: 'updated_at',
+        };
+
+        const selected = fields.map((f) => fieldMap[f] || f).filter(Boolean);
+
+        return selected.length > 0 ? selected : undefined;
+    }
+
+    // ==================== INCLUDE CLAUSE BUILDER ====================
+
+    private buildIncludeClause(include?: string[]): any[] {
+        if (!include || include.length === 0) {
+            // Default includes (lightweight)
+            return [
+                {
+                    model: VendorModel,
+                    as: 'vendor',
+                    attributes: ['id', 'business_name', 'total_ratings', 'is_verified'],
+                },
+                {
+                    model: SectionModel,
+                    as: 'section',
+                    attributes: ['id', 'name', 'slug'],
+                },
+            ];
+        }
+
+        const includes: any[] = [];
+
+        // Map include names to Sequelize include configurations
+        const includeMap = {
+            vendor: {
+                model: VendorModel,
+                as: 'vendor',
+                attributes: ['id', 'business_name', 'total_ratings', 'is_verified'],
+            },
+            store: {
+                model: StoreModel,
+                as: 'store',
+                attributes: ['id', 'name', 'description', 'slug'],
+            },
+            section: {
+                model: SectionModel,
+                as: 'section',
+                attributes: ['id', 'name', 'slug'],
+            },
+            gallery: {
+                model: MediaModel,
+                as: 'gallery_images',
+                where: {
+                    entity_type: MediaEntityTypeEnum.PRODUCT,
+                    type: MediaTypeEnum.PRODUCT_IMAGE,
+                },
+                required: false,
+                attributes: ['id', 'url', 'thumbnail_url', 'caption'],
+            },
+            featuredImage: {
+                model: MediaModel,
+                as: 'featured_image',
+                where: {
+                    is_primary: true,
+                    entity_type: MediaEntityTypeEnum.PRODUCT,
+                },
+                required: false,
+                attributes: ['id', 'url', 'thumbnail_url'],
+            },
+            variants: {
+                model: ProductVariantModel,
+                as: 'variants',
+                required: false,
+                include: [
+                    {
+                        model: InventoryModel,
+                        attributes: [
+                            'stock_quantity',
+                            'quantity',
+                            'reserved_quantity',
+                            'stock_status',
+                        ],
+                    },
+                    {
+                        model: ProductVariantAttributeValueModel,
+                        as: 'attribute_values',
+                        include: [
+                            { model: AttributeModel, as: 'attribute' },
+                            { model: AttributeValueModel, as: 'attribute_value' },
+                        ],
+                    },
+                ],
+            },
+            reviews: {
+                model: ReviewModel,
+                as: 'reviews',
+                required: false,
+                limit: 5,
+                order: [['created_at', 'DESC']],
+            },
+        };
+
+        // Add requested includes
+        include.forEach((name) => {
+            const includeConfig = includeMap[name];
+            if (includeConfig) {
+                includes.push(includeConfig);
+            }
+        });
+
+        return includes;
+    }
+
+    // ==================== EXISTING METHODS (Updated) ====================
+
+    async findProductDetails(
+        id: number,
+        options?: { include?: string[] },
+    ): Promise<ProductModel | null> {
+        const include = this.buildIncludeClause(
+            options?.include.length
+                ? options.include
+                : ['vendor', 'store', 'section', 'gallery', 'variants'],
+        );
+        return this.productModel.findOne({
+            where: {
+                id,
+                status: ProductStatusEnum.PUBLISHED,
+                is_active: true,
+                deleted_at: null,
+            },
+            include,
+        });
+    }
+
+    async findBySlug(
+        slug: string,
+        options?: { include?: string[] },
+    ): Promise<ProductModel | null> {
+        const include = this.buildIncludeClause(
+            options?.include || ['vendor', 'store', 'section', 'gallery', 'variants'],
+        );
+
+        return this.productModel.findOne({
+            where: {
+                slug,
+                status: ProductStatusEnum.PUBLISHED,
+                is_active: true,
+                deleted_at: null,
+            },
+            include,
+        });
     }
 
     async findByStore(
@@ -397,82 +758,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         });
     }
 
-    async findProductDetails(
-        productId?: number,
-        storeId?: number,
-        slug?: string,
-    ): Promise<ProductModel | null> {
-        const where: any = {
-            is_active: true,
-            // status: 'published',
-        };
-
-        if (productId) where.id = productId;
-        if (slug) where.slug = slug;
-        if (storeId) where.store_id = storeId;
-
-        // Phase 1: product
-        const product = await this.productModel.findOne({
-            where,
-            attributes: { exclude: ['deleted_at', 'search_keywords'] },
-            include: [
-                { model: StoreModel, attributes: ['id', 'name', 'slug'] },
-                { model: VendorModel, attributes: ['id', 'business_name', 'slug'] },
-                { model: SectionModel, attributes: ['id', 'name', 'slug'] },
-                {
-                    model: MediaModel,
-                    as: 'gallery_images',
-                    where: {
-                        entity_type: MediaEntityTypeEnum.PRODUCT,
-                        type: MediaTypeEnum.PRODUCT_IMAGE,
-                    },
-                    required: false,
-                },
-            ],
-        });
-        if (!product) return null;
-
-        // Phase 2: variants
-        const variants = await this.productVariantModel.findAll({
-            where: {
-                product_id: product.id,
-                // status: 'active',
-            },
-            include: [
-                { model: InventoryModel },
-                {
-                    model: MediaModel,
-                    as: 'gallery',
-                    where: { entity_type: MediaEntityTypeEnum.PRODUCT_VARIANT },
-                    required: false,
-                },
-                {
-                    model: ProductVariantAttributeValueModel,
-                    as: 'attribute_values',
-                    include: [
-                        { model: AttributeModel, as: 'attribute' },
-                        { model: AttributeValueModel, as: 'attribute_value' },
-                    ],
-                },
-            ],
-            order: [['id', 'ASC']],
-        });
-        // console.log('Variants for product', product.id, variants);
-        product.setDataValue('variants', variants);
-
-        return product;
-    }
-
-    /**
-     * Get product by slug (for SEO-friendly URLs)
-     */
-    async findBySlug(
-        slug: string,
-        storeId: number | null = null,
-    ): Promise<ProductModel | null> {
-        return this.findProductDetails(null, storeId, slug);
-    }
-
     /**
      * Find product with variants optimized for quick view/preview
      */
@@ -585,7 +870,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     model: StoreModel,
                     as: 'store',
                     attributes: ['id', 'name', 'description', 'slug'],
-
                 },
                 {
                     model: ProductVariantModel,
@@ -599,8 +883,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                                 { model: AttributeValueModel, as: 'attribute_value' },
                             ],
                         },
-                    ]
-
+                    ],
                 },
                 { model: InventoryModel },
                 {
@@ -615,9 +898,8 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     where: { is_primary: true, entity_type: MediaEntityTypeEnum.PRODUCT },
                     required: false,
                 },
-
-            ]
-        })
+            ],
+        });
     }
 
     async findOneByVendorId(vendorId: number, productId: number) {
@@ -639,7 +921,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     model: StoreModel,
                     as: 'store',
                     attributes: ['id', 'name', 'description', 'slug'],
-
                 },
                 {
                     model: ProductVariantModel,
@@ -653,8 +934,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                                 { model: AttributeValueModel, as: 'attribute_value' },
                             ],
                         },
-                    ]
-
+                    ],
                 },
                 { model: InventoryModel },
                 {
@@ -669,9 +949,8 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     where: { is_primary: true, entity_type: MediaEntityTypeEnum.PRODUCT },
                     required: false,
                 },
-
-            ]
-        })
+            ],
+        });
     }
 
     async findByStoreId(storeId: number) {
@@ -684,7 +963,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     model: StoreModel,
                     as: 'store',
                     attributes: ['id', 'name', 'description', 'slug'],
-
                 },
                 {
                     model: ProductVariantModel,
@@ -698,8 +976,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                                 { model: AttributeValueModel, as: 'attribute_value' },
                             ],
                         },
-                    ]
-
+                    ],
                 },
                 { model: InventoryModel },
                 {
@@ -714,9 +991,8 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     where: { is_primary: true, entity_type: MediaEntityTypeEnum.PRODUCT },
                     required: false,
                 },
-
-            ]
-        })
+            ],
+        });
     }
 
     async findOneByStoreId(storeId: number, productId: number) {
@@ -730,7 +1006,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     model: StoreModel,
                     as: 'store',
                     attributes: ['id', 'name', 'description', 'slug'],
-
                 },
                 {
                     model: ProductVariantModel,
@@ -744,8 +1019,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                                 { model: AttributeValueModel, as: 'attribute_value' },
                             ],
                         },
-                    ]
-
+                    ],
                 },
                 { model: InventoryModel },
                 {
@@ -760,8 +1034,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     where: { is_primary: true, entity_type: MediaEntityTypeEnum.PRODUCT },
                     required: false,
                 },
-
-            ]
-        })
+            ],
+        });
     }
 }

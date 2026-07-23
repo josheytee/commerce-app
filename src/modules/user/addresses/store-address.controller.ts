@@ -26,7 +26,7 @@ import { CreateAddressDto, UpdateAddressDto, AddressResponseDto } from './dto';
 import { AddressableTypeEnum } from 'src/shared/enums';
 
 @ApiTags('Store Address')
-@Controller('stores/:storeId/address')
+@Controller('stores/:storeId/addresses')
 @ApiBearerAuth()
 export class StoreAddressController {
     constructor(private readonly addressService: AddressService) { }

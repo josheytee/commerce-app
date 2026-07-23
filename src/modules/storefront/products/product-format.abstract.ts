@@ -5,7 +5,7 @@ import {
     StoreModel,
     VendorModel,
 } from 'src/infrastructure';
-import { ProductResponseDto } from './dto/index.dto';
+import { ProductResponseDto } from './dto';
 
 export abstract class ProductFormat {
     protected formatProductResponse(product: ProductModel): ProductResponseDto {

@@ -4,11 +4,12 @@ import { StoreFrontProductController } from './store-front-product.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ProductModel, ProductVariantModel } from 'src/infrastructure';
 import { ProductRepository } from 'src/infrastructure/database/repositories';
+import { PaginationService } from 'src/shared';
 
 @Module({
     imports: [SequelizeModule.forFeature([ProductModel, ProductVariantModel])],
     controllers: [StoreFrontProductController],
-    providers: [ProductRepository, ProductService],
+    providers: [ProductRepository, ProductService, PaginationService],
     exports: [ProductService],
 })
 export class ProductsModule { }

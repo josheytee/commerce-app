@@ -6,7 +6,7 @@ import { PaymentService } from './payment.service';
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) { }
 
-  @Post('initialize')
+  @Post()
   async initializePayment(@Body() paymentDto: any) {
     console.log('Received payment initialization request:', paymentDto);
     const { amount, currency, ...customerDetails } = paymentDto;
@@ -16,7 +16,7 @@ export class PaymentController {
       customerDetails,
     );
   }
-  @Get('callback')
+  @Get('/{id}/status')
   async handleFlutterwaveCallback(@Query() queryParams: any): Promise<void> {
     await this.paymentService.handlePaymentCallback('order', queryParams);
   }

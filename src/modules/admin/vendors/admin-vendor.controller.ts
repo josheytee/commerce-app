@@ -25,7 +25,10 @@ import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 @UseGuards(TokenAuthGuard, PermissionsGuard)
 export class AdminVendorController {
   constructor(private readonly vendorService: VendorService) { }
-
+  // # Should be sequential:
+  // POST /api/vendors/onboarding/start
+  // POST /api/vendors/onboarding/verify-document
+  // POST /api/vendors/onboarding/complete
   @Post()
   @ApiSuccessResponse(VendorModel)
   create(
