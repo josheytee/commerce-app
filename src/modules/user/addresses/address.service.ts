@@ -122,7 +122,7 @@ export class AddressService {
     if (entityType === AddressableTypeEnum.CUSTOMER) {
       return this.addressRepository.getCustomerAddresses(entityId, options);
     } else if (entityType === AddressableTypeEnum.STORE) {
-      // return this.addressRepository.getStoreAddresses(entityId, options);
+      return this.addressRepository.getStoreAddresses(entityId);
     } else {
       throw new BadRequestException(`Invalid entity type: ${entityType}`);
     }
@@ -134,8 +134,6 @@ export class AddressService {
   ): Promise<AddressModel | null> {
     if (entityType === AddressableTypeEnum.CUSTOMER) {
       return this.addressRepository.getCustomerDefaultAddress(entityId);
-    } else if (entityType === AddressableTypeEnum.STORE) {
-      return this.addressRepository.getStoreDefaultAddress(entityId);
     } else {
       throw new BadRequestException(`Invalid entity type: ${entityType}`);
     }
@@ -205,12 +203,6 @@ export class AddressService {
       if (entityType === AddressableTypeEnum.CUSTOMER) {
 
         result = await this.addressRepository.setCustomerDefaultAddress(
-          entityId,
-          addressId,
-          transaction,
-        );
-      } else if (entityType === AddressableTypeEnum.STORE) {
-        result = await this.addressRepository.setStoreDefaultAddress(
           entityId,
           addressId,
           transaction,

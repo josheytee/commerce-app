@@ -1,4 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, Transaction } from 'sequelize';
 import { AddressModel } from '../models/address.model';
@@ -175,37 +178,6 @@ export class AddressRepository extends BaseRepository<AddressModel> {
     }
 
     /**
-     * Set a specific address as default for customer
-     */
-    async setStoreDefaultAddress(
-        storeId: number,
-        addressId: number,
-        transaction?: Transaction,
-    ): Promise<AddressModel> {
-        // Verify address belongs to customer
-        const address = await this.addressModel.findOne({
-            where: {
-                id: addressId,
-                addressable_id: storeId,
-                addressable_type: AddressableTypeEnum.STORE,
-            },
-        });
-
-        if (!address) {
-            throw new StoreAddressNotFoundException(addressId, storeId);
-        }
-
-        // Remove default from other addresses
-        // await this.removeDefaultCustomerAddress(customerId, transaction);
-
-        // Set this address as default
-        address.is_default = true;
-        await address.save({ transaction });
-
-        return this.getAddressWithRelations(address.id, transaction);
-    }
-
-    /**
      * Get customer's billing addresses
      */
     async getCustomerBillingAddresses(
@@ -259,12 +231,20 @@ export class AddressRepository extends BaseRepository<AddressModel> {
         addressData: Partial<AddressModel>,
         transaction?: Transaction,
     ): Promise<AddressModel> {
-        // Verify store exists
-        const store = await this.storeModel.findByPk(storeId);
+        // Validate store exists
+        const store = await this.storeModel.findByPk(storeId, {
+            transaction,
+            attributes: ['id', 'address_id'], // Only fetch needed fields
+        });
+
         if (!store) {
             throw new StoreNotFoundException(storeId);
         }
 
+        // Validate address data
+        this.validateAddressData(addressData);
+
+        // Create the address
         const address = await this.addressModel.create(
             {
                 ...addressData,
@@ -274,31 +254,66 @@ export class AddressRepository extends BaseRepository<AddressModel> {
             { transaction },
         );
 
+        // Update store with new address_id
+        await store.update({ address_id: address.id }, { transaction });
+
+        // Return the address with relations
         return this.getAddressWithRelations(address.id, transaction);
     }
 
     /**
+     * Validate address data
+     */
+    private validateAddressData(addressData: Partial<AddressModel>): void {
+        const requiredFields = [
+            'address_line1',
+            'city_id',
+            'state_id',
+            'country_id',
+        ];
+        const missingFields = requiredFields.filter((field) => !addressData[field]);
+
+        if (missingFields.length > 0) {
+            throw new BadRequestException(
+                `Missing required fields: ${missingFields.join(', ')}`,
+            );
+        }
+
+        // Validate zip code format if provided
+        if (addressData.postal_code) {
+            const zipCodeRegex = /^[0-9]{5}(-[0-9]{4})?$/; // US zip code format
+            if (!zipCodeRegex.test(addressData.postal_code.toString())) {
+                throw new BadRequestException('Invalid zip code format');
+            }
+        }
+
+        // Validate phone number if provided
+        if (addressData.contact_phone) {
+            const phoneRegex = /^\+?[1-9]\d{1,14}$/; // E.164 format
+            if (!phoneRegex.test(addressData.contact_phone.toString())) {
+                throw new BadRequestException('Invalid phone number format');
+            }
+        }
+    }
+    /**
      * Get all addresses for a store
      */
-    async getStoreAddresses(
-        storeId: number,
-        options?: {
-            includeInactive?: boolean;
-            onlyPrimary?: boolean;
-        },
-    ): Promise<AddressModel[]> {
+    async getStoreAddresses(storeId: number): Promise<AddressModel[]> {
         const where: any = {
             addressable_id: storeId,
             addressable_type: AddressableTypeEnum.STORE,
         };
 
-
         const query: any = {
             where,
             include: [
-                { model: CityModel, as: 'city' },
-                { model: StateModel, as: 'state' },
-                { model: CountryModel, as: 'country' },
+                { model: CityModel, as: 'city', attributes: ['id', 'name'] },
+                { model: StateModel, as: 'state', attributes: ['id', 'name'] },
+                {
+                    model: CountryModel,
+                    as: 'country',
+                    attributes: ['id', 'name', 'code'],
+                },
             ],
             order: [
                 ['is_default', 'DESC'],
@@ -306,29 +321,7 @@ export class AddressRepository extends BaseRepository<AddressModel> {
             ],
         };
 
-        if (!options?.includeInactive) {
-            query.paranoid = true;
-        }
-
         return this.addressModel.findAll(query);
-    }
-
-    /**
-     * Get store's default address
-     */
-    async getStoreDefaultAddress(storeId: number): Promise<AddressModel | null> {
-        return this.addressModel.findOne({
-            where: {
-                addressable_id: storeId,
-                addressable_type: AddressableTypeEnum.STORE,
-                is_default: true,
-            },
-            include: [
-                { model: CityModel, as: 'city' },
-                { model: StateModel, as: 'state' },
-                { model: CountryModel, as: 'country' },
-            ],
-        });
     }
 
     /**
@@ -384,9 +377,13 @@ export class AddressRepository extends BaseRepository<AddressModel> {
     ): Promise<AddressModel> {
         const address = await this.addressModel.findByPk(addressId, {
             include: [
-                { model: CityModel, as: 'city' },
-                { model: StateModel, as: 'state' },
-                { model: CountryModel, as: 'country' },
+                { model: CityModel, as: 'city', attributes: ['id', 'name'] },
+                { model: StateModel, as: 'state', attributes: ['id', 'name'] },
+                {
+                    model: CountryModel,
+                    as: 'country',
+                    attributes: ['id', 'name', 'code'],
+                },
             ],
             transaction,
         });

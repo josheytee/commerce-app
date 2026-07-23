@@ -58,7 +58,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
           path: request.url,
           method,
           responseTime: `${Date.now() - now}ms`,
-          ...additionalMeta,
         };
 
         // Add pagination if it exists (nested inside meta)
@@ -74,6 +73,14 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
         // Add search term if it exists (nested inside meta)
         if (searchTerm) {
           responseData.meta.searchTerm = searchTerm;
+        }
+
+        // ✅ ONLY add additionalMeta if it has actual meta fields
+        if (additionalMeta && Object.keys(additionalMeta).length > 0) {
+          responseData.meta = {
+            ...responseData.meta,
+            ...additionalMeta,
+          };
         }
 
         this.logger.log(`${method} ${request.url} - ${responseData.meta.responseTime}`);
@@ -228,7 +235,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
   }
 
   /**
-   * Extract additional meta data (excluding pagination, filters, searchTerm, message, and data)
+   * ✅ FIXED: Extract additional meta data (ONLY meta fields, NOT data)
    */
   private extractOtherMeta(data: any): any {
     if (!data || typeof data !== 'object') {
@@ -240,30 +247,11 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
       return null;
     }
 
-    // Keys to exclude from meta
-    const excludedKeys = [
-      'items',
-      'meta',
-      'data',
-      'pagination',
-      'filters',
-      'searchTerm',
-      'message',
-      'rows',
-      'count',
-      'success',
-      'statusCode',
-      'timestamp',
-      'path',
-      'method',
-      'responseTime'
-    ];
-
-    const otherMeta: any = {};
-
-    // If data has a meta property, extract non-pagination fields from it
+    // ✅ Only extract if there's an explicit 'meta' property
     if ('meta' in data && data.meta && typeof data.meta === 'object') {
       const { meta } = data;
+
+      // Pagination fields to exclude from meta
       const paginationFields = [
         'currentPage',
         'totalPages',
@@ -274,31 +262,41 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
         'links'
       ];
 
+      // Data fields to exclude (these are already in the data property)
+      const dataFields = [
+        'items',
+        'data',
+        'pagination',
+        'filters',
+        'searchTerm',
+        'message',
+        'rows',
+        'count',
+        'success',
+        'statusCode',
+        'timestamp',
+        'path',
+        'method',
+        'responseTime'
+      ];
+
+      const otherMeta: any = {};
+
+      // Only extract fields that are:
+      // 1. In the meta object
+      // 2. Not pagination fields
+      // 3. Not data fields
       Object.keys(meta).forEach(key => {
-        if (!paginationFields.includes(key) && !excludedKeys.includes(key)) {
+        if (!paginationFields.includes(key) && !dataFields.includes(key)) {
           otherMeta[key] = meta[key];
         }
       });
+
+      return Object.keys(otherMeta).length > 0 ? otherMeta : null;
     }
 
-    // Only add root-level properties that aren't the data itself or excluded keys
-    Object.keys(data).forEach(key => {
-      if (!excludedKeys.includes(key) && !otherMeta[key]) {
-        // Don't add large objects or arrays to meta
-        const value = data[key];
-        if (value !== null && typeof value === 'object') {
-          // Skip adding large objects/arrays to meta
-          if (isArray(value)) {
-            return; // Skip arrays
-          }
-          if (Object.keys(value).length > 10) {
-            return; // Skip large objects
-          }
-        }
-        otherMeta[key] = value;
-      }
-    });
-
-    return Object.keys(otherMeta).length > 0 ? otherMeta : null;
+    // ✅ Don't extract root-level properties as meta
+    // This prevents the duplication issue
+    return null;
   }
 }

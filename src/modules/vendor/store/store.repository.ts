@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseRepository } from 'src/infrastructure/database/repositories/base.repository';
-import { UserModel, StoreModel, VendorModel } from 'src/infrastructure';
+import { UserModel, StoreModel, VendorModel, AddressModel } from 'src/infrastructure';
 
 @Injectable()
 export class StoreRepository extends BaseRepository<StoreModel> {
@@ -54,6 +54,11 @@ export class StoreRepository extends BaseRepository<StoreModel> {
                         },
                     ],
                 },
+                {
+                    model: AddressModel,
+                    as: 'address'
+
+                }
             ],
         });
 
@@ -65,6 +70,7 @@ export class StoreRepository extends BaseRepository<StoreModel> {
         storeId: number,
     ): Promise<StoreModel> {
         // Direct query through associations
+
         const store = await StoreModel.findOne({
             where: { id: storeId }, // Filter by store ID
             include: [
@@ -82,8 +88,13 @@ export class StoreRepository extends BaseRepository<StoreModel> {
                         },
                     ],
                 },
+                {
+                    model: AddressModel,
+                    as: 'address'
+
+                }
             ],
         });
-        return store;
+        return store ? store.get({ plain: true }) : null;
     }
 }

@@ -3,3 +3,7 @@ export * from './address.exception';
 export * from './store.exception';
 export * from './user.exception';
 export * from './customer.exception';
+export * from './order.exception';
+export * from './product.exception';
+export * from './vendor.exception';
+export * from './payment.exception';
