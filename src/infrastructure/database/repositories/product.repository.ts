@@ -384,7 +384,9 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         options?: { include?: string[] },
     ): Promise<ProductModel | null> {
         const include = this.buildIncludeClause(
-            options?.include || ['vendor', 'store', 'section', 'gallery', 'variants'],
+            options?.include.length
+                ? options.include
+                : ['vendor', 'store', 'section', 'gallery', 'variants'],
         );
 
         return this.productModel.findOne({
@@ -870,6 +872,11 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     model: StoreModel,
                     as: 'store',
                     attributes: ['id', 'name', 'description', 'slug'],
+                },
+                {
+                    model: SectionModel,
+                    as: 'section',
+                    attributes: ['id', 'name', 'slug'],
                 },
                 {
                     model: ProductVariantModel,
