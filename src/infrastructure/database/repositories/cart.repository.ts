@@ -59,7 +59,7 @@ export class CartRepository extends BaseRepository<CartModel> {
                                     model: ProductModel,
                                     as: 'product',
                                     required: false,
-                                    attributes: ['id', 'name', 'slug', 'price'],
+                                    attributes: ['id', 'name', 'slug', 'base_price'],
                                 },
                             ],
                         },
