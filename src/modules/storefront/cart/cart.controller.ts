@@ -23,12 +23,14 @@ export class CartController {
 
   @Post()
   addToCart(@Req() req, @Body() dto: AddToCartDto) {
-    return this.cartService.addToCart(req.user.id, dto);
+    const customerId = req.user?.customer?.id;
+    return this.cartService.addToCart(customerId, dto);
   }
 
   @Get()
   getCart(@Req() req) {
-    return this.cartService.getCart(req.user.id);
+    const customerId = req.user?.customer?.id;
+    return this.cartService.getCart(customerId);
   }
 
   @Patch('items/:id')
@@ -43,6 +45,7 @@ export class CartController {
 
   @Delete('clear')
   clearCart(@Req() req) {
-    return this.cartService.clearCart(req.user.id);
+    const customerId = req.user?.customer?.id;
+    return this.cartService.clearCart(customerId);
   }
 }

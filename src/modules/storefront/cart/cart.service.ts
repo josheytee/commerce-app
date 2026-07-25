@@ -252,7 +252,7 @@ export class CartService {
     transaction?: Transaction,
   ): Promise<CartModel> {
     const cart = await this.findOne(id);
-    return cart.update(updateCartDto, { transaction });
+    return cart.update(updateCartDto as any, { transaction });
   }
 
   // ============ REMOVE CART ============

@@ -35,14 +35,8 @@ export class CartModel extends Model<CartModel> {
   })
   status: CartStatusEnum;
 
-  @Column({
-    type: DataType.JSONB,
-    allowNull: true,
-  })
-  items: object;
-
   @HasMany(() => CartItemModel)
-  cartItems: CartItemModel[];
+  items: CartItemModel[];
 
   @BelongsTo(() => CustomerModel)
   customer: CustomerModel;

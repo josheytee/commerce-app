@@ -1,7 +1,7 @@
 // repositories/base.repository.ts
 import {
     Model,
-    ModelCtor,
+    ModelStatic,
     Transaction,
     WhereOptions,
     FindOptions,
@@ -9,7 +9,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 
 export abstract class BaseRepository<T extends Model> {
-    constructor(protected readonly model: ModelCtor<T>) { }
+    constructor(protected readonly model: ModelStatic<T>) { }
 
     async create(data: Partial<T>): Promise<T> {
         return this.model.create(data as any);

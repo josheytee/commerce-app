@@ -49,5 +49,5 @@ export class CartItemModel extends Model<CartItemModel> {
   store: StoreModel;
 
   @BelongsTo(() => ProductVariantModel)
-  product: ProductVariantModel;
+  variant: ProductVariantModel;
 }
