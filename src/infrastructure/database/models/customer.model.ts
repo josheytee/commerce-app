@@ -37,6 +37,13 @@ export class CustomerModel extends Model<CustomerModel> {
   @BelongsTo(() => UserModel)
   user: UserModel;
 
+  @ForeignKey(() => UserModel)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  default_address_id: number;
+
   // JSON or another format to store user preferences (e.g., preferred payment methods, saved items).
   // @Column({ type: DataType.JSONB })
   // preferences: Record<string, any>;

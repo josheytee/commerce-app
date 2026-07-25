@@ -45,6 +45,9 @@ export class CartItemModel extends Model<CartItemModel> {
   @BelongsTo(() => CartModel)
   cart: CartModel;
 
+  @BelongsTo(() => ProductModel)
+  product: CartModel;
+
   @BelongsTo(() => StoreModel)
   store: StoreModel;
 

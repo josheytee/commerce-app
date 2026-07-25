@@ -1,7 +1,4 @@
-import {
-    BadRequestException,
-    Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, Transaction } from 'sequelize';
 import { AddressModel } from '../models/address.model';
@@ -64,6 +61,13 @@ export class AddressRepository extends BaseRepository<AddressModel> {
             },
             { transaction },
         );
+
+        if (addressData.is_default) {
+            await customer.update(
+                { default_address_id: address.id },
+                { transaction },
+            );
+        }
 
         return this.getAddressWithRelations(address.id, transaction);
     }
