@@ -30,6 +30,7 @@ export class CartController {
   @Get()
   getCart(@Req() req) {
     const customerId = req.user?.customer?.id;
+    console.log('customerId', customerId)
     return this.cartService.getCart(customerId);
   }
 

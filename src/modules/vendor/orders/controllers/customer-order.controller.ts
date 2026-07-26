@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   ParseIntPipe,
+  Req,
 } from '@nestjs/common';
 import { OrderService } from '../order.service';
 
@@ -14,24 +15,27 @@ import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { OrderModel } from 'src/infrastructure';
 import { CreateOrderDto, CreateOrderFromCartDto } from '../dto';
 
-@ApiTags('Customer - Orders')
-@Controller('customers/:customerId/orders')
+@ApiTags('Orders')
+@Controller('orders')
 export class CustomerOrderController {
   constructor(private readonly orderService: OrderService) { }
 
   @Post()
   @ApiSuccessResponse(OrderModel)
-  async create(@Body() orderDto: CreateOrderDto): Promise<OrderModel> {
-    const { customer_id, items, address_id } = orderDto;
-    return this.orderService.create(customer_id, items, address_id);
+  async create(@Body() orderDto: CreateOrderDto): Promise<any> {
+    console.log('orderDto', orderDto)
+    return this.orderService.create(orderDto);
   }
 
   @Post('/from-cart')
   @ApiSuccessResponse(OrderModel)
   async createFromCart(
-    @Param('customerId', ParseIntPipe) customerId: number,
+    // @Param('customerId', ParseIntPipe) customerId: number,
+    @Req() req,
     @Body() orderDto: CreateOrderFromCartDto,
   ): Promise<OrderModel> {
+    const customerId = req.user?.customer?.id;
+
     const { address_id } = orderDto;
     return this.orderService.createOrderFromCart(customerId, address_id);
   }

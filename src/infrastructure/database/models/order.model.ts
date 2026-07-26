@@ -16,6 +16,7 @@ import { OrderItemModel } from './order-item.model';
 import { CustomerModel } from 'src/infrastructure/database/models/customer.model';
 import { VendorModel } from './vendor.model';
 import { AddressModel } from './address.model';
+import { StoreModel } from './store.model';
 import { OrderStatusEnum } from 'src/shared/enums/order.enums';
 
 @Table({
@@ -50,9 +51,18 @@ export class OrderModel extends Model<OrderModel> {
   @BelongsTo(() => VendorModel)
   vendor: VendorModel;
 
+  // @ForeignKey(() => StoreModel)
+  // @Column({
+  //   type: DataType.INTEGER,
+  //   allowNull: false,
+  // })
+  // store_id: number;
+
+  // @BelongsTo(() => StoreModel)
+  // store: StoreModel;
+
   @Column(DataType.DECIMAL)
   total_amount: number;
-
 
   @Default(OrderStatusEnum.PENDING)
   @Column({ type: DataType.ENUM(...Object.values(OrderStatusEnum)) })

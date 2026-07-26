@@ -56,7 +56,6 @@ export class InventoryService {
     const inventory = await this._inventoryRepository.findOne({
       where: { product_variant_id: productVariantId, store_id: storeId },
     });
-
     if (inventory.quantity - inventory.reserved_quantity < qty) {
       throw new Error('Insufficient stock');
     }

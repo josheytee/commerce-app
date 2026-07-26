@@ -5,7 +5,7 @@ import { BaseRepository } from 'src/infrastructure/database/repositories/base.re
 import { CreateMediaDto } from 'src/modules/vendor/media/dto';
 import { MediaTypeEnum } from 'src/shared/';
 import { MediaRepository } from 'src/modules/vendor/media/media.repository';
-import { MediaModel, VendorModel } from 'src/infrastructure';
+import { MediaModel, StoreModel, VendorModel } from 'src/infrastructure';
 import { Op } from 'sequelize';
 
 @Injectable()
@@ -131,4 +131,21 @@ export class VendorRepository extends BaseRepository<VendorModel> {
             where: { user_id: userId, is_default: true },
         });
     }
+
+
+    async getVendorsById(ids: number[]): Promise<VendorModel[] | null> {
+        return this.vendorModel.findAll({
+            where: { id: ids },
+            include: [
+                {
+                    model: StoreModel,
+                    as: 'stores',
+                    where: { status: 'active' },
+                    required: false,
+                },
+            ],
+        })
+    }
+
+
 }

@@ -37,6 +37,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let details: any = null;
     let errors: any[] = [];
 
+    console.log('exception', exception);
     // 🔐 Handle Custom BaseException
     if (exception instanceof BaseException) {
       const errorResponse = exception.getResponse() as ExceptionResponse;
@@ -129,7 +130,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
       details = {
         message: exception.message,
         sql: process.env.NODE_ENV === 'development' ? exception.sql : undefined,
-        parameters: process.env.NODE_ENV === 'development' ? exception.parameters : undefined,
+        parameters:
+          process.env.NODE_ENV === 'development'
+            ? exception.parameters
+            : undefined,
       };
     }
 
@@ -157,10 +161,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = exception.message || 'Internal server error';
       errorCode = 'UNKNOWN_ERROR';
-      details = process.env.NODE_ENV === 'development' ? {
-        name: exception.name,
-        stack: exception.stack,
-      } : null;
+      details =
+        process.env.NODE_ENV === 'development'
+          ? {
+            name: exception.name,
+            stack: exception.stack,
+          }
+          : null;
     }
 
     // 🔧 Normalize message

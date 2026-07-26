@@ -10,8 +10,14 @@ import { InjectModel } from '@nestjs/sequelize';
 import { OrderSearchCriteria } from './order-search-criteria.interface';
 import { PaymentService } from 'src/infrastructure/payment/payment.service';
 import { CustomerService } from 'src/modules/user/customer/customer.service';
-import { CartItemModel, OrderItemModel, OrderModel } from 'src/infrastructure';
-import { CreateOrderDto } from './dto';
+import {
+  CartItemModel,
+  OrderItemModel,
+  OrderModel,
+  ProductModel,
+  StoreModel,
+} from 'src/infrastructure';
+import { CreateOrderDto, OrderItemDto } from './dto';
 import { Sequelize } from 'sequelize-typescript';
 import {
   FulfillmentRepository,
@@ -22,8 +28,22 @@ import {
 import { InventoryService } from '../inventory/inventory.service';
 import { FulfillmentStatusEnum, OrderStatusEnum } from 'src/shared';
 import { CartRepository } from 'src/infrastructure/database/repositories/cart.repository';
+import { VendorRepository } from '../onboarding/vendor.repository';
 // import { PaymentService } from 'src/payment/payment.service';
 
+// {
+//   "customer_id": 142,
+//   "items": [
+//     {
+//       "variant_id": 618,
+//       "quantity": 2,
+//       "store_id": 49,
+//       "vendor_id": 8,
+//       "product_id": 251
+//     }
+//   ],
+//   "address_id": 3
+// }
 @Injectable()
 export class OrderService {
   constructor(
@@ -33,6 +53,7 @@ export class OrderService {
     private readonly _cartRepository: CartRepository,
     private readonly _inventoryService: InventoryService,
     private readonly _orderRepository: OrderRepository,
+    private readonly _vendorRepository: VendorRepository,
     private readonly _orderItemRepository: OrderItemRepository,
     private readonly _fulfillmentRepository: FulfillmentRepository,
     private readonly _sequelize: Sequelize,
@@ -43,77 +64,274 @@ export class OrderService {
   // - confirmOrder()
   // - cancelOrder()
 
-  async create(
-    customerId: number,
-    items: any[],
-    addressId: number,
-    // paymentDetails: any,
-  ): Promise<any> {
-    const orderReference = this.generateOrderReference(customerId);
+  /**
+   * Group items by vendor for multi-vendor orders
+   */
+  private groupItemsByVendor(
+    items: OrderItemDto[],
+  ): Map<number, OrderItemDto[]> {
+    const grouped = new Map<number, OrderItemDto[]>();
+
+    items.forEach((item) => {
+      const vendorId = item.vendor_id;
+      if (!grouped.has(vendorId)) {
+        grouped.set(vendorId, []);
+      }
+      grouped.get(vendorId)!.push(item);
+    });
+
+    return grouped;
+  }
+
+  /**
+   * Calculate shipping cost for a vendor's items
+   */
+  private calculateShippingCost(
+    vendorId: number,
+    items: OrderItemDto[],
+    shippingMethod: string = 'standard',
+  ): number {
+    // Base shipping rates
+    const shippingRates = {
+      standard: 0,
+      express: 12.0,
+      same_day: 25.0,
+    };
+
+    // Calculate based on items weight or quantity
+    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+    const baseRate = shippingRates[shippingMethod] || 0;
+
+    // Additional cost for bulky items (if weight info is available)
+    // This is a simplified example
+    let additionalCost = 0;
+    if (totalItems > 5) {
+      additionalCost = 2.0;
+    }
+
+    return baseRate + additionalCost;
+  }
+
+  /**
+   * Create a multi-vendor order
+   */
+  async create(createOrderDto: CreateOrderDto): Promise<{
+    // order: OrderModel;
+    vendorOrders: OrderModel[];
+    paymentUrl: string;
+  }> {
+    const { customer_id, items, address_id } = createOrderDto;
+    const shipping_method = 'standard';
+    const coupon_code = '';
+
+    // Validate input
+    if (!items || items.length === 0) {
+      throw new BadRequestException('Order must contain at least one item');
+    }
+
+    // Group items by vendor
+    const vendorGroups = this.groupItemsByVendor(items);
+    const vendorIds = Array.from(vendorGroups.keys());
+
+    // Validate all vendors exist
+    const vendors = await this._vendorRepository.getVendorsById(vendorIds);
+
+    if (vendors.length !== vendorIds.length) {
+      throw new NotFoundException('One or more vendors not found');
+    }
+
+    // Create a main order (parent order)
+    const orderReference = this.generateOrderReference(customer_id);
     let totalAmount = 0;
-    // console.log('order_reference', orderReference);
+    const vendorOrders: OrderModel[] = [];
 
-    const order = await this._orderRepository.create({
-      order_reference: orderReference,
-      customer_id: customerId,
-      address_id: addressId,
-      status: OrderStatusEnum.PENDING,
-      total_amount: totalAmount,
-    });
+    // Create main order
+    // const mainOrder = await this._orderRepository.create({
+    //   order_reference: orderReference,
+    //   customer_id,
+    //   address_id,
+    //   status: OrderStatusEnum.PENDING,
+    //   total_amount: 0, // Will be updated after vendor orders
+    //   // shipping_method,
+    //   // coupon_code,
+    // });
 
-    const orderItems = items.map((item) => {
-      totalAmount += item.price * item.quantity;
-      return {
-        order_id: order.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.price,
-      };
-    });
+    // Process each vendor's items
+    for (const [vendorId, vendorItems] of vendorGroups) {
+      const vendor = vendors.find((v) => v.id === vendorId);
+      const vendorOrderReference = `${orderReference}-V${vendorId}`;
 
-    await this._orderItemRepository.bulkCreate(orderItems);
+      // Create vendor-specific order (sub-order)
+      const vendorOrder = await this._orderRepository.create({
+        order_reference: vendorOrderReference,
+        customer_id,
+        address_id,
+        vendor_id: vendorId,
+        // parent_order_id: mainOrder.id,
+        status: OrderStatusEnum.PENDING,
+        total_amount: 0,
+        // shipping_method,
+        // is_multi_vendor: false,
+        // vendor_name: vendor.business_name,
+      });
 
-    order.total_amount = totalAmount;
+      // Fetch variants for this vendor's items
+      const variantIds = vendorItems.map((item) => item.variant_id);
+      const variants = await this._variantRepository.findAll({
+        where: { id: variantIds },
+        include: [
+          {
+            model: ProductModel,
+            as: 'product',
+            attributes: ['id', 'base_price', 'name', 'vendor_id'],
+          },
+        ],
+      });
 
-    // Process payment
-    // const paymentResponse = await this._paymentService.initializePayment(
-    //   totalAmount,
-    //   paymentDetails.currency,
-    //   paymentDetails.customerDetails,
-    // );
+      // Create a map for quick variant lookup
+      const variantMap = new Map(variants.map((v) => [v.id, v]));
 
-    // if (paymentResponse.status !== 'success') {
-    //   order.status = 'failed';
-    // } else {
-    //   order.status = 'completed';
-    // }
+      // Prepare order items
+      const orderItemsData = vendorItems.map((item: OrderItemDto) => {
+        const variant = variantMap.get(item.variant_id);
+        if (!variant) {
+          throw new BadRequestException(
+            `Variant with ID ${item.variant_id} not found`,
+          );
+        }
 
-    await order.save();
-    const customer = await this._customerService.findOne(customerId);
+        // Check if variant belongs to this vendor
+        if (variant.product?.vendor_id !== vendorId) {
+          throw new BadRequestException(
+            `Variant ${variant.id} does not belong to vendor ${vendorId}`,
+          );
+        }
+
+        // Get price from variant or fallback to product base price
+        const price = variant.price || variant.product?.base_price || 0;
+        if (price === 0) {
+          throw new BadRequestException(
+            `Price not found for variant ${variant.id}`,
+          );
+        }
+
+        // Validate stock availability
+        if (variant.status !== 'active') {
+          throw new BadRequestException(
+            `Variant ${variant.variant_name || variant.id} is not available`,
+          );
+        }
+
+        return {
+          order_id: vendorOrder.id,
+          // parent_order_id: mainOrder.id,
+          product_id: item.product_id || variant.product_id,
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          price: price,
+          store_id: item.store_id,
+          // vendor_id: vendorId,
+          // total: price * item.quantity,
+          // vendor_name: vendor.business_name,
+        };
+      });
+
+      // Calculate subtotal for this vendor
+      const subtotal = orderItemsData.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0,
+      );
+
+      // Calculate shipping for this vendor
+      const shippingCost = this.calculateShippingCost(
+        vendorId,
+        vendorItems,
+        shipping_method,
+      );
+
+      // Calculate tax for this vendor (e.g., 7.5%)
+      const taxRate = 0.075;
+      const taxAmount = +(subtotal * taxRate).toFixed(2);
+
+      // Update vendor order totals
+      // vendorOrder.subtotal = subtotal;
+      // vendorOrder.shipping_cost = shippingCost;
+      // vendorOrder.tax_amount = taxAmount;
+      vendorOrder.total_amount = +(subtotal + shippingCost + taxAmount).toFixed(
+        2,
+      );
+      console.log('orderItemsData', orderItemsData)
+
+      // Bulk create order items
+      await this._orderItemRepository.bulkCreate(orderItemsData);
+
+      // Save vendor order
+      await vendorOrder.save();
+      vendorOrders.push(vendorOrder);
+
+      // Add to main order total
+      totalAmount += vendorOrder.total_amount;
+    }
+
+    // Update main order total
+    // mainOrder.total_amount = +totalAmount.toFixed(2);
+    // await mainOrder.save();
+
+    // Get customer details for payment
+    const customer = await this._customerService.findOne(customer_id);
+    if (!customer) {
+      throw new NotFoundException(`Customer with ID ${customer_id} not found`);
+    }
+
+    // Initialize payment
     const paymentUrl = await this._paymentService.initializePayment(
-      order.total_amount,
+      totalAmount,
       'NGN',
       {
-        refrence: order.order_reference,
-        redirectUrl: '/orders/callback',
+        reference: orderReference,
+        redirectUrl: `${process.env.APP_URL}/orders/callback`,
         customer: {
-          id: customerId,
-          email: customer.user.email,
-          phonenumber: customer.user.phone_number,
-          name: customer.user.first_name + ' ' + customer.user.last_name,
+          id: customer_id,
+          email: customer.user?.email || 'customer@example.com',
+          phone_number: customer.user?.phone_number || '',
+          name:
+            `${customer.user?.first_name || ''} ${customer.user?.last_name || ''}`.trim() ||
+            'Customer',
+        },
+        metadata: {
+          // order_id: mainOrder.id,
+          // order_reference: orderReference,
+          customer_id,
+          vendor_orders: vendorOrders.map((vo) => ({
+            id: vo.id,
+            vendor_id: vo.vendor_id,
+            total: vo.total_amount,
+          })),
         },
       },
     );
-    // return { order };
-    return { order, paymentUrl };
+
+    return {
+      // order: mainOrder,
+      vendorOrders,
+      paymentUrl,
+    };
   }
 
-  async createOrderFromCart(cartId: number, addressId: number): Promise<any> {
-    const cart = await this._cartRepository.findOne({ where: { id: cartId } });
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
+  async createOrderFromCart(
+    customerId: number,
+    addressId: number,
+  ): Promise<any> {
+    const cart = await this._cartRepository.findOne({
+      where: { customer_id: customerId },
+    });
 
+    if (!cart) {
+      throw new NotFoundException(
+        'User has no cart, please create one and retry!',
+      );
+    }
+    console.log('cart', cart, cart.items);
     return this._sequelize.transaction(async (t) => {
       let total = 0;
 
@@ -175,7 +393,11 @@ export class OrderService {
         const variant = await this._variantRepository.findById(item.variant_id);
 
         // 🔥 reserve stock
-        await this._inventoryService.reserve(item.variant_id, item.store_id, item.quantity);
+        await this._inventoryService.reserve(
+          item.variant_id,
+          item.store_id,
+          item.quantity,
+        );
 
         total += variant.price * item.quantity;
 
@@ -261,7 +483,7 @@ export class OrderService {
 
     for (const item of order.orderItems) {
       await this._inventoryService.release(
-        item.product_variant_id,
+        item.variant_id,
         item.store_id,
         item.quantity,
       );
@@ -276,10 +498,7 @@ export class OrderService {
     });
 
     for (const item of order.orderItems) {
-      await this._inventoryService.confirm(
-        item.product_variant_id,
-        item.quantity,
-      );
+      await this._inventoryService.confirm(item.variant_id, item.quantity);
     }
 
     await order.update({ status: OrderStatusEnum.PAID });

@@ -47,7 +47,14 @@ export class OrderItemModel extends Model<OrderItemModel> {
 
   @ForeignKey(() => ProductVariantModel)
   @Column
-  product_variant_id: number;
+  variant_id: number;
+
+  @BelongsTo(() => ProductVariantModel)
+  product: ProductVariantModel;
+
+  @ForeignKey(() => ProductVariantModel)
+  @Column
+  product_id: number;
 
   @Column
   quantity: number;
