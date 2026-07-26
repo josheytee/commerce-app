@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { OrderService } from '../order.service';
 
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiQuery } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { OrderModel } from 'src/infrastructure';
 import { CreateOrderDto, CreateOrderFromCartDto } from '../dto';
@@ -43,9 +43,11 @@ export class CustomerOrderController {
   @Get()
   @ApiSuccessResponse(OrderModel)
   findAll(
-    @Param('customerId', ParseIntPipe) customerId: number,
-  ): Promise<OrderModel[]> {
-    return this.orderService.findAllByVendorId(customerId);
+    @Query('customerId', ParseIntPipe) customerId?: number,
+    @Query('page') page?: number,
+    @Query('linit') limit?: number,
+  ): Promise<{ orders: OrderModel[]; total: number }> {
+    return this.orderService.findAllByCustomerId(customerId, page, limit);
   }
 
   @Get(':id')

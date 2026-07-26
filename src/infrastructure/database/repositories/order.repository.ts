@@ -62,6 +62,7 @@ export class OrderRepository extends BaseRepository<OrderModel> {
                     where: { id: vendorId },
                     attributes: [
                         'id',
+                        'slug',
                         'business_name',
                         'business_email',
                         'business_phone',
@@ -113,6 +114,110 @@ export class OrderRepository extends BaseRepository<OrderModel> {
                     as: 'vendor',
                     required: true,
                     where: { id: vendorId },
+                },
+                {
+                    model: OrderItemModel,
+                    as: 'orderItems',
+                    required: false,
+                },
+            ],
+            limit,
+            offset,
+            order: [['created_at', 'DESC']],
+        });
+
+        return {
+            orders: rows,
+            total: count,
+        };
+    }
+
+    async findOneByCustomerId(
+        customerId: number,
+        orderId: number,
+    ): Promise<OrderModel> {
+        const order = await this.orderModel.findOne({
+            where: { id: orderId },
+            include: [
+                {
+                    model: CustomerModel,
+                    as: 'customer',
+                    required: true,
+                    where: { id: customerId },
+                    include: ['user']
+                },
+                {
+                    model: VendorModel,
+                    as: 'vendor',
+                    required: true,
+                    attributes: [
+                        'id',
+                        'slug',
+                        'business_name',
+                        'business_email',
+                        'business_phone',
+                    ],
+                },
+
+                {
+                    model: OrderItemModel,
+                    as: 'items',
+                    required: false,
+                    include: [
+                        {
+                            model: ProductModel,
+                            as: 'product',
+                            required: false,
+                            attributes: ['id', 'name', 'slug', 'price', 'featured_image'],
+                        },
+                    ],
+                },
+                {
+                    model: CustomerModel,
+                    as: 'customer',
+                    required: false,
+                    attributes: ['id', 'first_name', 'last_name', 'email', 'phone'],
+                },
+            ],
+        });
+
+        if (!order) {
+            throw new NotFoundException(
+                `Order with ID ${orderId} not found for customer ${customerId}`,
+            );
+        }
+
+        return order;
+    }
+
+    // Additional useful methods
+    async findAllByCustomerId(
+        customerId: number,
+        page: number = 1,
+        limit: number = 10,
+    ): Promise<{ orders: OrderModel[]; total: number }> {
+        const offset = (page - 1) * limit;
+
+        const { rows, count } = await this.orderModel.findAndCountAll({
+            include: [
+                {
+                    model: CustomerModel,
+                    as: 'customer',
+                    required: true,
+                    where: { id: customerId },
+                    include: ['user']
+                },
+                {
+                    model: VendorModel,
+                    as: 'vendor',
+                    required: true,
+                    attributes: [
+                        'id',
+                        'slug',
+                        'business_name',
+                        'business_email',
+                        'business_phone',
+                    ],
                 },
                 {
                     model: OrderItemModel,

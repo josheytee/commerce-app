@@ -260,7 +260,6 @@ export class OrderService {
       vendorOrder.total_amount = +(subtotal + shippingCost + taxAmount).toFixed(
         2,
       );
-      console.log('orderItemsData', orderItemsData)
 
       // Bulk create order items
       await this._orderItemRepository.bulkCreate(orderItemsData);
@@ -568,6 +567,51 @@ export class OrderService {
       console.log(`Found ${stores.orders.length} stores for vendor ID: ${id}`);
 
       return stores.orders;
+    } catch (error) {
+      console.error(`Error finding stores for vendor ${id}:`, error.message);
+      throw new InternalServerErrorException('Failed to retrieve stores');
+    }
+  }
+
+  async findOneById(id: number, customerId: number): Promise<OrderModel> {
+    try {
+      // Validate input
+      if (!id || id <= 0) {
+        throw new BadRequestException('Invalid vendor ID');
+      }
+
+      // Direct query through associations
+      const stores = await this._orderRepository.findOneByCustomerId(
+        customerId,
+        id,
+      );
+
+      return stores;
+    } catch (error) {
+      console.error(`Error finding stores for vendor ${id}:`, error.message);
+      throw new InternalServerErrorException('Failed to retrieve stores');
+    }
+  }
+
+  async findAllByCustomerId(
+    id: number,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{ orders: OrderModel[]; total: number }> {
+    try {
+      // Validate input
+      if (!id || id <= 0) {
+        throw new BadRequestException('Invalid vendor ID');
+      }
+
+      // Direct query through associations
+      const orders = await this._orderRepository.findAllByCustomerId(
+        id,
+        page,
+        limit,
+      );
+
+      return orders;
     } catch (error) {
       console.error(`Error finding stores for vendor ${id}:`, error.message);
       throw new InternalServerErrorException('Failed to retrieve stores');
