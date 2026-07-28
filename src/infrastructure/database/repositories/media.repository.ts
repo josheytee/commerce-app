@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { BaseRepository } from 'src/infrastructure/database/repositories/base.repository';
-
-import { CreateMediaDto } from './dto';
-import { MediaModel } from 'src/infrastructure';
+import { BaseRepository } from './base.repository';
+import { MediaModel } from '../models';
 import { MediaTypeEnum } from 'src/shared';
+import { CreateMediaDto } from 'src/modules/vendor/media/dto';
 
 @Injectable()
 export class MediaRepository extends BaseRepository<MediaModel> {
@@ -127,3 +126,4 @@ export class MediaRepository extends BaseRepository<MediaModel> {
         }
     }
 }
+

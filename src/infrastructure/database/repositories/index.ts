@@ -12,4 +12,5 @@ export * from './cart.repository';
 export * from './cart-item.repository';
 export * from './address.repository';
 export * from './store.repository';
-// export * from './vendor.repository';
+export * from './media.repository';
+export * from './vendor.repository';

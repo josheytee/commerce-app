@@ -28,7 +28,7 @@ import {
 import { InventoryService } from '../inventory/inventory.service';
 import { FulfillmentStatusEnum, OrderStatusEnum } from 'src/shared';
 import { CartRepository } from 'src/infrastructure/database/repositories/cart.repository';
-import { VendorRepository } from '../onboarding/vendor.repository';
+import { VendorRepository } from '../../../infrastructure/database/repositories/vendor.repository';
 // import { PaymentService } from 'src/payment/payment.service';
 
 // {

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { MediaService } from './media.service';
-import { MediaRepository } from './media.repository';
 import { MediaController } from './controllers';
 import { MediaUploadService } from './services';
 import { MediaModel } from 'src/infrastructure';
+import { MediaRepository } from 'src/infrastructure/database/repositories';
 
 @Module({
   imports: [SequelizeModule.forFeature([MediaModel])],

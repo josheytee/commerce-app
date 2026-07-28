@@ -4,8 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MediaRepository } from 'src/modules/vendor/media/media.repository';
-import { VendorRepository } from './vendor.repository';
+import { VendorRepository } from '../../../infrastructure/database/repositories/vendor.repository';
 import {
   VendorModel,
   MediaModel,
@@ -15,7 +14,8 @@ import {
 import { Sequelize } from 'sequelize-typescript';
 import { RoleRepository } from '../../user/role/role.repository';
 import { UserVendorRoleRepository } from '../../user/user-vendor-role/user-vendor-role.repository';
-import { CreateVendorDto } from './dto';
+import { CreateVendorDto, VendorFilterDto, VendorListResponseDto } from './dto';
+import { MediaRepository } from 'src/infrastructure/database/repositories';
 
 @Injectable()
 export class VendorService {
@@ -116,6 +116,12 @@ export class VendorService {
       await transaction.rollback();
       throw error;
     }
+  }
+
+  async findVendorsWithFilters(
+    options: VendorFilterDto,
+  ): Promise<VendorListResponseDto> {
+    return this.vendorRepository.findVendorsWithFilters(options);
   }
 
   async getVendor(id: number): Promise<VendorModel> {

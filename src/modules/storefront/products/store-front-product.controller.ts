@@ -23,7 +23,6 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
   ApiExtraModels,
-  getSchemaPath,
 } from '@nestjs/swagger';
 import { ProductService } from './products.service';
 import { ProductResponseDto } from './dto/product-response.dto';
@@ -33,7 +32,6 @@ import {
   ProductFilterType,
 } from './dto/product-query.dto';
 import { ProductIncludeQueryDto } from './dto';
-import { PaginationService } from 'src/shared';
 
 @ApiTags('StoreFront - Products')
 @Controller('products')

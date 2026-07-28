@@ -1,4 +1,6 @@
 // Shared type definitions
+export * from './vendor';
+
 export type UUID = string & { readonly __brand: 'UUID' };
 
 export type Nullable<T> = T | null;

@@ -4,7 +4,7 @@ import { MediaModule } from './media/media.module';
 import { UserVendorRoleModule } from '../user/user-vendor-role/user-vendor-role.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { VendorService } from './onboarding/vendor.service';
-import { VendorRepository } from './onboarding/vendor.repository';
+import { VendorRepository } from '../../infrastructure/database/repositories/vendor.repository';
 import { VendorMediaController } from './vendor-media.controller';
 import { VendorController } from './vendor.controller';
 import {
@@ -12,6 +12,7 @@ import {
   VendorModel,
   PermissionModel,
   UserVendorRoleModel,
+  MediaModel,
 } from 'src/infrastructure';
 import { StoreSectionModule } from './store-section/store-section.module';
 import { StoreModule } from './store/store.module';
@@ -19,6 +20,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
 import { OrderModule } from './orders/order.module';
 import { DeliveryModule } from './delivery/delivery.module';
 import { ProductModule } from './products/product.module';
+import { MediaRepository } from 'src/infrastructure/database/repositories';
 
 @Module({
   imports: [
@@ -33,13 +35,14 @@ import { ProductModule } from './products/product.module';
     DeliveryModule,
     SequelizeModule.forFeature([
       RoleModel,
+      MediaModel,
       VendorModel,
       PermissionModel,
       UserVendorRoleModel,
     ]),
   ],
-  providers: [VendorService, VendorRepository],
+  providers: [VendorService, VendorRepository, MediaRepository],
   controllers: [VendorController, VendorMediaController],
-  exports: [VendorService, VendorRepository],
+  exports: [VendorService, VendorRepository, MediaRepository],
 })
 export class VendorModule { }

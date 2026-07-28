@@ -1,4 +1,3 @@
-import { MediaRepository } from './../media/media.repository';
 import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { OrderService } from './order.service';
@@ -17,11 +16,12 @@ import {
   OrderRepository,
   OrderItemRepository,
   FulfillmentRepository,
+  MediaRepository,
 } from 'src/infrastructure/database/repositories';
 import { InventoryModule } from '../inventory/inventory.module';
 import { CustomerOrderController, OrderController } from './controllers';
 import { CartModule } from 'src/modules/storefront/cart/cart.module';
-import { VendorRepository } from '../onboarding/vendor.repository';
+import { VendorRepository } from '../../../infrastructure/database/repositories/vendor.repository';
 
 @Module({
   imports: [
@@ -46,6 +46,7 @@ import { VendorRepository } from '../onboarding/vendor.repository';
     VariantRepository,
     VendorRepository,
     FulfillmentRepository,
+    MediaRepository,
   ],
   controllers: [OrderController, CustomerOrderController],
   exports: [OrderService, OrderItemRepository, OrderRepository],

@@ -1,4 +1,4 @@
-import { VendorRepository } from './vendor.repository';
+import { VendorRepository } from '../../../infrastructure/database/repositories/vendor.repository';
 import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { VendorService } from './vendor.service';
@@ -10,8 +10,11 @@ import {
   VendorModel,
   UserVendorRoleModel,
   RoleModel,
+  MediaModel,
   PermissionModel,
+  OrderModel,
 } from 'src/infrastructure';
+import { MediaRepository, OrderRepository } from 'src/infrastructure/database/repositories';
 
 @Module({
   imports: [
@@ -20,12 +23,14 @@ import {
     UserVendorRoleModule,
     SequelizeModule.forFeature([
       RoleModel,
+      MediaModel,
       VendorModel,
       PermissionModel,
       UserVendorRoleModel,
+      OrderModel,
     ]),
   ],
-  providers: [VendorService, VendorRepository],
+  providers: [VendorService, VendorRepository, MediaRepository, OrderRepository],
   controllers: [VendorOnboardingController],
   exports: [VendorService, VendorRepository],
 })
