@@ -595,6 +595,7 @@ export class OrderService {
 
   async findAllByCustomerId(
     id: number,
+    status: OrderStatusEnum,
     page: number = 1,
     limit: number = 10,
   ): Promise<{ orders: OrderModel[]; total: number }> {
@@ -607,6 +608,7 @@ export class OrderService {
       // Direct query through associations
       const orders = await this._orderRepository.findAllByCustomerId(
         id,
+        status,
         page,
         limit,
       );

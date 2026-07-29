@@ -343,7 +343,7 @@ export class VendorRepository extends BaseRepository<VendorModel> {
 
     async findWithFullDetails(id: number): Promise<VendorModel | null> {
         return this.findById(id, {
-            include: ['user', 'stores', 'users', 'orders'],
+            include: ['user', 'logo', 'cover_image', 'stores', 'users', 'orders'],
         });
     }
 

@@ -7,6 +7,7 @@ import {
   Query,
   ParseIntPipe,
   Req,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import { OrderService } from '../order.service';
 
@@ -14,6 +15,7 @@ import { ApiTags, ApiQuery } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
 import { OrderModel } from 'src/infrastructure';
 import { CreateOrderDto, CreateOrderFromCartDto } from '../dto';
+import { OrderStatusEnum } from 'src/shared';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -23,7 +25,6 @@ export class CustomerOrderController {
   @Post()
   @ApiSuccessResponse(OrderModel)
   async create(@Body() orderDto: CreateOrderDto): Promise<any> {
-    console.log('orderDto', orderDto)
     return this.orderService.create(orderDto);
   }
 
@@ -44,10 +45,17 @@ export class CustomerOrderController {
   @ApiSuccessResponse(OrderModel)
   findAll(
     @Query('customerId', ParseIntPipe) customerId?: number,
+    @Query('status', new ParseEnumPipe(OrderStatusEnum))
+    status?: OrderStatusEnum,
     @Query('page') page?: number,
-    @Query('linit') limit?: number,
+    @Query('limit') limit?: number,
   ): Promise<{ orders: OrderModel[]; total: number }> {
-    return this.orderService.findAllByCustomerId(customerId, page, limit);
+    return this.orderService.findAllByCustomerId(
+      customerId,
+      status,
+      page,
+      limit,
+    );
   }
 
   @Get(':id')

@@ -8,6 +8,7 @@ import {
     ProductModel,
     VendorModel,
 } from '../models';
+import { OrderStatusEnum } from 'src/shared';
 
 @Injectable()
 export class OrderRepository extends BaseRepository<OrderModel> {
@@ -144,7 +145,7 @@ export class OrderRepository extends BaseRepository<OrderModel> {
                     as: 'customer',
                     required: true,
                     where: { id: customerId },
-                    include: ['user']
+                    include: ['user'],
                 },
                 {
                     model: VendorModel,
@@ -193,19 +194,23 @@ export class OrderRepository extends BaseRepository<OrderModel> {
     // Additional useful methods
     async findAllByCustomerId(
         customerId: number,
+        status: OrderStatusEnum = OrderStatusEnum.ALL,
         page: number = 1,
         limit: number = 10,
     ): Promise<{ orders: OrderModel[]; total: number }> {
         const offset = (page - 1) * limit;
+        let where = {};
+        if (status != OrderStatusEnum.ALL) where = { status: status };
 
         const { rows, count } = await this.orderModel.findAndCountAll({
+            where,
             include: [
                 {
                     model: CustomerModel,
                     as: 'customer',
                     required: true,
                     where: { id: customerId },
-                    include: ['user']
+                    include: ['user'],
                 },
                 {
                     model: VendorModel,
