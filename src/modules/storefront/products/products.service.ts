@@ -10,9 +10,9 @@ import {
     UpdateProductDto,
     SortOrder,
 } from './dto';
-import { ProductFormat } from './product-format.abstract';
 
 import { PaginationService } from 'src/shared';
+import { ProductFormat } from './product-format.abstract';
 
 @Injectable()
 export class ProductService extends ProductFormat {

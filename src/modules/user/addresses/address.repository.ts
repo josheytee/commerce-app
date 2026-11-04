@@ -10,6 +10,7 @@ import {
     AddressModel,
 } from 'src/infrastructure';
 import { AddressableTypeEnum, AddressTypeEnum } from 'src/shared';
+import { AddressSnapshot } from 'src/modules/vendor/orders/dto/address-snapshot.dto';
 
 @Injectable()
 export class AddressRepository extends BaseRepository<AddressModel> {

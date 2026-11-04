@@ -39,4 +39,12 @@ export * from './fulfillment-item.model';
 export * from './rider.model';
 export * from './delivery-tracking.model';
 export * from './search_documents.model';
-
+export * from './variant-store.model';
+export * from './shipments.model';
+export * from './checkout-session.model';
+export * from './digital-deliveries.model';
+export * from './inventory-reservation.model';
+export * from './order-status-history.model';
+export * from './refund.model';
+export * from './service-booking.model';
+export * from './shipment-events.model';

@@ -8,6 +8,8 @@ import {
   ProductModel,
   ProductVariantModel,
   InventoryModel,
+  InventoryReservationModel,
+  AttributeModel,
 } from 'src/infrastructure';
 import {
   CartItemRepository,
@@ -15,6 +17,8 @@ import {
   ProductRepository,
   VariantRepository,
   InventoryRepository,
+  InventoryReservationRepository,
+  AttributeRepository,
 } from 'src/infrastructure/database/repositories';
 import { InventoryModule, OrderModule } from 'src/modules/vendor';
 
@@ -24,8 +28,10 @@ import { InventoryModule, OrderModule } from 'src/modules/vendor';
       CartModel,
       CartItemModel,
       ProductModel,
-      ProductVariantModel,
+      AttributeModel,
       InventoryModel,
+      ProductVariantModel,
+      InventoryReservationModel,
     ]),
     InventoryModule,
     forwardRef(() => OrderModule),
@@ -37,6 +43,8 @@ import { InventoryModule, OrderModule } from 'src/modules/vendor';
     ProductRepository,
     VariantRepository,
     InventoryRepository,
+    InventoryReservationRepository,
+    AttributeRepository,
   ],
   controllers: [CartController],
   exports: [CartService, CartRepository, CartItemRepository],

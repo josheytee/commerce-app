@@ -13,7 +13,6 @@ import {
 import { StoreService } from './store.service';
 
 import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
-import { AuthenticatedRequest } from 'src/modules/auth/interfaces/authenticated-request.interface';
 import { CreateStoreDto, UpdateStoreDto } from './dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from 'src/shared/dto/common/api.response';
@@ -22,6 +21,7 @@ import { Permissions } from 'src/modules/user/permission/permissions.decorator';
 import { ProductModel, StoreModel } from 'src/infrastructure';
 import { Public } from 'src/modules/auth/decorators/public.decorator';
 import { ProductService } from '../products/services';
+import { AuthenticatedRequest } from 'src/modules/auth';
 
 @ApiBearerAuth()
 @ApiTags('Vendor - Stores')

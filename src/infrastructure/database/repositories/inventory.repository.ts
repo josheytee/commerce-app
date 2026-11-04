@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { InventoryModel } from 'src/infrastructure';
 import { BaseRepository } from './base.repository';
-import { Transaction } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 
 @Injectable()
 export class InventoryRepository extends BaseRepository<InventoryModel> {
@@ -18,7 +18,7 @@ export class InventoryRepository extends BaseRepository<InventoryModel> {
         transaction?: Transaction,
     ): Promise<InventoryModel> {
         return this.inventoryModel.findOne({
-            where: { product_variant_id: variantId },
+            where: { variant_id: variantId },
             transaction,
         });
     }
@@ -28,7 +28,7 @@ export class InventoryRepository extends BaseRepository<InventoryModel> {
         quantity: number,
         transaction?: Transaction,
     ): Promise<void> {
-        await this.inventoryModel.increment('reserved_quantity', {
+        await this.increment('reserved_quantity', {
             by: quantity,
             where: { product_variant_id: variantId },
             transaction,
@@ -40,10 +40,113 @@ export class InventoryRepository extends BaseRepository<InventoryModel> {
         quantity: number,
         transaction?: Transaction,
     ): Promise<void> {
-        await this.inventoryModel.decrement('reserved_quantity', {
+        await this.increment('reserved_quantity', {
             by: quantity,
             where: { product_variant_id: variantId },
             transaction,
+        });
+    }
+
+    async decrementQuantity(reservation: any, transaction?: Transaction) {
+        return await this.decrement(
+            {
+                quantity: reservation.quantity,
+                reserved_quantity: reservation.quantity,
+            },
+            {
+                where: {
+                    variant_id: reservation.variant_id,
+                    store_id: reservation.store_id,
+                },
+                transaction,
+            },
+        );
+    }
+
+    async decrement(data: any, conditionOrOptions: any) {
+        if (conditionOrOptions && conditionOrOptions.where) {
+            return await this.inventoryModel.decrement(data, conditionOrOptions);
+        }
+        return await this.inventoryModel.decrement(data, {
+            where: conditionOrOptions,
+        });
+    }
+
+    async increment(data: any, conditionOrOptions: any) {
+        if (conditionOrOptions && conditionOrOptions.where) {
+            return await this.inventoryModel.increment(data, conditionOrOptions);
+        }
+        return await this.inventoryModel.increment(data, {
+            where: conditionOrOptions,
+        });
+    }
+
+
+    async zeroOutByVariant(variantId: number, t?: Transaction) {
+        return this.model.update(
+            { quantity: 0, reserved_quantity: 0 },
+            { where: { variant_id: variantId }, transaction: t },
+        );
+    }
+
+    /**
+  * Create an inventory row for a variant at a store.
+  * Idempotency is enforced by the unique (variant_id, store_id) constraint,
+  * so duplicate calls will throw — callers should know this is the "first insert".
+  */
+    async createForVariant(
+        variantId: number,
+        storeId: number,
+        quantity: number,
+        t?: Transaction,
+    ): Promise<InventoryModel> {
+        return this.model.create(
+            {
+                variant_id: variantId,
+                store_id: storeId,
+                quantity,
+                reserved_quantity: 0,
+            } as any,
+            { transaction: t },
+        );
+    }
+
+    /**
+     * Zero out stock for a batch of variants (used on soft-delete).
+     * Keeps the rows so history is preserved.
+     */
+    async zeroOutByVariants(ids: number[], t?: Transaction): Promise<number> {
+        if (!ids.length) return 0;
+        const [affected] = await this.model.update(
+            { quantity: 0, reserved_quantity: 0 },
+            {
+                where: { variant_id: { [Op.in]: ids } },
+                transaction: t,
+            },
+        );
+        return affected;
+    }
+
+    /**
+     * Find-or-create semantics for "set initial stock" during updates.
+     * Returns [instance, created].
+     */
+    async findOrCreateForVariant(
+        variantId: number,
+        storeId: number,
+        quantity: number,
+        t?: Transaction,
+    ): Promise<[InventoryModel, boolean]> {
+        return this.model.findOrCreate({
+            where: { variant_id: variantId, store_id: storeId },
+            defaults: {
+                variant_id: variantId,
+                store_id: storeId,
+                quantity,
+                reserved_quantity: 0,
+            } as any,
+            transaction: t,
+            returning: true,
         });
     }
 }

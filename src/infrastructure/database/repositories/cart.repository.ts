@@ -9,6 +9,8 @@ import {
     StoreModel,
     VendorModel,
 } from '../models';
+import { CartStatusEnum } from 'src/shared';
+import { Transaction } from 'sequelize';
 
 @Injectable()
 export class CartRepository extends BaseRepository<CartModel> {
@@ -23,10 +25,37 @@ export class CartRepository extends BaseRepository<CartModel> {
         return await this.findOne({ where: { customer_id: customerId } });
     }
 
-    async findActiveCart(customerId: number) {
+    /**
+     * Lock the cart row for update. Use inside a transaction to serialize
+     * concurrent checkout attempts on the same cart.
+     *
+     * Deliberately has no includes — Postgres forbids FOR UPDATE across
+     * outer joins.
+     */
+    async lockActiveCart(
+        customerId: number,
+        transaction?: Transaction,
+    ): Promise<CartModel | null> {
+        return this.findOne({
+            where: { customer_id: customerId, status: CartStatusEnum.ACTIVE },
+            lock: transaction.LOCK.UPDATE,
+            transaction,
+        });
+    }
+    //   async findActiveCart(
+    //     customerId: number,
+    //     transaction?: Transaction,
+    //   ): Promise<CartModel | null> {
+    //     return this.findOne({
+    //       where: { customer_id: customerId, status: CartStatusEnum.ACTIVE },
+    //       transaction,
+    //     });
+    //   }
+    async findActiveCart(customerId: number, transaction?: Transaction) {
         return this.model.findOne({
             where: {
                 customer_id: customerId,
+                status: CartStatusEnum.ACTIVE,
                 // expires_at: { [Op.gt]: new Date() },
             },
             include: [
@@ -66,6 +95,7 @@ export class CartRepository extends BaseRepository<CartModel> {
                     ],
                 },
             ],
+            transaction,
         });
     }
 }

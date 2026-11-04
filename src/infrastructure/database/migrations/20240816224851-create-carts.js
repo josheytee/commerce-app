@@ -22,11 +22,19 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      session_token: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
       },
       updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      expires_at: {
         type: Sequelize.DATE,
         allowNull: false,
       },

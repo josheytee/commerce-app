@@ -101,4 +101,5 @@ export class StoreModel extends Model<StoreModel> {
 
   @BelongsToMany(() => RoleModel, () => UserStoreRoleModel)
   roles: RoleModel[];
+  fulfillment_types: any;
 }

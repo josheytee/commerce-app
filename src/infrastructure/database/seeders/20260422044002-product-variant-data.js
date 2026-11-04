@@ -5,207 +5,210 @@ const { faker } = require('@faker-js/faker');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // Get variable products
-    const [products] = await queryInterface.sequelize.query(`
-      SELECT id, base_price, name, store_id
-      FROM products 
-      WHERE product_type = 'variable' 
-      LIMIT 20;
-    `);
+    const [products] = await queryInterface.sequelize.query(
+      'SELECT id, product_type, base_price, vendor_id FROM products;',
+    );
 
     if (!products.length) {
-      console.log('No variable products found');
+      console.log('Skipping product variants seeder: no products found');
       return;
     }
 
-    // Get warehouses for inventory
-    const [warehouses] = await queryInterface.sequelize.query(`
-      SELECT id FROM warehouses LIMIT 5;
-    `);
-
-    // Fetch attributes
-    const [dbAttributes] = await queryInterface.sequelize.query(`
-      SELECT a.id AS attr_id, a.code, av.id AS value_id, 
-             av.value, av.display_value, av.color_code
-      FROM attributes a
-      JOIN attribute_values av ON av.attribute_id = a.id
-      WHERE a.code IN ('color', 'size', 'material')
-      ORDER BY a.code, av.sort_order;
-    `);
-
-    const attributes = dbAttributes.reduce((acc, row) => {
-      if (!acc[row.code]) acc[row.code] = { id: row.attr_id, values: [] };
-      acc[row.code].values.push({
-        valueId: row.value_id,
-        value: row.value,
-        display: row.display_value,
-        colorCode: row.color_code,
-      });
-      return acc;
-    }, {});
-
-    const colors = attributes.color?.values || [];
-    const sizes = attributes.size?.values || [];
-    const materials = attributes.material?.values || [];
-
-    if (!colors.length || !sizes.length) {
-      console.log('Missing color/size attributes');
-      return;
-    }
+    const stockStatuses = [
+      'active',
+      'inactive',
+      'out_of_stock',
+      // 'low_stock',
+      // 'backorder',
+      'discontinued',
+    ];
+    const colors = [
+      'Red',
+      'Blue',
+      'Black',
+      'White',
+      'Green',
+      'Navy',
+      'Gray',
+      'Yellow',
+      'Purple',
+      'Orange',
+      'Pink',
+      'Teal',
+    ];
+    const sizes = [
+      'XS',
+      'S',
+      'M',
+      'L',
+      'XL',
+      'XXL',
+      '36',
+      '38',
+      '40',
+      '42',
+      '44',
+      '46',
+      '48',
+    ];
 
     const variants = [];
-    const variantLinks = [];
-    const shippingClasses = ['standard', 'express', 'free', 'heavy', 'fragile'];
+    const mediaRecords = [];
 
     for (const product of products) {
-      const count = faker.number.int({ min: 3, max: 8 });
-      const used = new Set();
-      let created = 0;
+      const isVariable = product.product_type === 'variable';
+      const variantCount = isVariable
+        ? faker.number.int({ min: 3, max: 12 })
+        : 1;
 
-      while (created < count && used.size < count * 3) {
-        const color = faker.helpers.arrayElement(colors);
-        const size = faker.helpers.arrayElement(sizes);
-        const material = materials.length
-          ? faker.helpers.arrayElement(materials)
-          : null;
-        const key = `${color.value}-${size.value}-${material?.value || 'none'}`;
+      // Track used combinations for variable products to avoid duplicates
+      const usedCombinations = new Set();
 
-        if (used.has(key)) continue;
-        used.add(key);
-        created++;
+      for (let i = 0; i < variantCount; i++) {
+        let variantName = 'Default';
+        let metadata = null;
 
-        const hasPrice = faker.datatype.boolean(0.5);
-        const price = hasPrice
-          ? parseFloat(
-              (
-                product.base_price *
-                faker.number.float({ min: 0.85, max: 1.35 })
-              ).toFixed(2),
+        if (isVariable) {
+          let color, size, comboKey;
+          let attempts = 0;
+
+          // Ensure unique color/size combinations per product
+          do {
+            color = faker.helpers.arrayElement(colors);
+            size = faker.helpers.arrayElement(sizes);
+            comboKey = `${color}-${size}`;
+            attempts++;
+          } while (usedCombinations.has(comboKey) && attempts < 50);
+
+          usedCombinations.add(comboKey);
+          variantName = `${color} / Size ${size}`;
+          metadata = JSON.stringify({
+            color,
+            size,
+            origin: faker.location.country(),
+          });
+        }
+
+        const basePrice = parseFloat(product.base_price);
+        const hasPriceOverride =
+          isVariable && faker.datatype.boolean({ probability: 0.7 });
+        const price = hasPriceOverride
+          ? Math.max(
+              5,
+              basePrice +
+                faker.number.float({ min: -15, max: 40, fractionDigits: 2 }),
             )
-          : null;
-        const final = price || parseFloat(product.base_price);
+          : basePrice;
 
-        const idx = variants.length;
+        const compareAtPrice = faker.datatype.boolean({ probability: 0.25 })
+          ? parseFloat((price * 1.2).toFixed(2))
+          : null;
+
+        const isDigitalOrService =
+          product.product_type === 'digital' ||
+          product.product_type === 'service';
+
         variants.push({
           product_id: product.id,
-          sku: `${faker.string.alpha(3).toUpperCase()}-${product.id}-${faker.string.alphanumeric(4).toUpperCase()}`,
-          barcode: faker.datatype.boolean(0.6)
+          sku: `VAR-${product.vendor_id}-${product.id}-${String(i).padStart(3, '0')}`,
+          barcode: faker.datatype.boolean({ probability: 0.6 })
             ? faker.string.numeric(13)
             : null,
-          attributes: JSON.stringify({
-            color: color.value,
-            size: size.value,
-            ...(material && { material: material.value }),
-          }),
-          variant_name: [color.display, size.display, material?.display]
-            .filter(Boolean)
-            .join(' / '),
+          mpn: faker.datatype.boolean({ probability: 0.3 })
+            ? `${faker.string.alpha({ length: 3 }).toUpperCase()}-${faker.string.numeric(6)}`
+            : null,
+          variant_name: variantName,
           price: price,
-          compare_at_price: parseFloat((final * 1.25).toFixed(2)),
-          cost_price: parseFloat((final * 0.5).toFixed(2)),
-          image_url: faker.image.url({ width: 800, height: 800 }),
-          weight: faker.number.float({ min: 0.1, max: 25, fractionDigits: 3 }),
-          length: faker.number.float({ min: 5, max: 100, fractionDigits: 1 }),
-          width: faker.number.float({ min: 5, max: 80, fractionDigits: 1 }),
-          height: faker.number.float({ min: 1, max: 50, fractionDigits: 1 }),
-          requires_shipping: faker.datatype.boolean(0.9),
-          shipping_class: faker.helpers.arrayElement(shippingClasses),
-          metadata: JSON.stringify({
-            warehouse: faker.location.city(),
-            color_hex: color.colorCode,
-          }),
-          status: faker.helpers.arrayElement([
-            'active',
-            'inactive',
-            'out_of_stock',
-            'discontinued',
-          ]),
-          created_at: faker.date.past({ years: 1 }),
+          compare_at_price: compareAtPrice,
+          cost_price: parseFloat((price * 0.55).toFixed(2)),
+          image_url: faker.datatype.boolean({ probability: 0.4 })
+            ? `https://picsum.photos/seed/${faker.string.alphanumeric(10)}/400/400`
+            : null,
+          weight: isDigitalOrService
+            ? null
+            : faker.number.float({ min: 0.1, max: 20, fractionDigits: 2 }),
+          length: faker.datatype.boolean({ probability: 0.4 })
+            ? faker.number.float({ min: 5, max: 100, fractionDigits: 2 })
+            : null,
+          width: faker.datatype.boolean({ probability: 0.4 })
+            ? faker.number.float({ min: 5, max: 80, fractionDigits: 2 })
+            : null,
+          height: faker.datatype.boolean({ probability: 0.4 })
+            ? faker.number.float({ min: 1, max: 60, fractionDigits: 2 })
+            : null,
+          requires_shipping: isDigitalOrService ? false : true,
+          shipping_class: faker.datatype.boolean({ probability: 0.25 })
+            ? faker.helpers.arrayElement([
+                'standard',
+                'express',
+                'free',
+                'heavy',
+                'fragile',
+              ])
+            : null,
+          metadata: metadata,
+          status: faker.helpers.arrayElement(stockStatuses),
+          created_at: faker.date.past({ years: 2 }),
           updated_at: faker.date.recent(),
         });
-
-        variantLinks.push(
-          { idx, attrId: attributes.color.id, valId: color.valueId },
-          { idx, attrId: attributes.size.id, valId: size.valueId },
-        );
-        if (material)
-          variantLinks.push({
-            idx,
-            attrId: attributes.material.id,
-            valId: material.valueId,
-          });
       }
     }
 
-    const inserted = await queryInterface.bulkInsert(
+    // Insert variants
+    const insertedVariants = await queryInterface.bulkInsert(
       'product_variants',
       variants,
-      { returning: ['id'] },
+      { returning: ['id', 'product_id'] },
     );
-    console.log(`Inserted ${inserted.length} variants`);
 
-    // Junction table
-    const links = variantLinks.map((l) => ({
-      variant_id: inserted[l.idx].id,
-      attribute_id: l.attrId,
-      attribute_value_id: l.valId,
-      // created_at: new Date(),
-      // updated_at: new Date(),
-    }));
-    await queryInterface.bulkInsert('product_variant_attribute_values', links);
-    console.log(`Inserted ${links.length} attribute links`);
+    console.log(`Inserted ${insertedVariants.length} product variants`);
 
-    // Create inventory records matching your schema
-    const inventoryRecords = inserted.map((v, i) => {
-      const variant = variants[i];
-      const product = products.find((p) => p.id === variant.product_id);
-      const stockQty = faker.number.int({ min: 0, max: 500 });
-      const reservedQty = faker.number.int({
-        min: 0,
-        max: Math.min(stockQty, 50),
-      });
+    // Generate gallery media for variants (polymorphic)
+    for (const variant of insertedVariants) {
+      const imageCount = faker.number.int({ min: 0, max: 3 });
 
-      // Determine stock status based on quantity
-      let stockStatus = 'in_stock';
-      if (stockQty === 0) stockStatus = 'out_of_stock';
-      else if (stockQty <= 10) stockStatus = 'low_stock';
-      else if (faker.datatype.boolean(0.1)) stockStatus = 'backorder';
+      for (let j = 0; j < imageCount; j++) {
+        const imageSeed = faker.string.alphanumeric(12);
+        mediaRecords.push({
+          url: `https://picsum.photos/seed/${imageSeed}/600/600`,
+          key: `variants/${variant.id}/${imageSeed}.jpg`,
+          thumbnail_url: `https://picsum.photos/seed/${imageSeed}/200/200`,
+          medium_url: `https://picsum.photos/seed/${imageSeed}/400/400`,
+          alt_text: faker.commerce.productName(),
+          title: faker.commerce.productName().slice(0, 100),
+          caption: faker.lorem.sentence(8),
+          type: 'variant_image',
+          entity_type: 'product_variant',
+          entity_id: variant.id,
+          sort_order: j,
+          is_primary: j === 0,
+          metadata: JSON.stringify({
+            width: 600,
+            height: 600,
+            format: 'jpg',
+            seed: imageSeed,
+          }),
+          file_size: faker.number.int({ min: 8000, max: 2000000 }),
+          mime_type: 'image/jpeg',
+          uploaded_by: faker.number.int({ min: 1, max: 10 }),
+          created_at: faker.date.past({ years: 2 }),
+          updated_at: faker.date.recent(),
+        });
+      }
+    }
 
-      return {
-        store_id: product?.store_id || null,
-        product_id: variant.product_id,
-        product_variant_id: v.id,
-        quantity: stockQty - reservedQty, // Available quantity
-        stock_quantity: stockQty, // Total physical stock
-        stock_status: stockStatus,
-        low_stock_threshold: faker.number.int({ min: 5, max: 20 }),
-        reserved_quantity: reservedQty,
-        track_quantity: faker.datatype.boolean(0.8),
-        allow_backorders: faker.datatype.boolean(0.2),
-        warehouse_id: warehouses.length
-          ? faker.helpers.arrayElement(warehouses).id
-          : null,
-        location_details: JSON.stringify({
-          aisle: faker.string.alpha(1).toUpperCase(),
-          shelf: faker.number.int({ min: 1, max: 20 }),
-          bin: faker.number.int({ min: 1, max: 50 }),
-        }),
-        created_at: faker.date.past({ years: 1 }),
-        updated_at: new Date(),
-      };
-    });
+    if (mediaRecords.length > 0) {
+      await queryInterface.bulkInsert('media', mediaRecords);
+      console.log(`Inserted ${mediaRecords.length} variant media records`);
+    }
 
-    await queryInterface.bulkInsert('inventories', inventoryRecords);
-    console.log(`Inserted ${inventoryRecords.length} inventory records`);
-
-    return inserted;
+    return insertedVariants;
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('inventories', null, {});
     await queryInterface.bulkDelete(
-      'product_variant_attribute_values',
-      null,
+      'media',
+      { entity_type: 'product_variant' },
       {},
     );
     await queryInterface.bulkDelete('product_variants', null, {});

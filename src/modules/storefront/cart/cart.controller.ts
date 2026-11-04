@@ -30,18 +30,24 @@ export class CartController {
   @Get()
   getCart(@Req() req) {
     const customerId = req.user?.customer?.id;
-    console.log('customerId', customerId)
+    console.log('customerId', customerId);
     return this.cartService.getCart(customerId);
   }
 
   @Patch('items/:id')
-  updateItem(@Param('id') id: number, @Body() dto: UpdateCartItemDto) {
-    return this.cartService.updateItem(id, dto.quantity);
+  updateItem(
+    @Req() req,
+    @Param('id') id: number,
+    @Body() dto: UpdateCartItemDto,
+  ) {
+    const customerId = req.user?.customer?.id;
+    return this.cartService.updateItem(customerId, id, dto.quantity);
   }
 
   @Delete('items/:id')
-  removeItem(@Param('id') id: number) {
-    return this.cartService.removeItem(id);
+  removeItem(@Req() req, @Param('id') id: number) {
+    const customerId = req.user?.customer?.id;
+    return this.cartService.removeItem(customerId, id);
   }
 
   @Delete('clear')

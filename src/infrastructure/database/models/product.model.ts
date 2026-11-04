@@ -11,25 +11,27 @@ import {
   DataType,
   Default,
   AllowNull,
-  Unique,
   CreatedAt,
   UpdatedAt,
   DeletedAt,
-  Index,
   BelongsToMany,
 } from 'sequelize-typescript';
 import { SectionModel } from './section.model';
 import { StoreModel } from './store.model';
-import { InventoryModel } from './inventory.model';
 import { ProductVariantModel } from './product-variant.model';
 import { MediaModel } from './media.model';
 import { VendorModel } from './vendor.model';
 import { ReviewModel } from './review.model';
 import { DiscountModel } from './discount.model';
 import { TagModel } from './tag.model';
-import { MediaTypeEnum, ProductStatusEnum, ProductTypeEnum } from 'src/shared';
-import { SearchDocumentModel } from './search_documents.model';
 import { ProductAttributeValueModel } from './product-attribute-values.model';
+import { SearchDocumentModel } from './search_documents.model';
+import {
+  MediaEntityTypeEnum,
+  MediaTypeEnum,
+  ProductStatusEnum,
+  ProductTypeEnum,
+} from 'src/shared';
 
 @Table({
   timestamps: true,
@@ -44,23 +46,16 @@ import { ProductAttributeValueModel } from './product-attribute-values.model';
     },
     { fields: ['store_id'], name: 'products_store_id_idx' },
     { fields: ['section_id'], name: 'products_section_id_idx' },
+    { fields: ['vendor_id'], name: 'products_vendor_id_idx' },
     { fields: ['status'], name: 'products_status_idx' },
-    { fields: ['price'], name: 'products_price_idx' },
+    { fields: ['product_type'], name: 'products_type_idx' },
     { fields: ['created_at'], name: 'products_created_at_idx' },
     { fields: ['updated_at'], name: 'products_updated_at_idx' },
-    {
-      name: 'products_vendor_sku_unique',
-      unique: true,
-      fields: ['vendor_id', 'sku'],
-    },
-    { fields: ['vendor_id'], name: 'products_vendor_id_idx' },
     { fields: ['is_featured'], name: 'products_featured_idx' },
     { fields: ['is_active'], name: 'products_active_idx' },
-    { fields: ['stock_quantity'], name: 'products_stock_idx' },
-    {
-      fields: ['weight', 'length', 'width', 'height'],
-      name: 'products_shipping_idx',
-    },
+    { fields: ['min_variant_price'], name: 'products_min_price_idx' },
+    { fields: ['max_variant_price'], name: 'products_max_price_idx' },
+    { fields: ['published_at'], name: 'products_published_at_idx' },
   ],
 })
 export class ProductModel extends Model<ProductModel> {
@@ -69,12 +64,12 @@ export class ProductModel extends Model<ProductModel> {
   @Column
   id: number;
 
-  // Basic Information
+  // ============ BASIC INFORMATION ============
   @AllowNull(false)
   @Column({ type: DataType.STRING(255) })
   name: string;
 
-  @Unique
+  // Scoped uniqueness enforced via composite index (store_id + slug)
   @AllowNull(false)
   @Column({ type: DataType.STRING(255) })
   slug: string;
@@ -88,18 +83,31 @@ export class ProductModel extends Model<ProductModel> {
   @Column({ type: DataType.TEXT })
   specification: string;
 
-  // Pricing
+  // ============ PRICING (display defaults; variants are source of truth) ============
+  // Denormalized range of variant prices — updated via hooks on ProductVariant
+  @Default(0)
+  @Column({ type: DataType.DECIMAL(12, 2) })
+  min_variant_price: number;
+
+  @Default(0)
+  @Column({ type: DataType.DECIMAL(12, 2) })
+  max_variant_price: number;
+
+  // Currency for this product (multi-currency support)
+  @Default('USD')
   @AllowNull(false)
-  @Column({ type: DataType.DECIMAL(10, 2) })
-  base_price: number;
+  @Column({ type: DataType.STRING(3) })
+  currency: string;
 
-  @Column({ type: DataType.DECIMAL(10, 2) })
-  compare_at_price: number;
+  // Tax
+  @Default(false)
+  @Column({ type: DataType.BOOLEAN })
+  is_taxable: boolean;
 
-  @Column({ type: DataType.DECIMAL(10, 2) })
-  cost_price: number;
+  @Column({ type: DataType.STRING(100) })
+  tax_class: string;
 
-  // SEO & Metadata
+  // ============ SEO & METADATA ============
   @Column({ type: DataType.STRING(160) })
   meta_title: string;
 
@@ -109,7 +117,7 @@ export class ProductModel extends Model<ProductModel> {
   @Column({ type: DataType.STRING(255) })
   meta_keywords: string;
 
-  // Status & Flags
+  // ============ STATUS & FLAGS ============
   @Default(ProductStatusEnum.DRAFT)
   @Column({ type: DataType.ENUM(...Object.values(ProductStatusEnum)) })
   status: ProductStatusEnum;
@@ -132,11 +140,16 @@ export class ProductModel extends Model<ProductModel> {
 
   @Default(false)
   @Column({ type: DataType.BOOLEAN })
-  is_taxable: boolean;
+  allow_backorders: boolean;
 
+  // ============ DENORMALIZED METRICS (updated via events/hooks) ============
   @Default(0)
   @Column({ type: DataType.INTEGER })
   total_ratings: number;
+
+  @Default(0)
+  @Column({ type: DataType.DECIMAL(3, 2) })
+  average_rating: number;
 
   @Default(0)
   @Column({ type: DataType.INTEGER })
@@ -146,16 +159,7 @@ export class ProductModel extends Model<ProductModel> {
   @Column({ type: DataType.INTEGER })
   views: number;
 
-  // Denormalized for fast search/filtering (updated via hooks)
-  @Default(0)
-  @Column({ type: DataType.DECIMAL(12, 2) })
-  min_variant_price: number;
-
-  @Default(0)
-  @Column({ type: DataType.DECIMAL(12, 2) })
-  max_variant_price: number;
-
-  // Dates
+  // ============ AVAILABILITY WINDOW ============
   @Column({ type: DataType.DATE })
   published_at: Date;
 
@@ -165,16 +169,18 @@ export class ProductModel extends Model<ProductModel> {
   @Column({ type: DataType.DATE })
   available_to: Date;
 
-  // Relations
+  // ============ RELATIONS ============
   @ForeignKey(() => SectionModel)
   @Column
   section_id: number;
 
   @ForeignKey(() => StoreModel)
+  @AllowNull(false)
   @Column
   store_id: number;
 
   @ForeignKey(() => VendorModel)
+  @AllowNull(false)
   @Column
   vendor_id: number;
 
@@ -187,71 +193,75 @@ export class ProductModel extends Model<ProductModel> {
   @BelongsTo(() => VendorModel)
   vendor: VendorModel;
 
-  // Child associations
-  @HasMany(() => InventoryModel)
-  inventories: InventoryModel[];
+  // ============ CHILD ASSOCIATIONS ============
 
-  // Media association (polymorphic)
-  @HasMany(() => MediaModel, {
-    foreignKey: 'entity_id',
-    constraints: false,
-    scope: {
-      entity_type: 'product',
-      type: MediaTypeEnum.PRODUCT_IMAGE,
-    },
-  })
-  gallery_images: MediaModel[];
-
-  // Media
-  @HasOne(() => MediaModel, {
-    foreignKey: 'entity_id',
-    constraints: false,
-    scope: {
-      entity_type: 'product',
-      type: MediaTypeEnum.PRODUCT_IMAGE,
-      is_primary: true,
-    },
-  })
-  featured_image: MediaModel;
-
-  // Variants association
+  // Every product has at least one variant (simple = single default variant)
   @HasMany(() => ProductVariantModel, {
     foreignKey: 'product_id',
     as: 'variants',
   })
   variants: ProductVariantModel[];
 
-  // Reviews association
+  // Product-level attribute values (used for SIMPLE products or shared attrs)
+  @HasMany(() => ProductAttributeValueModel, {
+    foreignKey: 'product_id',
+    as: 'attribute_values',
+  })
+  attribute_values: ProductAttributeValueModel[];
+
+  // Unified media association — use scopes to filter
+  @HasMany(() => MediaModel, {
+    foreignKey: 'entity_id',
+    constraints: false,
+    scope: {
+      entity_type: MediaEntityTypeEnum.PRODUCT,
+    },
+  })
+  gallery_images: MediaModel[];
+
+  @HasOne(() => MediaModel, {
+    foreignKey: 'entity_id',
+    constraints: false,
+    scope: {
+      entity_type: MediaEntityTypeEnum.PRODUCT,
+      is_primary: true,
+    },
+  })
+  featured_image: MediaModel;
+
+  // Reviews (polymorphic)
   @HasMany(() => ReviewModel, {
     foreignKey: 'entity_id',
     constraints: false,
-    scope: {
-      entity_type: 'product',
-    },
+    scope: { entity_type: MediaEntityTypeEnum.PRODUCT },
   })
   reviews: ReviewModel[];
 
-  // Tags association (many-to-many)
+  // Tags (polymorphic)
   @HasMany(() => TagModel, {
     foreignKey: 'entity_id',
     constraints: false,
-    scope: {
-      entity_type: 'product',
-    },
+    scope: { entity_type: MediaEntityTypeEnum.PRODUCT },
   })
   tags: TagModel[];
 
-  // Discounts association (polymorphic)
+  // Discounts (polymorphic)
   @HasMany(() => DiscountModel, {
     foreignKey: 'entity_id',
     constraints: false,
-    scope: {
-      entity_type: 'product',
-    },
+    scope: { entity_type: MediaEntityTypeEnum.PRODUCT },
   })
   discounts: DiscountModel[];
 
-  // Timestamps
+  // Search index (one-to-one)
+  @HasOne(() => SearchDocumentModel, {
+    foreignKey: 'entity_id',
+    constraints: false,
+    scope: { entity_type: MediaEntityTypeEnum.PRODUCT },
+  })
+  search_document: SearchDocumentModel;
+
+  // ============ TIMESTAMPS ============
   @CreatedAt
   @Column
   created_at: Date;
@@ -264,61 +274,33 @@ export class ProductModel extends Model<ProductModel> {
   @Column
   deleted_at: Date;
 
-  // Product-level attributes (applies to all variants)
-  @HasMany(() => ProductAttributeValueModel)
-  attribute_values: ProductAttributeValueModel[];
+  // ============ VIRTUAL FIELDS ============
 
-  // Media gallery (polymorphic)
-  @HasMany(() => MediaModel, {
-    foreignKey: 'entity_id',
-    constraints: false,
-    scope: { entity_type: 'product' },
-  })
-  media: MediaModel[];
-
-  // Search index sync
-  @HasOne(() => SearchDocumentModel, {
-    foreignKey: 'entity_id',
-    constraints: false,
-    scope: { entity_type: 'product' },
-  })
-  search_document: SearchDocumentModel;
-
-  // Virtual fields / computed properties
-
-  get has_variants(): boolean {
-    return this.product_type === ProductTypeEnum.VARIABLE;
-  }
-
-  // Virtuals
   get is_configurable(): boolean {
     return this.product_type === ProductTypeEnum.VARIABLE;
   }
 
-  get formatted_price(): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(this.base_price);
+  get is_simple(): boolean {
+    return this.product_type === ProductTypeEnum.SIMPLE;
   }
 
-  get display_price(): string {
-    if (
-      this.is_configurable &&
-      this.min_variant_price !== this.max_variant_price
-    ) {
-      return `$${this.min_variant_price} - $${this.max_variant_price}`;
-    }
-    return `$${this.base_price}`;
-  }
-
-  get attribute_combination_key(): string {
-    // "color:red|size:42" for fast lookup
+  get has_price_range(): boolean {
     return (
-      this.attribute_values
-        ?.sort((a, b) => a.attribute.code.localeCompare(b.attribute.code))
-        .map((av) => `${av.attribute.code}:${av.attribute_value.value}`)
-        .join('|') ?? ''
+      this.is_configurable &&
+      Number(this.min_variant_price) !== Number(this.max_variant_price)
     );
+  }
+
+  get formatted_price_range(): string {
+    const fmt = (v: number) =>
+      new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: this.currency || 'USD',
+      }).format(v);
+
+    if (this.has_price_range) {
+      return `${fmt(this.min_variant_price)} – ${fmt(this.max_variant_price)}`;
+    }
+    return fmt(this.min_variant_price);
   }
 }

@@ -4,19 +4,46 @@ import {
   Model,
   PrimaryKey,
   AutoIncrement,
+  ForeignKey,
+  BelongsTo,
   DataType,
+  Default,
   AllowNull,
-  Unique,
   HasMany,
-  Index,
+  CreatedAt,
+  UpdatedAt,
+  DeletedAt,
 } from 'sequelize-typescript';
 import { AttributeValueModel } from './attribute-value.model';
+import { VendorModel } from './vendor.model';
 import { AttributeTypeEnum } from 'src/shared';
 
 @Table({
   tableName: 'attributes',
   timestamps: true,
   underscored: true,
+  paranoid: true, // soft-delete: preserves variant→attribute links
+  indexes: [
+    // Vendor-scoped uniqueness (also covers platform rows when vendor_id is set)
+    {
+      name: 'attributes_vendor_code_uidx',
+      unique: true,
+      fields: ['vendor_id', 'code'],
+    },
+    // Platform-scoped uniqueness — Postgres partial index
+    // (NULL vendor_id would otherwise bypass the composite unique above)
+    {
+      name: 'attributes_platform_code_uidx',
+      unique: true,
+      fields: ['code'],
+      where: { vendor_id: null },
+    },
+    // Fast lookup: "all platform attributes" or "all attributes for vendor X"
+    { fields: ['vendor_id'], name: 'attributes_vendor_id_idx' },
+    // UI filtering
+    { fields: ['is_filterable'], name: 'attributes_filterable_idx' },
+    { fields: ['is_variant_attribute'], name: 'attributes_variant_attr_idx' },
+  ],
 })
 export class AttributeModel extends Model<AttributeModel> {
   @PrimaryKey
@@ -24,41 +51,94 @@ export class AttributeModel extends Model<AttributeModel> {
   @Column
   id: number;
 
+  // ============ OWNERSHIP ============
+  // NULL = platform attribute (admin-managed, global)
+  // set  = vendor-owned attribute
+  @ForeignKey(() => VendorModel)
+  @AllowNull(true)
+  @Column
+  vendor_id: number | null;
+
+  @BelongsTo(() => VendorModel, {
+    foreignKey: 'vendor_id',
+    as: 'vendor',
+  })
+  vendor: VendorModel;
+
+  // ============ IDENTITY ============
   @AllowNull(false)
   @Column({ type: DataType.STRING(100) })
   name: string; // "Color"
 
-  @Unique
+  // Unique per vendor; unique globally when vendor_id IS NULL
   @AllowNull(false)
   @Column({ type: DataType.STRING(100) })
-  code: string; // "color" (URL-friendly)
+  code: string; // "color" (URL-safe, lowercase)
 
   @Column({ type: DataType.TEXT })
   description: string;
 
+  // ============ BEHAVIOR ============
+  @Default(AttributeTypeEnum.SELECT)
   @AllowNull(false)
   @Column({
     type: DataType.ENUM(...Object.values(AttributeTypeEnum)),
-    defaultValue: AttributeTypeEnum.SELECT,
   })
   type: AttributeTypeEnum;
 
-  @Column({ type: DataType.INTEGER, defaultValue: 0 })
-  sort_order: number; // Display order in filters
+  @Default(0)
+  @Column({ type: DataType.INTEGER })
+  sort_order: number;
 
-  @Column({ type: DataType.BOOLEAN, defaultValue: true })
-  is_filterable: boolean; // Show in sidebar filters?
+  @Default(true)
+  @Column({ type: DataType.BOOLEAN })
+  is_filterable: boolean;
 
-  @Column({ type: DataType.BOOLEAN, defaultValue: true })
-  is_visible: boolean; // Show on product page?
+  @Default(true)
+  @Column({ type: DataType.BOOLEAN })
+  is_visible: boolean;
 
-  @Column({ type: DataType.BOOLEAN, defaultValue: false })
-  is_variant_attribute: boolean; // Can be used for variants?
+  @Default(false)
+  @Column({ type: DataType.BOOLEAN })
+  is_variant_attribute: boolean;
 
-  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  @Default(false)
+  @Column({ type: DataType.BOOLEAN })
   is_required: boolean;
 
-  // Predefined values for SELECT/MULTI_SELECT types
-  @HasMany(() => AttributeValueModel)
+  // Platform can lock a vendor attribute to prevent vendor edits
+  // (e.g., an admin-defined "Color" that vendors must use as-is)
+  @Default(false)
+  @Column({ type: DataType.BOOLEAN })
+  is_locked: boolean;
+
+  // ============ RELATIONS ============
+  @HasMany(() => AttributeValueModel, {
+    foreignKey: 'attribute_id',
+    as: 'values',
+  })
   values: AttributeValueModel[];
+
+  // ============ TIMESTAMPS ============
+  @CreatedAt
+  @Column
+  created_at: Date;
+
+  @UpdatedAt
+  @Column
+  updated_at: Date;
+
+  @DeletedAt
+  @Column
+  deleted_at: Date;
+
+  // ============ VIRTUALS ============
+
+  get is_platform(): boolean {
+    return this.vendor_id === null;
+  }
+
+  get is_vendor_owned(): boolean {
+    return this.vendor_id !== null;
+  }
 }

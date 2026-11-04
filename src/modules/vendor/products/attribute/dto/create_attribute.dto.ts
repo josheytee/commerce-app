@@ -89,4 +89,22 @@ export class CreateAttributeDto {
   @IsOptional()
   @IsBoolean()
   is_required?: boolean;
+
+
+  @ApiPropertyOptional({
+    description: 'Vendor ID (null for platform attributes)',
+    example: null,
+  })
+  @IsOptional()
+  @IsNumber()
+  vendor_id?: number | null; // null for platform attributes
+
+  @ApiPropertyOptional({
+    description: 'Is this attribute locked (cannot be modified by vendors)?',
+    example: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_locked?: boolean; // true if platform attribute that cannot be modified by vendors
 }

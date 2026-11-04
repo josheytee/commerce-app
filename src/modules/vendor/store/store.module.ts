@@ -21,15 +21,28 @@ import {
   ProductVariantModel,
   InventoryModel,
   OrderModel,
+  VariantStoreModel,
+  AttributeModel,
+  AttributeValueModel,
+  DiscountModel,
+  ProductVariantAttributeValueModel,
 } from 'src/infrastructure';
 
-import { ProductRepository } from 'src/infrastructure/database/repositories/product.repository';
-import { VariantRepository as ProductVariantRepository } from 'src/infrastructure/database/repositories/variant.repository';
 import { ProductsModule } from 'src/modules/storefront/products/products.module';
 import { PricingService, ProductService } from '../products/services';
+
+import {
+  ProductRepository,
+  VariantRepository as ProductVariantRepository,
+  InventoryRepository,
+  OrderRepository,
+  VariantStoreRepository,
+  AttributeRepository,
+  AttributeValueRepository,
+  ProductVariantAttributeValueRepository,
+} from 'src/infrastructure/database/repositories';
 import { InventoryService } from '../inventory/inventory.service';
-import { InventoryRepository } from 'src/infrastructure/database/repositories/inventory.repository';
-import { OrderRepository } from 'src/infrastructure/database/repositories/order.repository';
+
 //TOdO: Review these imports and remove any unused ones
 @Module({
   imports: [
@@ -47,6 +60,11 @@ import { OrderRepository } from 'src/infrastructure/database/repositories/order.
       UserVendorRoleModel,
       InventoryModel,
       OrderModel,
+      VariantStoreModel,
+      AttributeModel,
+      AttributeValueModel,
+      DiscountModel,
+      ProductVariantAttributeValueModel,
     ]),
   ],
   providers: [
@@ -62,7 +80,11 @@ import { OrderRepository } from 'src/infrastructure/database/repositories/order.
     OrderRepository,
     ProductService,
     InventoryService,
-    PricingService
+    PricingService,
+    VariantStoreRepository,
+    AttributeRepository,
+    AttributeValueRepository,
+    ProductVariantAttributeValueRepository,
   ],
   controllers: [StoreController],
   exports: [StoreService, StoreRepository],

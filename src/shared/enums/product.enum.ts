@@ -15,4 +15,11 @@ export enum ProductTypeEnum {
     BUNDLE = 'bundle',
 }
 
+export enum VariantStatusEnum {
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+    OUT_OF_STOCK = 'out_of_stock',
+    DISCONTINUED = 'discontinued',
+}
+
 // vendor/30/store/49/

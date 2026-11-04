@@ -16,12 +16,11 @@ import { Permissions } from '../permission/permissions.decorator';
 import { PermissionsGuard } from '../permission/permissions.guard';
 import { RoleModel } from 'src/infrastructure';
 
-
 @Controller('roles')
 export class RoleController {
   constructor(private readonly roleService: RoleService) { }
 
-  @Get()
+  // @Get()
   async findAll(): Promise<RoleModel[]> {
     return this.roleService.findAll();
   }
@@ -36,7 +35,7 @@ export class RoleController {
     return this.roleService.create(role);
   }
 
-  @Post()
+  // @Post()
   @Permissions('create-role')
   @UseGuards(PermissionsGuard)
   async createRoleWithPermissions(

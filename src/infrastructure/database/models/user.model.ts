@@ -103,4 +103,7 @@ export class UserModel extends Model<UserModel> implements IUser {
     delete values.password_hash;
     return values;
   }
+  get fullName(): string {
+    return `${this.first_name || ''} ${this.last_name || ''}`.trim();
+  }
 }

@@ -1,69 +1,60 @@
-// dto/attribute-value/create-attribute-value.dto.ts
+// src/modules/vendor/products/attribute/dto/create-attribute.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsString,
-  IsNumber,
+  IsBoolean,
+  IsEnum,
+  IsInt,
   IsOptional,
-  IsPositive,
-  IsUrl,
+  IsString,
   MaxLength,
   Min,
 } from 'class-validator';
+import { AttributeTypeEnum } from 'src/shared';
 
-export class CreateAttributeValueDto {
-  @ApiProperty({
-    description: 'ID of the attribute this value belongs to',
-    example: 1,
-  })
-  @IsNumber()
-  @IsPositive()
-  attribute_id: number;
-
-  @ApiProperty({
-    description: 'Attribute value (e.g., "Red")',
-    example: 'Red',
-    maxLength: 100,
-  })
+export class CreateAttributeDto {
+  @ApiProperty({ example: 'Color' })
   @IsString()
   @MaxLength(100)
-  value: string;
+  name: string;
 
-  @ApiPropertyOptional({
-    description: 'Display value (pretty name)',
-    example: 'Crimson Red',
-    maxLength: 100,
-  })
-  @IsOptional()
+  @ApiProperty({ example: 'color', description: 'URL-safe, unique per vendor' })
   @IsString()
   @MaxLength(100)
-  display_value?: string;
+  code: string;
 
-  @ApiPropertyOptional({
-    description: 'Hex color code for color attributes',
-    example: '#FF0000',
-    maxLength: 7,
-  })
+  @ApiPropertyOptional({ example: 'Product color' })
   @IsOptional()
   @IsString()
-  @MaxLength(7)
-  color_code?: string;
+  description?: string;
 
-  @ApiPropertyOptional({
-    description: 'Sort order for display',
-    example: 1,
-    default: 0,
-  })
+  @ApiPropertyOptional({ enum: AttributeTypeEnum, default: AttributeTypeEnum.SELECT })
   @IsOptional()
-  @IsNumber()
+  @IsEnum(AttributeTypeEnum)
+  type?: AttributeTypeEnum;
+
+  @ApiPropertyOptional({ example: 0 })
+  @IsOptional()
+  @IsInt()
   @Min(0)
   sort_order?: number;
 
-  @ApiPropertyOptional({
-    description: 'URL to swatch image',
-    example: 'https://example.com/images/red-swatch.jpg',
-  })
+  @ApiPropertyOptional({ example: true, default: true })
   @IsOptional()
-  @IsUrl()
-  @MaxLength(255)
-  image_url?: string;
+  @IsBoolean()
+  is_filterable?: boolean;
+
+  @ApiPropertyOptional({ example: true, default: true })
+  @IsOptional()
+  @IsBoolean()
+  is_visible?: boolean;
+
+  @ApiPropertyOptional({ example: false, default: false })
+  @IsOptional()
+  @IsBoolean()
+  is_variant_attribute?: boolean;
+
+  @ApiPropertyOptional({ example: false, default: false })
+  @IsOptional()
+  @IsBoolean()
+  is_required?: boolean;
 }

@@ -29,8 +29,27 @@ import { ProductModel } from 'src/infrastructure/database/models/product.model';
 import { UserStoreRoleModel } from 'src/infrastructure/database/models/user-store-role.model';
 import { UserVendorRoleModel } from 'src/infrastructure/database/models/user-vendor-role.model';
 import { UserVendorRolePermissionModel } from 'src/infrastructure/database/models/user-vendor-role-permission.model';
-import { AttributeValueModel, CartItemModel, DiscountModel, OrderItemModel, OrderModel, ProductAttributeValueModel, ProductVariantAttributeValueModel, ProductVariantModel, SearchDocumentModel, TagModel } from './models';
-import { SectionRepository } from './repositories';
+import {
+    AttributeValueModel,
+    CartItemModel,
+    DiscountModel,
+    OrderItemModel,
+    OrderModel,
+    ProductAttributeValueModel,
+    ProductVariantAttributeValueModel,
+    ProductVariantModel,
+    SearchDocumentModel,
+    TagModel,
+    CheckoutSessionModel,
+    ShipmentModel,
+    ShipmentEventModel,
+    OrderStatusHistoryModel,
+    DigitalDeliveryModel,
+    InventoryReservationModel,
+    ServiceBookingModel,
+    RefundModel,
+    VariantStoreModel,
+} from './models';
 
 @Module({
     imports: [
@@ -89,6 +108,15 @@ import { SectionRepository } from './repositories';
                 UserVendorRoleModel,
                 UserVendorRolePermissionModel,
                 SearchDocumentModel,
+                CheckoutSessionModel,
+                ShipmentModel,
+                ShipmentEventModel,
+                OrderStatusHistoryModel,
+                DigitalDeliveryModel,
+                InventoryReservationModel,
+                ServiceBookingModel,
+                RefundModel,
+                VariantStoreModel,
             ],
         }),
     ],

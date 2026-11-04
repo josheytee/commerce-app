@@ -5,6 +5,7 @@ import {
     Transaction,
     WhereOptions,
     FindOptions,
+    Op,
 } from 'sequelize';
 import { InjectModel } from '@nestjs/sequelize';
 
@@ -17,6 +18,14 @@ export abstract class BaseRepository<T extends Model> {
 
     async findById(id: number, options?: FindOptions): Promise<T | null> {
         return this.model.findByPk(id, options);
+    }
+
+    async findByIds(ids: number[], t?: Transaction): Promise<T[]> {
+        if (!ids.length) return [];
+        return this.model.findAll({
+            where: { id: { [Op.in]: ids } } as unknown as WhereOptions<T>,
+            transaction: t,
+        });
     }
 
     async findOne(options: FindOptions): Promise<T | null> {

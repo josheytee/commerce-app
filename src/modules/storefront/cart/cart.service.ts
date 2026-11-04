@@ -1,365 +1,512 @@
-// services/cart.service.ts
+// src/modules/cart/cart.service.ts
 import {
-  Injectable,
   BadRequestException,
-  NotFoundException,
   ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
 } from '@nestjs/common';
+import { Sequelize } from 'sequelize-typescript';
 import { Transaction } from 'sequelize';
-import { AddToCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
-import { CartModel, CartItemModel } from 'src/infrastructure';
+
 import {
-  CartItemRepository,
+  CartModel,
+  CartItemModel,
+  InventoryReservationModel,
+} from 'src/infrastructure';
+import {
   CartRepository,
+  CartItemRepository,
   ProductRepository,
   VariantRepository,
-  InventoryRepository,
+  InventoryReservationRepository,
 } from 'src/infrastructure/database/repositories';
-import { ProductStatusEnum, VariantStockStatusEnum } from 'src/shared/enums';
 import {
-  ProductNotFoundException,
-  ProductVariantNotFoundException,
   CartItemNotFoundException,
   CartNotFoundException,
+  ProductNotFoundException,
+  ProductStatusEnum,
+  ProductVariantNotFoundException,
+  InventoryReservationStatusEnum,
 } from 'src/shared';
+import { AddToCartDto } from './dto/create-cart.dto';
+import { UpdateCartDto } from './dto/update-cart.dto';
+import { InventoryService } from 'src/modules/vendor/inventory/inventory.service';
+
+// ============================================================
+// CART SERVICE
+// ============================================================
+// Invariants:
+//   1. Every cart item that holds physical stock has a matching
+//      InventoryReservationModel with status = HELD.
+//   2. Cart service NEVER writes reserved_quantity directly — it
+//      delegates to InventoryService so low-stock, backorder, and
+//      stock_status logic stay in one place.
+//   3. Every mutation runs in a transaction (either provided by the
+//      caller or opened here).
+// ============================================================
+
+const CART_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 @Injectable()
 export class CartService {
-  private CART_TTL = 30 * 60 * 1000; // 30 mins
+  private readonly logger = new Logger(CartService.name);
 
   constructor(
-    private readonly _cartRepository: CartRepository,
-    private readonly _cartItemRepository: CartItemRepository,
-    private readonly _productRepository: ProductRepository,
-    private readonly _productVariantRepository: VariantRepository,
-    private readonly _inventoryRepository: InventoryRepository,
-    // private readonly _inventoryService: InventoryService,
+    private readonly cartRepo: CartRepository,
+    private readonly cartItemRepo: CartItemRepository,
+    private readonly productRepo: ProductRepository,
+    private readonly variantRepo: VariantRepository,
+    private readonly reservationRepo: InventoryReservationRepository,
+    private readonly inventoryService: InventoryService,
+    private readonly sequelize: Sequelize,
   ) { }
 
-  // ============ ADD TO CART ============
+  // ============================================================
+  // ADD TO CART
+  // ============================================================
+
   /**
-   * Add product to cart (handles both simple products and variants)
+   * Add a variant to the customer's active cart.
+   * - Validates the variant, product, and store.
+   * - Reserves stock via InventoryService.
+   * - Creates or updates the cart item.
+   * - Creates an InventoryReservation tied to the cart item.
+   *
+   * All steps run in a single transaction.
    */
   async addToCart(
-    userId: number,
+    customerId: number,
     dto: AddToCartDto,
-    transaction?: Transaction,
+    externalTransaction?: Transaction,
   ) {
-    // Get or create cart
-    const cart = await this.getOrCreateCart(userId, transaction);
-
-    // ✅ ALWAYS use variant_id - no special cases needed
     if (!dto.product_variant_id) {
       throw new BadRequestException('Product variant ID is required');
     }
-
-    // Validate variant exists and is active
-    const variant = await this._productVariantRepository.findById(
-      dto.product_variant_id,
-      // transaction,
-    );
-
-    if (!variant) {
-      throw new ProductVariantNotFoundException(dto.product_variant_id);
+    if (dto.quantity <= 0) {
+      throw new BadRequestException('Quantity must be positive');
     }
 
-    // Check if product is active
-    const product = await this._productRepository.findById(
-      variant.product_id,
-      // transaction,
-    );
-    if (
-      !product ||
-      product.status !== ProductStatusEnum.PUBLISHED ||
-      !product.is_active
-    ) {
-      throw new BadRequestException('Product is not available');
-    }
+    const run = async (t: Transaction) => {
+      // 1. Load variant + product
+      const variant = await this.variantRepo.findById(dto.product_variant_id, {
+        transaction: t,
+      });
+      if (!variant) {
+        throw new ProductVariantNotFoundException(dto.product_variant_id);
+      }
 
-    // Validate inventory
-    await this.validateInventory(
-      dto.product_variant_id,
-      dto.quantity,
-      transaction,
-    );
+      const product = await this.productRepo.findById(variant.product_id, {
+        transaction: t,
+      });
+      if (
+        !product ||
+        product.status !== ProductStatusEnum.PUBLISHED ||
+        !product.is_active
+      ) {
+        throw new BadRequestException('Product is not available');
+      }
 
-    // Add to cart
-    const existing = await this._cartItemRepository.findByVariant(
-      cart.id,
-      dto.product_variant_id,
-      // transaction,
-    );
+      // 2. Resolve store
+      const storeId = dto.store_id ?? variant.store_id;
+      if (!storeId) {
+        throw new BadRequestException('Cannot determine store for this variant');
+      }
 
-    if (existing) {
-      existing.quantity += dto.quantity;
-      await existing.save({ transaction });
-    } else {
-      await this._cartItemRepository.createWithTransaction(
-        {
-          cart_id: cart.id,
-          product_id: variant.product_id,
-          product_variant_id: dto.product_variant_id,
-          quantity: dto.quantity,
-          store_id: dto.store_id || product.store_id,
-        },
-        transaction,
+      // 3. Get or create the active cart
+      const cart = await this.getOrCreateCart(customerId, t);
+
+      // 4. Existing cart item?
+      const existing = await this.cartItemRepo.findByVariant(
+        cart.id,
+        dto.product_variant_id,
       );
-    }
 
-    await this.refreshCartExpiry(cart.id, transaction);
-    return this.getCart(userId);
-  }
-
-  // ============ GET OR CREATE CART ============
-  async getOrCreateCart(customerId: number, transaction?: Transaction) {
-    let cart = await this._cartRepository.findActiveCart(
-      customerId,
-      // transaction,
-    );
-
-    if (!cart) {
-      cart = await this._cartRepository.createWithTransaction(
-        {
-          customer_id: customerId,
-          // expires_at: this.getExpiry(),
-        },
-        transaction,
+      // 5. Reserve stock — ONCE, capturing the inventory row
+      const inventoryRow = await this.inventoryService.reserve(
+        dto.product_variant_id,
+        storeId,
+        dto.quantity,
+        t,
       );
+
+      // 6. Upsert cart item + reservation
+      if (existing) {
+        await existing.update(
+          { quantity: existing.quantity + dto.quantity },
+          { transaction: t },
+        );
+
+        const reservation = await this.reservationRepo.findOne({
+          where: {
+            cart_item_id: existing.id,
+            status: InventoryReservationStatusEnum.HELD,
+          },
+          transaction: t,
+        });
+
+        if (reservation) {
+          await reservation.update(
+            {
+              quantity: Number(reservation.quantity) + dto.quantity,
+              expires_at: this.getExpiry(),
+            },
+            { transaction: t },
+          );
+        } else {
+          // Existing item with no live reservation — recreate one.
+          // The reserve above already accounted for this quantity.
+          await this.createReservation(
+            existing,
+            dto.quantity,
+            inventoryRow.id,
+            t,
+          );
+        }
+      } else {
+        const cartItem = await this.cartItemRepo.createWithTransaction(
+          {
+            cart_id: cart.id,
+            product_id: variant.product_id,
+            variant_id: dto.product_variant_id,
+            store_id: storeId,
+            quantity: dto.quantity,
+          },
+          t,
+        );
+
+        await this.createReservation(
+          cartItem,
+          dto.quantity,
+          inventoryRow.id,
+          t,
+        );
+      }
+
+      // 7. Refresh cart expiry
+      await this.refreshCartExpiry(cart.id, t);
+      return cart.id;
+    };
+
+    const cartId = externalTransaction
+      ? await run(externalTransaction)
+      : await this.sequelize.transaction(run);
+
+    return this.getCart(customerId, { cartId });
+  }
+
+  // ============================================================
+  // GET OR CREATE
+  // ============================================================
+
+  async getOrCreateCart(
+    customerId: number,
+    t?: Transaction,
+  ): Promise<CartModel> {
+    const existing = await this.cartRepo.findActiveCart(customerId);
+    if (existing) return existing;
+
+    return this.cartRepo.createWithTransaction(
+      {
+        customer_id: customerId,
+        status: 'active',
+      } as any,
+      t,
+    );
+  }
+
+  // ============================================================
+  // GET CART
+  // ============================================================
+
+  async getCart(
+    customerId: number,
+    options: { cartId?: number; t?: Transaction } = {},
+  ): Promise<CartModel | null> {
+    const cartId = options.cartId;
+    if (cartId) {
+      return this.cartRepo.findById(cartId, {
+        include: ['items'],
+        transaction: options.t,
+      } as any);
     }
-
-    return cart;
+    return this.cartRepo.findActiveCart(customerId);
   }
 
-  // ============ GET CART ============
-  async getCart(userId: number) {
-    return this._cartRepository.findActiveCart(userId);
-  }
+  // ============================================================
+  // UPDATE ITEM QUANTITY
+  // ============================================================
 
-  // ============ UPDATE ITEM QUANTITY ============
   async updateItem(
+    customerId: number,
     itemId: number,
     quantity: number,
-    transaction?: Transaction,
+    externalTransaction?: Transaction,
   ) {
     if (quantity < 0) {
       throw new BadRequestException('Quantity cannot be negative');
     }
 
-    if (quantity === 0) {
-      return this.removeItem(itemId, transaction);
-    }
+    const run = async (t: Transaction) => {
+      const item = await this.loadOwnedItem(customerId, itemId, t);
 
-    const item = await this._cartItemRepository.findById(itemId);
-    if (!item) {
-      throw new CartItemNotFoundException(itemId);
-    }
+      if (quantity === 0) {
+        await this.releaseReservationForItem(item, t);
+        await item.destroy({ transaction: t });
+        await this.refreshCartExpiry(item.cart_id, t);
+        return { removed: true, item: null };
+      }
 
-    // Get variant and check inventory
-    const variant = await this._productVariantRepository.findById(
-      item.product_variant_id,
-    );
-    if (!variant) {
-      throw new ProductVariantNotFoundException(item.product_variant_id);
-    }
+      const diff = quantity - item.quantity;
 
-    // Check if requested quantity is available
-    const diff = quantity - item.quantity;
-    if (diff > 0) {
-      await this.validateInventory(variant.id, diff, transaction);
-    }
+      if (diff > 0) {
+        // Growing the line — reserve more stock
+        const inventoryRow = await this.inventoryService.reserve(
+          item.variant_id,
+          item.store_id,
+          diff,
+          t,
+        );
 
-    // Update quantity
-    item.quantity = quantity;
-    await item.save({ transaction });
+        const reservation = await this.reservationRepo.findOne({
+          where: {
+            cart_item_id: item.id,
+            status: InventoryReservationStatusEnum.HELD,
+          },
+          transaction: t,
+        });
+        if (reservation) {
+          await reservation.update(
+            {
+              quantity: Number(reservation.quantity) + diff,
+              expires_at: this.getExpiry(),
+            },
+            { transaction: t },
+          );
+        } else {
+          await this.createReservation(item, quantity, inventoryRow.id, t);
+        }
+      } else if (diff < 0) {
+        // Shrinking — release the delta
+        await this.inventoryService.release(
+          item.variant_id,
+          item.store_id,
+          -diff,
+          t,
+        );
 
-    // Refresh cart expiry
-    await this.refreshCartExpiry(item.cart_id, transaction);
+        const reservation = await this.reservationRepo.findOne({
+          where: {
+            cart_item_id: item.id,
+            status: InventoryReservationStatusEnum.HELD,
+          },
+          transaction: t,
+        });
+        if (reservation) {
+          await reservation.update(
+            { quantity: Number(reservation.quantity) - -diff },
+            { transaction: t },
+          );
+        }
+      }
 
-    return item;
+      await item.update({ quantity }, { transaction: t });
+      await this.refreshCartExpiry(item.cart_id, t);
+
+      return { removed: false, item };
+    };
+
+    return externalTransaction
+      ? run(externalTransaction)
+      : this.sequelize.transaction(run);
   }
 
-  // ============ REMOVE ITEM ============
-  async removeItem(itemId: number, transaction?: Transaction) {
-    const item = await this._cartItemRepository.findById(itemId);
-    if (!item) {
-      throw new CartItemNotFoundException(itemId);
-    }
+  // ============================================================
+  // REMOVE ITEM
+  // ============================================================
 
-    // Release inventory reservation if needed
-    // await this._inventoryService.release(
-    //   item.product_variant_id,
-    //   item.store_id,
-    //   item.quantity,
-    // );
+  async removeItem(
+    customerId: number,
+    itemId: number,
+    externalTransaction?: Transaction,
+  ) {
+    const run = async (t: Transaction) => {
+      const item = await this.loadOwnedItem(customerId, itemId, t);
 
-    await item.destroy({ transaction });
+      await this.releaseReservationForItem(item, t);
+      await item.destroy({ transaction: t });
+      await this.refreshCartExpiry(item.cart_id, t);
 
-    // Refresh cart expiry
-    await this.refreshCartExpiry(item.cart_id, transaction);
+      return { success: true, message: 'Item removed from cart' };
+    };
 
-    return { success: true, message: 'Item removed from cart' };
+    return externalTransaction
+      ? run(externalTransaction)
+      : this.sequelize.transaction(run);
   }
 
-  // ============ CLEAR CART ============
-  async clearCart(cartId: number, transaction?: Transaction) {
-    const cart = await this._cartRepository.findById(cartId);
-    if (!cart) {
-      throw new CartNotFoundException(cartId);
-    }
+  // ============================================================
+  // CLEAR CART
+  // ============================================================
 
-    // Get all items to release inventory
-    // const items = await this._cartItemRepository.findAll({
-    //   where: { cart_id: cartId },
-    //   transaction,
-    // });
+  async clearCart(customerId: number, externalTransaction?: Transaction) {
+    const run = async (t: Transaction) => {
+      const cart = await this.cartRepo.findActiveCart(customerId);
+      if (!cart) throw new CartNotFoundException(customerId);
 
-    // for (const item of items) {
-    //   await this._inventoryService.release(
-    //     item.product_variant_id,
-    //     item.store_id,
-    //     item.quantity,
-    //   );
-    // }
+      const items = await this.cartItemRepo.findAll({
+        where: { cart_id: cart.id },
+        transaction: t,
+      });
 
-    // Delete all items
-    await this._cartItemRepository.deleteById(cartId);
+      for (const item of items) {
+        await this.releaseReservationForItem(item, t);
+      }
 
-    // Reset expiry
-    await this.refreshCartExpiry(cartId, transaction);
+      await this.cartItemRepo.deleteById(cart.id);
+      await this.refreshCartExpiry(cart.id, t);
 
-    return { success: true, message: 'Cart cleared' };
+      return { success: true, message: 'Cart cleared' };
+    };
+
+    return externalTransaction
+      ? run(externalTransaction)
+      : this.sequelize.transaction(run);
   }
 
-  // ============ FIND ALL ============
+  // ============================================================
+  // SIMPLE CRUD (admin/internal)
+  // ============================================================
+
   async findAll(): Promise<CartModel[]> {
-    return this._cartRepository.findAll({ include: ['customer'] });
+    return this.cartRepo.findAll({ include: ['customer', 'items'] });
   }
 
-  // ============ FIND ONE ============
   async findOne(id: number): Promise<CartModel> {
-    const cart = await this._cartRepository.findById(id);
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
+    const cart = await this.cartRepo.findById(id);
+    if (!cart) throw new CartNotFoundException(id);
     return cart;
   }
 
-  // ============ UPDATE CART ============
   async update(
     id: number,
-    updateCartDto: UpdateCartDto,
+    dto: UpdateCartDto,
     transaction?: Transaction,
   ): Promise<CartModel> {
     const cart = await this.findOne(id);
-    return cart.update(updateCartDto as any, { transaction });
+    return cart.update(dto as any, { transaction });
   }
 
-  // ============ REMOVE CART ============
   async remove(id: number, transaction?: Transaction): Promise<void> {
     const cart = await this.findOne(id);
     await cart.destroy({ transaction });
   }
 
-  // ============ VALIDATE INVENTORY ============
-  private async validateInventory(
-    variantId: number,
-    quantity: number,
-    transaction?: Transaction,
-  ) {
-    const inventory = await this._inventoryRepository.findByVariantId(
-      variantId,
-      transaction,
-    );
+  // ============================================================
+  // PRIVATE HELPERS
+  // ============================================================
 
-    if (!inventory) {
-      throw new NotFoundException(
-        `Inventory not found for variant ${variantId}`,
-      );
-    }
-
-    const available = inventory.stock_quantity - inventory.reserved_quantity;
-
-    if (available < quantity) {
-      throw new ConflictException(
-        `Insufficient stock. Available: ${available}, Requested: ${quantity}`,
-      );
-    }
-
-    return inventory;
-  }
-
-  // ============ VALIDATE STORE ============
-  private async validateStore(storeId: number, transaction?: Transaction) {
-    // Check if store exists and is active
-    // This would be implemented based on your Store model
-    // const store = await this._storeRepository.findById(storeId, transaction);
-    // if (!store || !store.is_active) {
-    //   throw new NotFoundException(`Store ${storeId} not found or inactive`);
-    // }
-    return true;
-  }
-
-  // ============ ADD ITEM TO CART ============
-  private async addItemToCart(
-    cartId: number,
-    data: {
-      product_id: number;
-      product_variant_id: number;
-      quantity: number;
-      store_id?: number;
-    },
-    transaction?: Transaction,
+  /**
+   * Load a cart item and verify it belongs to the given customer's active cart.
+   * Returns 404 on mismatch to prevent enumeration.
+   */
+  private async loadOwnedItem(
+    customerId: number,
+    itemId: number,
+    t: Transaction,
   ): Promise<CartItemModel> {
-    // Check if item already exists in cart
-    const existing = await this._cartItemRepository.findByVariant(
-      cartId,
-      data.product_variant_id,
-      // transaction,
-    );
+    const item = await this.cartItemRepo.findById(itemId, { transaction: t });
+    if (!item) throw new CartItemNotFoundException(itemId);
 
-    if (existing) {
-      // Validate total quantity
-      const newQuantity = existing.quantity + data.quantity;
-      await this.validateInventory(
-        data.product_variant_id,
-        newQuantity,
-        transaction,
-      );
-
-      // Update existing item
-      existing.quantity = newQuantity;
-      await existing.save({ transaction });
-      return existing;
+    const cart = await this.cartRepo.findById(item.cart_id, {
+      transaction: t,
+    });
+    if (!cart || cart.customer_id !== customerId) {
+      throw new CartItemNotFoundException(itemId);
     }
+    return item;
+  }
 
-    // Create new cart item
-    return this._cartItemRepository.createWithTransaction(
+  /**
+   * Create an InventoryReservation for a cart item.
+   */
+  private async createReservation(
+    item: CartItemModel,
+    quantity: number,
+    inventory_id: number,
+    t: Transaction,
+  ): Promise<InventoryReservationModel> {
+    return this.reservationRepo.createWithTransaction(
       {
-        cart_id: cartId,
-        product_id: data.product_id,
-        product_variant_id: data.product_variant_id,
-        quantity: data.quantity,
-        store_id: data.store_id || null,
-      },
-      transaction,
+        variant_id: item.variant_id,
+        store_id: item.store_id,
+        cart_item_id: item.id,
+        quantity,
+        status: InventoryReservationStatusEnum.HELD,
+        expires_at: this.getExpiry(),
+        inventory_id: inventory_id,
+      } as any,
+      t,
     );
   }
 
-  // ============ REFRESH CART EXPIRY ============
-  private async refreshCartExpiry(cartId: number, transaction?: Transaction) {
-    await this._cartRepository.updateWithTransaction(
-      cartId,
-      {
-        // expires_at: this.getExpiry(),
-        // updated_at: new Date(),
+  /**
+   * Release the reservation for a cart item (idempotent).
+   */
+  private async releaseReservationForItem(
+    item: CartItemModel,
+    t: Transaction,
+  ): Promise<void> {
+    const reservation = await this.reservationRepo.findOne({
+      where: {
+        cart_item_id: item.id,
+        status: InventoryReservationStatusEnum.HELD,
       },
-      transaction,
+      transaction: t,
+    });
+    if (!reservation) return;
+
+    await this.inventoryService.release(
+      reservation.variant_id,
+      reservation.store_id,
+      Number(reservation.quantity),
+      t,
+    );
+
+    await reservation.update(
+      { status: InventoryReservationStatusEnum.RELEASED },
+      { transaction: t },
     );
   }
 
-  // ============ GET EXPIRY ============
-  private getExpiry() {
-    return new Date(Date.now() + this.CART_TTL);
+  /**
+   * Refresh the cart's expiry timestamp. No-op if the cart model doesn't
+   * have an `expires_at` field — the method exists so we don't scatter
+   * commented-out code everywhere.
+   */
+  private async refreshCartExpiry(
+    cartId: number,
+    t?: Transaction,
+  ): Promise<void> {
+    // If CartModel has an `expires_at` column, uncomment:
+    // await this.cartRepo.updateWithTransaction(
+    //   cartId,
+    //   { expires_at: this.getExpiry() } as any,
+    //   t,
+    // );
+    void cartId;
+    void t;
+  }
+
+  private getExpiry(): Date {
+    return new Date(Date.now() + CART_TTL_MS);
+  }
+
+  // ============================================================
+  // REPOSITORY ACCESS (for composed flows)
+  // ============================================================
+
+  getRepository(): CartRepository {
+    return this.cartRepo;
   }
 }

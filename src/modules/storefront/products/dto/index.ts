@@ -4,6 +4,7 @@ export * from './product-response.dto';
 export * from './index-page-response.dto';
 export * from './product-query.dto';
 export * from './product-params.dto';
+export * from './product-media-response.dto';
 
 
 import { ApiProperty } from '@nestjs/swagger';

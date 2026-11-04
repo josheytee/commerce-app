@@ -134,7 +134,7 @@ module.exports = {
         {
           replacements: category,
           type: queryInterface.sequelize.QueryTypes.INSERT,
-        }
+        },
       );
       insertedCategories.push(insertedCategory[0]);
     }
@@ -146,7 +146,7 @@ module.exports = {
         name: 'Smartphones & Tablets',
         slug: 'smartphones-tablets',
         description: 'Mobile phones, tablets, and accessories',
-        parent_id: insertedCategories.find(c => c.name === 'Electronics')?.id,
+        parent_id: insertedCategories.find((c) => c.name === 'Electronics')?.id,
         level: 1,
         sort_order: 1,
         is_active: true,
@@ -157,7 +157,7 @@ module.exports = {
         name: 'Laptops & Computers',
         slug: 'laptops-computers',
         description: 'Laptops, desktops, and computer accessories',
-        parent_id: insertedCategories.find(c => c.name === 'Electronics')?.id,
+        parent_id: insertedCategories.find((c) => c.name === 'Electronics')?.id,
         level: 1,
         sort_order: 2,
         is_active: true,
@@ -168,20 +168,22 @@ module.exports = {
         name: 'Audio & Headphones',
         slug: 'audio-headphones',
         description: 'Headphones, speakers, and audio equipment',
-        parent_id: insertedCategories.find(c => c.name === 'Electronics')?.id,
+        parent_id: insertedCategories.find((c) => c.name === 'Electronics')?.id,
         level: 1,
         sort_order: 3,
         is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
       },
-      
+
       // Fashion Subcategories
       {
         name: "Men's Clothing",
         slug: 'mens-clothing',
         description: "Men's shirts, pants, suits, and accessories",
-        parent_id: insertedCategories.find(c => c.name === 'Fashion & Apparel')?.id,
+        parent_id: insertedCategories.find(
+          (c) => c.name === 'Fashion & Apparel',
+        )?.id,
         level: 1,
         sort_order: 1,
         is_active: true,
@@ -192,7 +194,9 @@ module.exports = {
         name: "Women's Clothing",
         slug: 'womens-clothing',
         description: "Women's dresses, tops, bottoms, and accessories",
-        parent_id: insertedCategories.find(c => c.name === 'Fashion & Apparel')?.id,
+        parent_id: insertedCategories.find(
+          (c) => c.name === 'Fashion & Apparel',
+        )?.id,
         level: 1,
         sort_order: 2,
         is_active: true,
@@ -203,7 +207,9 @@ module.exports = {
         name: 'Footwear',
         slug: 'footwear',
         description: 'Shoes, sneakers, boots, and sandals',
-        parent_id: insertedCategories.find(c => c.name === 'Fashion & Apparel')?.id,
+        parent_id: insertedCategories.find(
+          (c) => c.name === 'Fashion & Apparel',
+        )?.id,
         level: 1,
         sort_order: 3,
         is_active: true,
@@ -223,7 +229,7 @@ module.exports = {
           {
             replacements: subcategory,
             type: queryInterface.sequelize.QueryTypes.INSERT,
-          }
+          },
         );
         insertedSubcategories.push(insertedSubcategory[0]);
       }
@@ -232,15 +238,16 @@ module.exports = {
     // Get existing vendors and assign them categories
     const vendors = await queryInterface.sequelize.query(
       `SELECT id FROM vendors WHERE deleted_at IS NULL`,
-      { type: queryInterface.sequelize.QueryTypes.SELECT }
+      { type: queryInterface.sequelize.QueryTypes.SELECT },
     );
 
     // Assign each vendor to a random category
     const allCategories = [...insertedCategories, ...insertedSubcategories];
     for (const vendor of vendors) {
       // Randomly select a category for this vendor
-      const randomCategory = allCategories[Math.floor(Math.random() * allCategories.length)];
-      
+      const randomCategory =
+        allCategories[Math.floor(Math.random() * allCategories.length)];
+
       await queryInterface.sequelize.query(
         `UPDATE vendors SET category_id = :category_id WHERE id = :vendor_id`,
         {
@@ -249,7 +256,7 @@ module.exports = {
             vendor_id: vendor.id,
           },
           type: queryInterface.sequelize.QueryTypes.UPDATE,
-        }
+        },
       );
     }
 
@@ -260,7 +267,7 @@ module.exports = {
        WHERE category_id IS NULL AND deleted_at IS NULL`,
       {
         type: queryInterface.sequelize.QueryTypes.UPDATE,
-      }
+      },
     );
 
     // Make category_id NOT NULL after all vendors have categories
@@ -273,15 +280,15 @@ module.exports = {
   async down(queryInterface) {
     // Remove category assignments
     await queryInterface.sequelize.query(
-      `UPDATE vendors SET category_id = NULL WHERE category_id IS NOT NULL`
+      `UPDATE vendors SET category_id = NULL WHERE category_id IS NOT NULL`,
     );
-    
+
     // Make category_id nullable again
     await queryInterface.changeColumn('vendors', 'category_id', {
       type: Sequelize.INTEGER,
       allowNull: true,
     });
-    
+
     // Delete all seeded categories
     await queryInterface.sequelize.query(
       `DELETE FROM categories WHERE slug IN (
@@ -289,7 +296,7 @@ module.exports = {
         'health-wellness', 'beauty-personal-care', 'automotive', 'services',
         'smartphones-tablets', 'laptops-computers', 'audio-headphones',
         'mens-clothing', 'womens-clothing', 'footwear'
-      )`
+      )`,
     );
   },
 };

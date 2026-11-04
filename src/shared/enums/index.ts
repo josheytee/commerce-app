@@ -92,10 +92,53 @@ export enum PromotionTypeEnum {
 
 export enum PaymentStatusEnum {
     PENDING = 'pending',
-    COMPLETED = 'completed',
+    PROCESSING = 'processing',
+    PAID = 'paid',
     FAILED = 'failed',
+    CANCELLED = 'cancelled',
+    PARTIALLY_REFUNDED = 'partially_refunded',
+    REFUNDED = 'refunded',
+    EXPIRED = 'expired',
+}
+
+export enum PaymentMethodEnum {
+    CARD = 'card',
+    BANK_TRANSFER = 'bank_transfer',
+    USSD = 'ussd',
+    MOBILE_MONEY = 'mobile_money',
+    WALLET = 'wallet',
+}
+
+export enum PaymentProviderEnum {
+    PAYSTACK = 'paystack',
+    FLUTTERWAVE = 'flutterwave',
+}
+
+// src/shared/enums/order-status.enum.ts
+export enum OrderStatusEnum {
+    PENDING_PAYMENT = 'pending_payment',
+    PAID = 'paid',
+    CONFIRMED = 'confirmed',
+    PROCESSING = 'processing',
+    SHIPPED = 'shipped',
+    DELIVERED = 'delivered',
+    COMPLETED = 'completed',
+    CANCELLED = 'cancelled',
     REFUNDED = 'refunded',
     PARTIALLY_REFUNDED = 'partially_refunded',
+    FAILED = 'failed',
+    OUT_FOR_DELIVERY = 'out_for_delivery',
+    READY_FOR_PICKUP = 'ready_for_pickup',
+    PAYMENT_FAILED = 'payment_failed',
+
+}
+
+// src/shared/enums/fulfillment-mode.enum.ts
+export enum FulfillmentModeEnum {
+    DELIVERY = 'delivery',
+    PICKUP = 'pickup',
+    DIGITAL = 'digital',
+    APPOINTMENT = 'appointment',
 }
 
 export enum AddressableTypeEnum {
@@ -117,12 +160,12 @@ export enum VariantStockStatusEnum {
     IN_STOCK = 'in_stock',
     OUT_OF_STOCK = 'out_of_stock',
     BACKORDER = 'backorder',
-    PRE_ORDER = 'pre_order',
+    // PRE_ORDER = 'pre_order',
     ACTIVE = 'active',
     INACTIVE = 'inactive',
     DISCONTINUED = 'discontinued',
+    LOW_STOCK = 'low_stock',
 }
-
 
 export enum StockStatusEnum {
     IN_STOCK = 'in_stock',
@@ -130,6 +173,7 @@ export enum StockStatusEnum {
     BACKORDER = 'backorder',
     PRE_ORDER = 'pre_order',
     LOW_STOCK = 'low_stock',
+    ON_BACKORDER = 'on_backorder',
 }
 
 export enum StoreStatusEnum {
@@ -156,4 +200,5 @@ export enum CartStatusEnum {
     ACTIVE = 'active',
     COMPLETED = 'completed',
     ABANDONED = 'abandoned',
+    CONVERTED = 'CONVERTED',
 }

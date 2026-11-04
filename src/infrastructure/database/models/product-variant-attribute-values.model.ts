@@ -8,7 +8,6 @@ import {
   BelongsTo,
   DataType,
   AllowNull,
-  Index,
 } from 'sequelize-typescript';
 import { ProductVariantModel } from './product-variant.model';
 import { AttributeModel } from './attribute.model';
@@ -16,11 +15,16 @@ import { AttributeValueModel } from './attribute-value.model';
 
 @Table({
   tableName: 'product_variant_attribute_values',
-  timestamps: false, // No changes needed
+  timestamps: false,
   underscored: true,
   indexes: [
-    { fields: ['variant_id', 'attribute_id'], unique: true },
-    { fields: ['attribute_id', 'attribute_value_id'] }, // "Find all red variants"
+    {
+      name: 'pvav_variant_attr_unique',
+      unique: true,
+      fields: ['variant_id', 'attribute_id'],
+    },
+    { fields: ['attribute_id', 'attribute_value_id'] },
+    { fields: ['variant_id'] },
   ],
 })
 export class ProductVariantAttributeValueModel extends Model<ProductVariantAttributeValueModel> {
@@ -36,7 +40,7 @@ export class ProductVariantAttributeValueModel extends Model<ProductVariantAttri
 
   @BelongsTo(() => ProductVariantModel, {
     foreignKey: 'variant_id',
-    as: 'variant', // ✅ This should match the inverse
+    as: 'variant',
   })
   variant: ProductVariantModel;
 
@@ -47,7 +51,7 @@ export class ProductVariantAttributeValueModel extends Model<ProductVariantAttri
 
   @BelongsTo(() => AttributeModel, {
     foreignKey: 'attribute_id',
-    as: 'attribute', // ✅ This should match the inverse
+    as: 'attribute',
   })
   attribute: AttributeModel;
 
@@ -58,11 +62,10 @@ export class ProductVariantAttributeValueModel extends Model<ProductVariantAttri
 
   @BelongsTo(() => AttributeValueModel, {
     foreignKey: 'attribute_value_id',
-    as: 'attribute_value', // ✅ This should match the inverse
+    as: 'attribute_value',
   })
   attribute_value: AttributeValueModel;
 
-  // Convenience getter
   get value(): string {
     return this.attribute_value?.value;
   }

@@ -1,5 +1,6 @@
 // dto/product-variant-response.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ProductMediaResponseDto } from './product-media-response.dto';
 
 export class VariantDimensionsDto {
     @ApiPropertyOptional({ example: 0.5, description: 'Weight in kg' })
@@ -45,132 +46,119 @@ export class VariantInventorySummaryDto {
     allow_backorders: boolean;
 }
 
+export class VariantAttributeDto {
+    @ApiProperty({ example: 1 })
+    attribute_id: number;
+
+    @ApiPropertyOptional({ example: 'color', description: 'URL-safe attribute code' })
+    attribute_code?: string;
+
+    @ApiPropertyOptional({ example: 'Color' })
+    attribute_name?: string;
+
+    @ApiProperty({ example: 5 })
+    attribute_value_id: number;
+
+    @ApiPropertyOptional({ example: 'red', description: 'Canonical value' })
+    value?: string;
+
+    @ApiPropertyOptional({ example: 'Crimson Red', description: 'Pretty display label' })
+    display_value?: string;
+
+    @ApiPropertyOptional({ example: '#FF0000', description: 'Hex color for swatches' })
+    color_code?: string;
+}
+
 export class ProductVariantResponseDto {
-    @ApiProperty({ example: 1024, description: 'Unique variant identifier' })
+    @ApiProperty({ example: 42 })
     id: number;
 
-    @ApiProperty({ example: 266, description: 'Parent product ID' })
+    @ApiProperty({ example: 7 })
     product_id: number;
 
-    @ApiProperty({
-        example: { color: 'Red', size: 'XL', material: 'Cotton' },
-        description: 'Variant attributes as key-value pairs',
-        type: 'object',
-    })
-    attributes: Record<string, any>;
+    @ApiPropertyOptional({ example: 'Red / Size 42' })
+    variant_name?: string;
 
-    @ApiProperty({
-        example: 'PWH-RED-XL-COT',
-        description: 'SKU - Stock Keeping Unit',
-    })
+    @ApiProperty({ example: 'NIKE-AIR-MAX-RED-42' })
     sku: string;
 
-    @ApiPropertyOptional({
-        example: '1234567890123',
-        description: 'Barcode (EAN/UPC)',
-    })
+    @ApiPropertyOptional({ example: '0888999000112' })
     barcode?: string;
 
-    @ApiPropertyOptional({
-        example: 'NIKE-12345',
-        description: 'Manufacturer Part Number',
-    })
+    @ApiPropertyOptional({ example: 'NIKE-AIRMAX-R-42' })
     mpn?: string;
 
-    @ApiProperty({
-        example: 'Red / XL / Cotton',
-        description: 'Display name for this variant',
-    })
-    variant_name: string;
+    @ApiProperty({ example: 129.99 })
+    price: number;
 
-    @ApiPropertyOptional({
-        example: 89.99,
-        description: 'Variant-specific price (overrides product price if set)',
-    })
-    price?: number;
-
-    @ApiPropertyOptional({
-        example: 109.99,
-        description: 'Compare-at/original price',
-    })
+    @ApiPropertyOptional({ example: 149.99 })
     compare_at_price?: number;
 
-    @ApiPropertyOptional({
-        example: 45.5,
-        description: 'Cost price for margin calculations',
-    })
+    @ApiPropertyOptional({ example: 89.5 })
     cost_price?: number;
 
+    @ApiProperty({ example: '$129.99' })
+    formatted_price: string;
+
     @ApiProperty({
-        example: 18,
-        description: 'Discount percentage (calculated from compare_at_price)',
+        example: 13.33,
+        description: 'Discount % vs. compare_at_price',
     })
     discount_percentage: number;
 
-    @ApiPropertyOptional({
-        example: 'https://cdn.example.com/variants/1024.jpg',
-        description: 'Primary variant image URL',
-    })
-    image_url?: string;
+    @ApiProperty({ example: 50, description: 'Sum of quantity across all stores' })
+    stock_quantity: number;
 
-    @ApiProperty({
-        type: VariantDimensionsDto,
-        description: 'Shipping dimensions',
-    })
-    dimensions: VariantDimensionsDto;
+    @ApiProperty({ example: 3, description: 'Sum of reserved_quantity across all stores' })
+    reserved_quantity: number;
 
-    @ApiProperty({
-        example: true,
-        description: 'Whether this variant requires shipping',
-    })
+    @ApiProperty({ example: 47, description: 'stock_quantity - reserved_quantity' })
+    available_quantity: number;
+
+    @ApiProperty({ example: true })
+    is_in_stock: boolean;
+
+    @ApiPropertyOptional({ example: 0.5, description: 'kg' })
+    weight?: number;
+
+    @ApiPropertyOptional({ example: 30, description: 'cm' })
+    length?: number;
+
+    @ApiPropertyOptional({ example: 20, description: 'cm' })
+    width?: number;
+
+    @ApiPropertyOptional({ example: 15, description: 'cm' })
+    height?: number;
+
+    @ApiProperty({ example: true })
     requires_shipping: boolean;
 
-    @ApiPropertyOptional({
-        example: 'standard',
-        description: 'Shipping class/category',
-    })
+    @ApiPropertyOptional({ example: 'standard' })
     shipping_class?: string;
 
-    @ApiPropertyOptional({
-        example: { warehouse: 'NYC', priority: 'high' },
-        description: 'Additional metadata',
-        type: 'object',
-    })
-    metadata?: Record<string, any>;
-
-    @ApiProperty({
-        enum: ['active', 'inactive', 'out_of_stock', 'discontinued'],
-        example: 'active',
-        description: 'Variant status',
-    })
+    @ApiProperty({ example: 'active' })
     status: string;
 
-    @ApiPropertyOptional({
-        type: VariantInventorySummaryDto,
-        description: 'Inventory information',
+    @ApiProperty({
+        example: false,
+        description: 'True for the single default variant of a SIMPLE product',
     })
-    inventory?: VariantInventorySummaryDto;
+    is_default: boolean;
 
-    // @ApiProperty({
-    //     example: [
-    //         'https://cdn.example.com/variants/1024-1.jpg',
-    //         'https://cdn.example.com/variants/1024-2.jpg',
-    //     ],
-    //     description: 'Gallery image URLs',
-    //     type: [String],
-    // })
-    // gallery_images: string[];
+    @ApiProperty({ type: [VariantAttributeDto] })
+    attribute_values: VariantAttributeDto[];
 
-    // @ApiProperty({
-    //     example: '2024-01-10T08:00:00Z',
-    //     description: 'Creation timestamp',
-    // })
-    // created_at: Date;
+    @ApiProperty({ type: [String], example: ['https://cdn.example.com/v1.jpg'] })
+    images: string[];
 
-    // @ApiProperty({
-    //     example: '2024-01-15T14:30:00Z',
-    //     description: 'Last update timestamp',
-    // })
-    // updated_at: Date;
+    @ApiProperty({ type: [ProductMediaResponseDto] })
+    media: ProductMediaResponseDto[];
+
+    @ApiPropertyOptional({ example: '2025-01-15T10:00:00.000Z' })
+    created_at?: Date;
+
+    @ApiPropertyOptional({ example: '2025-01-15T10:00:00.000Z' })
+    updated_at?: Date;
 }
+
 

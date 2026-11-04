@@ -1,7 +1,7 @@
 // repositories/product.repository.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import {
     ProductModel,
@@ -21,6 +21,7 @@ import {
     MediaEntityTypeEnum,
     MediaTypeEnum,
     ProductStatusEnum,
+    VariantStatusEnum,
 } from 'src/shared/enums';
 
 interface ProductFilterOptions {
@@ -33,6 +34,11 @@ interface ProductFilterOptions {
     include?: string[];
 }
 
+export interface AttributeSearchCriteria {
+    attribute_id: number;
+    attribute_value_id: number;
+}
+
 @Injectable()
 export class ProductRepository extends BaseRepository<ProductModel> {
     constructor(
@@ -42,6 +48,99 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         // private productVariantModel: typeof ProductVariantModel,
     ) {
         super(productModel);
+    }
+
+    async findByIdWithVariants(id: number, t?: Transaction) {
+        return this.productModel.findByPk(id, {
+            include: [
+                { association: 'variants', include: [{ association: 'inventories' }] },
+            ],
+            transaction: t,
+        });
+    }
+
+    async findWithVariantsAndInventories(id: number) {
+        return this.productModel.findByPk(id, {
+            include: [
+                { association: 'variants', include: [{ association: 'inventories' }] },
+                { association: 'featured_image' },
+            ],
+        });
+    }
+
+    async findForPublish(id: number, t?: Transaction) {
+        return this.model.findByPk(id, {
+            include: [
+                {
+                    association: 'variants',
+                    include: [{ association: 'inventories' }],
+                },
+                { association: 'featured_image' },
+            ],
+            transaction: t,
+        });
+    }
+
+    /**
+     * Find products that have variants matching ALL given attribute/value pairs.
+     *
+     * Strategy: use a subquery on the junction table, so a product with variants
+     * matching all criteria is returned exactly once, regardless of how many
+     * variants satisfy it.
+     */
+    async searchByAttributes(
+        criteria: AttributeSearchCriteria[],
+        options: {
+            limit?: number;
+            offset?: number;
+            storeId?: number;
+            t?: Transaction;
+        } = {},
+    ): Promise<{ rows: ProductModel[]; count: number }> {
+        if (!criteria.length) {
+            const { rows, count } = await this.model.findAndCountAll({
+                limit: options.limit,
+                offset: options.offset,
+                where: options.storeId ? { store_id: options.storeId } : undefined,
+                transaction: options.t,
+            });
+            return { rows, count };
+        }
+
+        // Build a WHERE clause for the junction table using Op.and to enforce
+        // "all criteria" (not "any criteria").
+        const variantMatch = {
+            [Op.and]: criteria.map((c) => ({
+                attribute_id: c.attribute_id,
+                attribute_value_id: c.attribute_value_id,
+            })),
+        };
+
+        // Sequelize's include with required: true + where on nested association
+        // builds the appropriate INNER JOIN + WHERE for us.
+        const { rows, count } = await this.model.findAndCountAll({
+            distinct: true, // count products, not joined rows
+            limit: options.limit,
+            offset: options.offset,
+            where: options.storeId ? { store_id: options.storeId } : undefined,
+            include: [
+                {
+                    model: ProductVariantModel,
+                    as: 'variants',
+                    required: true,
+                    include: [
+                        {
+                            association: 'attribute_values',
+                            required: true,
+                            where: variantMatch,
+                        },
+                    ],
+                },
+            ],
+            transaction: options.t,
+        });
+
+        return { rows, count };
     }
 
     // ==================== ADVANCED PRODUCT QUERY ====================
@@ -335,6 +434,10 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                             { model: AttributeValueModel, as: 'attribute_value' },
                         ],
                     },
+                    {
+                        model: MediaModel,
+                        as: 'gallery',
+                    },
                 ],
             },
             reviews: {
@@ -371,8 +474,8 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         return this.productModel.findOne({
             where: {
                 id,
-                status: ProductStatusEnum.PUBLISHED,
-                is_active: true,
+                // status: ProductStatusEnum.PUBLISHED,
+                // is_active: true,
                 deleted_at: null,
             },
             include,
@@ -392,8 +495,8 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         return this.productModel.findOne({
             where: {
                 slug,
-                status: ProductStatusEnum.PUBLISHED,
-                is_active: true,
+                // status: ProductStatusEnum.PUBLISHED,
+                // is_active: true,
                 deleted_at: null,
             },
             include,
@@ -489,24 +592,36 @@ export class ProductRepository extends BaseRepository<ProductModel> {
             ],
         });
     }
-
+    /**
+     * Flash deals = published products where at least one variant has
+     * `compare_at_price > price`. Ordered by the deepest discount % across
+     * the product's variants.
+     *
+     * Returns products with their variants eagerly loaded so the caller can
+     * render the "from $X (was $Y)" badge without a second query.
+     */
     async findFlashDeals(limit: number = 10): Promise<ProductModel[]> {
-        return this.productModel.findAll({
+        const products = await this.productModel.findAll({
             where: {
                 status: ProductStatusEnum.PUBLISHED,
                 is_active: true,
-                [Op.or]: [
-                    { compare_at_price: { [Op.ne]: null } },
-                    { is_featured: true },
-                ],
-                [Op.and]: Sequelize.where(
-                    Sequelize.literal(
-                        `(base_price < compare_at_price OR compare_at_price IS NOT NULL)`,
-                    ),
-                    true,
-                ),
             },
             include: [
+                {
+                    model: ProductVariantModel,
+                    as: 'variants',
+                    required: true, // INNER JOIN — only products that have a discounted variant
+                    where: {
+                        status: VariantStatusEnum.ACTIVE,
+                        price: { [Op.gt]: 0 },
+                        compare_at_price: { [Op.ne]: null },
+                        [Op.and]: Sequelize.where(
+                            Sequelize.col('variants.compare_at_price'),
+                            Op.gt,
+                            Sequelize.col('variants.price'),
+                        ),
+                    },
+                },
                 {
                     model: SectionModel,
                     as: 'section',
@@ -521,13 +636,27 @@ export class ProductRepository extends BaseRepository<ProductModel> {
             order: [
                 [
                     Sequelize.literal(
-                        `((compare_at_price - base_price) / compare_at_price * 100)`,
+                        `(
+                            SELECT MAX(
+                            (v.compare_at_price - v.price) / v.compare_at_price * 100
+                            )
+                            FROM product_variants v
+                            WHERE v.product_id = "ProductModel"."id"
+                            AND v.compare_at_price IS NOT NULL
+                            AND v.compare_at_price > v.price
+                            AND v.deleted_at IS NULL
+                        )`,
                     ),
                     'DESC',
                 ],
+                ['is_featured', 'DESC'],
+                ['created_at', 'DESC'],
             ],
             limit,
+            subQuery: false, // we intentionally want variants joined in the outer query
         });
+
+        return products;
     }
 
     async findBestSellers(limit: number = 8): Promise<ProductModel[]> {
@@ -892,13 +1021,13 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                         },
                     ],
                 },
-                { model: InventoryModel },
-                {
-                    model: MediaModel,
-                    as: 'gallery_images',
-                    where: { entity_type: MediaEntityTypeEnum.PRODUCT },
-                    required: false,
-                },
+                // { model: InventoryModel },
+                // {
+                //     model: MediaModel,
+                //     as: 'gallery_images',
+                //     where: { entity_type: MediaEntityTypeEnum.PRODUCT },
+                //     required: false,
+                // },
                 {
                     model: MediaModel,
                     as: 'featured_image',

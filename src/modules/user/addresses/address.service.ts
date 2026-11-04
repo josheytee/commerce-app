@@ -10,6 +10,7 @@ import { AddressRepository } from 'src/infrastructure/database/repositories/addr
 import { CreateAddressDto, UpdateAddressDto, AddressQueryDto } from './dto';
 import { AddressableTypeEnum, AddressTypeEnum } from 'src/shared/enums';
 import { AddressModel } from 'src/infrastructure/database/models/address.model';
+import { AddressSnapshot } from 'src/modules/vendor/orders/dto/address-snapshot.dto';
 
 @Injectable()
 export class AddressService {
@@ -139,7 +140,6 @@ export class AddressService {
     }
   }
 
-
   async getCustomerBillingAddresses(
     customerId: number,
   ): Promise<AddressModel[]> {
@@ -201,7 +201,6 @@ export class AddressService {
       let result: AddressModel;
 
       if (entityType === AddressableTypeEnum.CUSTOMER) {
-
         result = await this.addressRepository.setCustomerDefaultAddress(
           entityId,
           addressId,
@@ -393,5 +392,70 @@ export class AddressService {
     label: string,
   ): Promise<AddressModel[]> {
     return this.addressRepository.getStoreAddressesByLabel(storeId, label);
+  }
+
+  /**
+   * Build an immutable snapshot of an address for order storage.
+   * Returns null when the address doesn't exist (caller decides whether that's fatal).
+   *
+   * Why snapshot instead of a FK?
+   *   Orders must remain historically correct even if the customer later edits or
+   *   deletes the address. A snapshot freezes the values at checkout time.
+   */
+  async getSnapshot(
+    addressId: number,
+    t?: Transaction,
+  ): Promise<AddressSnapshot | null> {
+    const address = await this.addressRepository.findById(addressId);
+    if (!address) return null;
+    return this.toSnapshot(address);
+  }
+
+  /**
+   * Same as `getSnapshot` but throws if the address is missing.
+   * Prefer this from services where a missing address is an error.
+   */
+  async getSnapshotOrThrow(
+    addressId: number,
+    t?: Transaction,
+  ): Promise<AddressSnapshot> {
+    const snapshot = await this.getSnapshot(addressId, t);
+    if (!snapshot) {
+      throw new NotFoundException(`Address ${addressId} not found`);
+    }
+    return snapshot;
+  }
+
+  /**
+   * Pure mapping — no DB hit. Useful when the caller already has the model loaded.
+   */
+  toSnapshot(address: AddressModel): AddressSnapshot {
+    return {
+      name: address.contact_name ?? '',
+      street: [address.address_line1, address.address_line2]
+        .filter(Boolean)
+        .join(', '),
+      city: address.city?.name ?? '',
+      state: address.state?.name ?? '',
+      postal_code: address.postal_code ?? '',
+      country: address.country?.name ?? '',
+      phone: address.contact_phone ?? undefined,
+      lat: address.latitude ? Number(address.latitude) : undefined,
+      lng: address.longitude ? Number(address.longitude) : undefined,
+    };
+  }
+
+  /**
+   * Batch version — used when building many order snapshots at once.
+   */
+  async getSnapshotsByIds(
+    ids: number[],
+    t?: Transaction,
+  ): Promise<Map<number, AddressSnapshot>> {
+    if (!ids.length) return new Map();
+    const rows = await this.addressRepository.findByIds(ids, t);
+    const map = new Map<number, AddressSnapshot>();
+    for (const row of rows) map.set(row.id, this.toSnapshot(row));
+    return map;
   }
 }

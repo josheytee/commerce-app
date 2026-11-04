@@ -205,11 +205,15 @@ module.exports = {
 
     // Add unique constraint for vendor_id + sku
 
-     // Indexes
-    await queryInterface.addIndex('products', ['store_id', 'vendor_id', 'slug'], {
-      unique: true,
-      name: 'products_store_vendor_slug_unique',
-    });
+    // Indexes
+    await queryInterface.addIndex(
+      'products',
+      ['store_id', 'vendor_id', 'slug'],
+      {
+        unique: true,
+        name: 'products_store_vendor_slug_unique',
+      },
+    );
     await queryInterface.addIndex('products', ['store_id', 'status'], {
       name: 'products_store_status_idx',
     });
@@ -228,9 +232,13 @@ module.exports = {
     await queryInterface.addIndex('products', ['base_price'], {
       name: 'products_base_price_idx',
     });
-    await queryInterface.addIndex('products', ['min_variant_price', 'max_variant_price'], {
-      name: 'products_variant_price_idx',
-    });
+    await queryInterface.addIndex(
+      'products',
+      ['min_variant_price', 'max_variant_price'],
+      {
+        name: 'products_variant_price_idx',
+      },
+    );
     await queryInterface.addIndex('products', ['in_stock'], {
       name: 'products_stock_idx',
     });

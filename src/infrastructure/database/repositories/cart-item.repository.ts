@@ -16,7 +16,7 @@ export class CartItemRepository extends BaseRepository<CartItemModel> {
         return this.model.findOne({
             where: {
                 cart_id: cartId,
-                product_variant_id: variantId,
+                variant_id: variantId,
             },
         });
     }

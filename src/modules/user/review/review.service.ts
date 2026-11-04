@@ -189,4 +189,34 @@ export class ReviewService {
       where: { entity_type, entity_id, user_id },
     });
   }
+
+
+  // async addOrderItemReview(
+  //   itemId: number,
+  //   customerId: number,
+  //   review: { rating: number; title?: string; content?: string },
+  // ): Promise<{ message: string }> {
+  //   const item = await this.orderItemRepo.findById(itemId);
+  //   if (!item) throw new NotFoundException(`Order item ${itemId} not found`);
+
+  //   const order = await this.orderRepo.findById(item.order_id);
+  //   if (!order) throw new NotFoundException(`Order ${item.order_id} not found`);
+
+  //   const session = await this.checkoutSessionRepo.findById(order.checkout_session_id);
+  //   if (!session || session.customer_id !== customerId) {
+  //     throw new NotFoundException(`Order item ${itemId} not found`);
+  //   }
+
+  //   await this.reviewService.createForOrderItem({
+  //     order_item_id: itemId,
+  //     variant_id: item.variant_id,
+  //     customer_id: customerId,
+  //     rating: review.rating,
+  //     title: review.title,
+  //     content: review.content,
+  //   });
+
+  //   return { message: 'Review added successfully' };
+  // }
+
 }

@@ -6,11 +6,13 @@ import {
   InventoryModel,
   OrderModel,
   ProductVariantModel,
+  VariantStoreModel,
 } from 'src/infrastructure';
 import {
   InventoryRepository,
   OrderRepository,
   VariantRepository,
+  VariantStoreRepository,
 } from 'src/infrastructure/database/repositories';
 
 @Module({
@@ -19,6 +21,7 @@ import {
       InventoryModel,
       OrderModel,
       ProductVariantModel,
+      VariantStoreModel,
     ]),
   ],
   providers: [
@@ -26,6 +29,7 @@ import {
     InventoryRepository,
     OrderRepository,
     VariantRepository,
+    VariantStoreRepository,
   ],
   controllers: [InventoryController],
   exports: [InventoryService],

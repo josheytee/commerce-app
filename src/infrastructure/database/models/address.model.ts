@@ -1,3 +1,4 @@
+// src/infrastructure/database/models/address.model.ts
 import { Op } from 'sequelize';
 import {
   Table,
@@ -8,13 +9,14 @@ import {
   DataType,
   Scopes,
   DefaultScope,
+  CreatedAt,
+  UpdatedAt,
+  DeletedAt,
 } from 'sequelize-typescript';
 import { AddressableTypeEnum, AddressTypeEnum } from 'src/shared';
 import { CountryModel } from './country.model';
 import { StateModel } from './state.model';
 import { CityModel } from './city.model';
-import { StoreModel } from './store.model';
-import { CustomerModel } from './customer.model';
 
 @DefaultScope(() => ({
   include: [
@@ -24,29 +26,21 @@ import { CustomerModel } from './customer.model';
   ],
 }))
 @Scopes(() => ({
-  customers: {
-    where: { addressable_type: AddressableTypeEnum.CUSTOMER },
-  },
-  stores: {
-    where: { addressable_type: AddressableTypeEnum.STORE },
-  },
-  default: {
-    where: { is_default: true },
-  },
+  customers: { where: { addressable_type: AddressableTypeEnum.CUSTOMER } },
+  stores: { where: { addressable_type: AddressableTypeEnum.STORE } },
+  onlyDefault: { where: { is_default: true } },
   withCoordinates: {
     where: {
       latitude: { [Op.ne]: null },
       longitude: { [Op.ne]: null },
     },
   },
-  verified: {
-    where: { is_verified: true },
-  },
+  verified: { where: { is_verified: true } },
 }))
 @Table({
   tableName: 'addresses',
   underscored: true,
-  paranoid: true, // Adds deleted_at column
+  paranoid: true,
   timestamps: true,
 })
 export class AddressModel extends Model<AddressModel> {
@@ -57,12 +51,8 @@ export class AddressModel extends Model<AddressModel> {
   })
   id: number;
 
-  // Polymorphic fields
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-    field: 'addressable_id',
-  })
+  // ============ POLYMORPHIC OWNER ============
+  @Column({ type: DataType.INTEGER, allowNull: false, field: 'addressable_id' })
   addressable_id: number;
 
   @Column({
@@ -72,7 +62,7 @@ export class AddressModel extends Model<AddressModel> {
   })
   addressable_type: AddressableTypeEnum;
 
-  // AddressModel metadata
+  // ============ ADDRESS METADATA ============
   @Column({
     type: DataType.ENUM(...Object.values(AddressTypeEnum)),
     allowNull: false,
@@ -103,7 +93,7 @@ export class AddressModel extends Model<AddressModel> {
   })
   contact_phone: string;
 
-  // AddressModel lines
+  // ============ ADDRESS LINES ============
   @Column({
     type: DataType.STRING(255),
     allowNull: false,
@@ -118,66 +108,34 @@ export class AddressModel extends Model<AddressModel> {
   })
   address_line2: string;
 
-  @Column({
-    type: DataType.STRING(255),
-    allowNull: true,
-  })
+  @Column({ type: DataType.STRING(255), allowNull: true })
   landmark: string;
 
-  // Location foreign keys
+  // ============ LOCATION FKs ============
   @ForeignKey(() => CityModel)
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-    field: 'city_id',
-  })
+  @Column({ type: DataType.INTEGER, allowNull: false, field: 'city_id' })
   city_id: number;
 
   @ForeignKey(() => StateModel)
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-    field: 'state_id',
-  })
+  @Column({ type: DataType.INTEGER, allowNull: false, field: 'state_id' })
   state_id: number;
 
   @ForeignKey(() => CountryModel)
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-    field: 'country_id',
-  })
+  @Column({ type: DataType.INTEGER, allowNull: false, field: 'country_id' })
   country_id: number;
 
-  // Postal details
-  @Column({
-    type: DataType.STRING(20),
-    allowNull: true,
-    field: 'postal_code',
-  })
+  // ============ POSTAL ============
+  @Column({ type: DataType.STRING(20), allowNull: true, field: 'postal_code' })
   postal_code: string;
 
-  @Column({
-    type: DataType.STRING(50),
-    allowNull: true,
-    field: 'po_box',
-  })
+  @Column({ type: DataType.STRING(50), allowNull: true, field: 'po_box' })
   po_box: string;
 
-  // Flags
-  @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: false,
-    field: 'is_default',
-    comment: 'Default address for this entity',
-  })
+  // ============ FLAGS ============
+  @Column({ type: DataType.BOOLEAN, defaultValue: false, field: 'is_default' })
   is_default: boolean;
 
-  @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: false,
-    field: 'is_verified',
-  })
+  @Column({ type: DataType.BOOLEAN, defaultValue: false, field: 'is_verified' })
   is_verified: boolean;
 
   @Column({
@@ -187,74 +145,54 @@ export class AddressModel extends Model<AddressModel> {
   })
   delivery_instructions: string;
 
-  // Geo coordinates
-  @Column({
-    type: DataType.DECIMAL(10, 8),
-    allowNull: true,
-  })
+  // ============ GEO ============
+  @Column({ type: DataType.DECIMAL(10, 8), allowNull: true })
   latitude: number;
 
-  @Column({
-    type: DataType.DECIMAL(11, 8),
-    allowNull: true,
-  })
+  @Column({ type: DataType.DECIMAL(11, 8), allowNull: true })
   longitude: number;
 
-  // Timestamps
-  @Column({
-    type: DataType.DATE,
-    field: 'created_at',
-  })
+  // ============ TIMESTAMPS ============
+  @CreatedAt
+  @Column({ field: 'created_at' })
   created_at: Date;
 
-  @Column({
-    type: DataType.DATE,
-    field: 'updated_at',
-  })
+  @UpdatedAt
+  @Column({ field: 'updated_at' })
   updated_at: Date;
 
-  @Column({
-    type: DataType.DATE,
-    field: 'deleted_at',
-  })
+  @DeletedAt
+  @Column({ field: 'deleted_at' })
   deleted_at: Date;
 
-  // Associations
-  @BelongsTo(() => CityModel, 'city_id')
+  // ============ ASSOCIATIONS ============
+  @BelongsTo(() => CityModel, { foreignKey: 'city_id', as: 'city' })
   city: CityModel;
 
-  @BelongsTo(() => StateModel, 'state_id')
+  @BelongsTo(() => StateModel, { foreignKey: 'state_id', as: 'state' })
   state: StateModel;
 
-  @BelongsTo(() => CountryModel, 'country_id')
+  @BelongsTo(() => CountryModel, { foreignKey: 'country_id', as: 'country' })
   country: CountryModel;
 
-  // Virtual fields for getting parent entity
-  async getAddressableEntity(): Promise<CustomerModel | StoreModel | null> {
-    if (this.addressable_type === AddressableTypeEnum.CUSTOMER) {
-      return CustomerModel.findByPk(this.addressable_id);
-    } else if (this.addressable_type === AddressableTypeEnum.STORE) {
-      return StoreModel.findByPk(this.addressable_id);
-    }
-    return null;
-  }
+  // ============ HELPERS ============
 
-  // Helper methods
   getFullAddress(): string {
-    const parts = [
+    return [
       this.address_line1,
       this.address_line2,
       this.city?.name,
       this.state?.name,
       this.country?.name,
       this.postal_code,
-    ].filter(Boolean);
-    return parts.join(', ');
+    ]
+      .filter(Boolean)
+      .join(', ');
   }
 
   getCoordinates(): { lat: number; lng: number } | null {
     if (this.latitude && this.longitude) {
-      return { lat: this.latitude, lng: this.longitude };
+      return { lat: Number(this.latitude), lng: Number(this.longitude) };
     }
     return null;
   }

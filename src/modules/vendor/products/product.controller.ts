@@ -136,7 +136,7 @@ export class ProductController {
     @Param('vendorId', ParseIntPipe) vendorId: number,
     @Body() data: CreateProductWithVariantsDto,
   ): Promise<ProductModel> {
-    return this.productService.create({ ...data, vendor_id: vendorId });
+    return this.productService.create({ ...data }, vendorId);
   }
 
   @Get('search')
@@ -189,7 +189,10 @@ export class ProductController {
   @Delete(':id')
   @ApiSuccessResponse(ProductModel)
   @Permissions('product:delete')
-  async remove(@Param('id') id: number): Promise<void> {
-    await this.productService.deleteProduct(id);
+  async remove(
+    @Param('vendorId', ParseIntPipe) vendorId: number,
+    @Param('id') id: number,
+  ): Promise<void> {
+    await this.productService.deleteProduct(vendorId, id);
   }
 }

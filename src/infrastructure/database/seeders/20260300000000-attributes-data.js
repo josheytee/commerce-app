@@ -138,9 +138,13 @@ module.exports = {
       },
     ];
 
-    const insertedAttributes = await queryInterface.bulkInsert('attributes', attributes, {
-      returning: ['id', 'code'],
-    });
+    const insertedAttributes = await queryInterface.bulkInsert(
+      'attributes',
+      attributes,
+      {
+        returning: ['id', 'code'],
+      },
+    );
 
     console.log(`Inserted ${insertedAttributes.length} attributes`);
     return insertedAttributes;

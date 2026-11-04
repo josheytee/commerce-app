@@ -11,4 +11,10 @@ export class CustomerRepository extends BaseRepository<CustomerModel> {
     ) {
         super(customerModel);
     }
+
+    public findByUserId(userId: number): Promise<CustomerModel> {
+        return this.customerModel.findOne({
+            where: { user_id: userId },
+        });
+    }
 }

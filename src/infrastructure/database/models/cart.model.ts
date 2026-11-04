@@ -1,22 +1,30 @@
 import {
   Table,
-  Column,
   Model,
-  ForeignKey,
   BelongsTo,
-  DataType,
   HasMany,
-  AutoIncrement,
   PrimaryKey,
+  AutoIncrement,
+  Column,
+  ForeignKey,
+  DataType,
+  Default,
+  CreatedAt,
+  UpdatedAt,
 } from 'sequelize-typescript';
-import { CustomerModel } from 'src/infrastructure/database/models/customer.model';
-import { CartItemModel } from './cart-item.model';
 import { CartStatusEnum } from 'src/shared';
+import { CartItemModel } from './cart-item.model';
+import { CustomerModel } from './customer.model';
 
 @Table({
-  tableName: 'carts',
-  underscored: true,
   timestamps: true,
+  underscored: true,
+  tableName: 'carts',
+  indexes: [
+    { fields: ['customer_id', 'status'], name: 'carts_customer_status_idx' },
+    { fields: ['session_token'], name: 'carts_session_idx' },
+    { fields: ['expires_at'], name: 'carts_expiry_idx' },
+  ],
 })
 export class CartModel extends Model<CartModel> {
   @PrimaryKey
@@ -28,16 +36,29 @@ export class CartModel extends Model<CartModel> {
   @Column
   customer_id: number;
 
+  @BelongsTo(() => CustomerModel)
+  customer: CustomerModel;
+
+  @Column({ type: DataType.STRING(255), unique: true })
+  session_token: string;
+
+  @Default(CartStatusEnum.ACTIVE)
   @Column({
-    type: DataType.ENUM,
-    values: Object.values(CartStatusEnum),
-    defaultValue: CartStatusEnum.ACTIVE,
+    type: DataType.ENUM(...Object.values(CartStatusEnum)),
   })
   status: CartStatusEnum;
 
-  @HasMany(() => CartItemModel)
-  items: CartItemModel[];
+  @Column({ type: DataType.DATE })
+  expires_at: Date;
 
-  @BelongsTo(() => CustomerModel)
-  customer: CustomerModel;
+  @CreatedAt
+  @Column({ field: 'created_at' })
+  created_at: Date;
+
+  @UpdatedAt
+  @Column({ field: 'updated_at' })
+  updated_at: Date;
+
+  @HasMany(() => CartItemModel, { foreignKey: 'cart_id', as: 'items' })
+  items: CartItemModel[];
 }

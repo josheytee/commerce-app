@@ -12,7 +12,6 @@ import { CustomerRepository } from 'src/infrastructure/database/repositories/cus
 
 @Injectable()
 export class AuthService {
-  private readonly JWT_SECRET = 'your-jwt-secret';
 
   constructor(
     private readonly _userRepository: UserRepository,
@@ -94,7 +93,7 @@ export class AuthService {
 
 
     // find active sessions and expires them
-    this.sessionService.deleteExpiredSessions(user.id);
+    await this.sessionService.deleteExpiredSessions(user.id);
 
     // Return the access token
     return {

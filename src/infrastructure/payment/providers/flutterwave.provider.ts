@@ -53,12 +53,12 @@ export class FlutterwavePaymentProvider implements PaymentProvider {
       }),
     });
 
-    // console.log('na we be this', this.secretKey, response);
+    console.log('na we be this', this.secretKey, response);
     if (!response.ok) {
       throw new Error('Failed to initialize payment');
     }
 
-    return response.json();
+    return response.json()?.data?.link;
   }
 
   async handlePaymentCallback(module, queryParams: any): Promise<void> {

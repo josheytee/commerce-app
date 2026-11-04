@@ -27,6 +27,14 @@ export class OrderItemDto {
 }
 
 export class CreateOrderDto {
+
+    @ApiProperty({
+        description: 'A unique key to ensure idempotency of the order creation',
+        example: 'unique-idempotency-key-12345',
+    })
+    @IsString()
+    idempotency_key: string;
+
     @IsNumber()
     @ApiProperty({
         description: 'The ID of the customer placing the order',

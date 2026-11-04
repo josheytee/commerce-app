@@ -1,5 +1,6 @@
 // dto/product-response.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ProductVariantResponseDto } from './product-variant-response.dto';
 
 export class CategoryDto {
     @ApiProperty({ example: 1, description: 'Category ID' })
@@ -103,99 +104,148 @@ export class ProductReviewSummaryDto {
     })
     recent_reviews: RecentReviewDto[];
 }
+export class ProductPriceRangeDto {
+    @ApiProperty({ example: 99.99 })
+    min: number;
 
-export class ProductResponseDto {
-    @ApiProperty({ example: 266, description: 'Unique product identifier' })
+    @ApiProperty({ example: 149.99 })
+    max: number;
+
+    @ApiProperty({ example: true, description: 'True when min !== max' })
+    is_range: boolean;
+}
+
+export class ProductOwnerDto {
+    @ApiProperty({ example: 1 })
     id: number;
 
-    @ApiProperty({
-        example: 'Premium Wireless Headphones',
-        description: 'Product name',
-    })
+    @ApiProperty({ example: 'Acme Store' })
     name: string;
 
-    @ApiProperty({
-        example: 'premium-wireless-headphones',
-        description: 'URL-friendly slug',
-    })
+    @ApiProperty({ example: 'acme-store' })
+    slug: string;
+}
+
+export class ProductVendorDto {
+    @ApiProperty({ example: 1 })
+    id: number;
+
+    @ApiProperty({ example: 'Acme Inc.' })
+    name: string;
+
+    @ApiProperty({ example: 4.7 })
+    rating: number;
+
+    @ApiProperty({ example: true })
+    verified: boolean;
+}
+
+export class ProductResponseDto {
+    @ApiProperty({ example: 1 })
+    id: number;
+
+    @ApiProperty({ example: 'Running Shoes' })
+    name: string;
+
+    @ApiProperty({ example: 'running-shoes' })
     slug: string;
 
-    @ApiPropertyOptional({
-        example:
-            'Experience crystal-clear audio with our premium wireless headphones...',
-        description: 'Full product description (HTML supported)',
-    })
+    @ApiPropertyOptional({ example: 'Long description...' })
     description?: string;
 
-    @ApiPropertyOptional({
-        example: 'High-quality wireless headphones with noise cancellation',
-        description: 'Short description for listings',
-    })
+    @ApiPropertyOptional({ example: 'Short summary...' })
     short_description?: string;
 
-    @ApiProperty({
-        type: ProductPricingDto,
-        description: 'Product pricing information',
-    })
-    pricing: ProductPricingDto;
+    @ApiPropertyOptional({ example: 'Weight: 300g, Material: mesh' })
+    specification?: string;
 
+    // ============ PRICING ============
     @ApiProperty({
-        enum: [
-            'draft',
-            'pending',
-            'published',
-            'archived',
-            'out_of_stock',
-            'discontinued',
-        ],
-        example: 'published',
-        description: 'Product status',
+        example: 99.99,
+        description: 'Minimum variant price (single value for simple products)',
     })
+    price: number;
+
+    @ApiProperty({ type: ProductPriceRangeDto })
+    price_range: ProductPriceRangeDto;
+
+    @ApiPropertyOptional({
+        example: 149.99,
+        description: 'Highest compare_at_price across variants',
+    })
+    compare_at_price?: number;
+
+    @ApiProperty({ example: '$99.99', description: 'Formatted min (or range) price' })
+    formatted_price: string;
+
+    @ApiProperty({ example: 33, description: 'Discount % vs. best compare_at_price' })
+    discount_percentage: number;
+
+    // ============ STATUS ============
+    @ApiProperty({ example: 'published' })
     status: string;
 
-    @ApiProperty({
-        enum: ['simple', 'variable', 'digital', 'service', 'bundle'],
-        example: 'variable',
-        description: 'Product type',
-    })
+    @ApiProperty({ example: 'variable', enum: ['simple', 'variable'] })
     product_type: string;
 
-    @ApiProperty({ example: true, description: 'Whether product is featured' })
+    @ApiProperty({ example: false })
     is_featured: boolean;
 
-    @ApiProperty({ example: true, description: 'Whether product is active' })
+    @ApiProperty({ example: true })
     is_active: boolean;
 
-    @ApiProperty({ type: ProductMediaDto, description: 'Product media assets' })
-    media: ProductMediaDto;
+    @ApiProperty({ example: false })
+    is_taxable: boolean;
+
+    @ApiProperty({ example: false })
+    allow_backorders: boolean;
+
+    // ============ REVIEWS ============
+    @ApiProperty({ example: 4.5 })
+    rating: number;
+
+    @ApiProperty({ example: 27 })
+    review_count: number;
+
+    @ApiProperty({ example: 27 })
+    total_ratings: number;
+
+    // ============ MEDIA ============
+    @ApiPropertyOptional({
+        example: 'https://cdn.example.com/products/hero.jpg',
+        nullable: true,
+    })
+    featured_image: string | null;
 
     @ApiProperty({
-        type: ProductReviewSummaryDto,
-        description: 'Review summary and recent reviews',
+        type: [String],
+        example: [
+            'https://cdn.example.com/products/1.jpg',
+            'https://cdn.example.com/products/2.jpg',
+        ],
     })
-    reviews: ProductReviewSummaryDto;
+    gallery_images: string[];
 
-    @ApiPropertyOptional({
-        type: CategoryDto,
-        description: 'Product category/section',
-    })
-    category: CategoryDto | null;
-
-    @ApiPropertyOptional({
-        type: VendorDto,
-        description: 'Product vendor information',
-    })
-    vendor: VendorDto | null;
-
-    @ApiProperty({
-        example: '2024-01-10T08:00:00Z',
-        description: 'Creation timestamp',
-    })
+    // ============ TIMESTAMPS ============
+    @ApiProperty({ example: '2025-01-15T10:00:00.000Z' })
     created_at: Date;
 
-    @ApiProperty({
-        example: '2024-01-15T14:30:00Z',
-        description: 'Last update timestamp',
-    })
+    @ApiProperty({ example: '2025-01-15T10:00:00.000Z' })
     updated_at: Date;
+
+    @ApiPropertyOptional({ example: '2025-01-16T09:00:00.000Z', nullable: true })
+    published_at?: Date | null;
+
+    // ============ RELATIONS ============
+    @ApiPropertyOptional({ type: ProductOwnerDto, nullable: true })
+    section: ProductOwnerDto | null;
+
+    @ApiPropertyOptional({ type: ProductOwnerDto, nullable: true })
+    store: ProductOwnerDto | null;
+
+    @ApiPropertyOptional({ type: ProductVendorDto, nullable: true })
+    vendor: ProductVendorDto | null;
+
+    @ApiProperty({ type: [ProductVariantResponseDto] })
+    variants: ProductVariantResponseDto[];
 }

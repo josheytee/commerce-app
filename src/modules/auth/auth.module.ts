@@ -10,6 +10,7 @@ import { TokenStrategy } from './token.strategy';
 import { UserModule } from '../user/user.module';
 import { SessionModule } from './session/session.module';
 import { CustomerModule } from '../user/customer/customer.module';
+import { CustomerJwtStrategy } from 'src/shared/strategies';
 
 @Module({
   imports: [
@@ -19,10 +20,16 @@ import { CustomerModule } from '../user/customer/customer.module';
     PassportModule.register({ session: false }), // Disable sessions
     JwtModule.register({
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: '60m' },
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy, TokenStrategy],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    TokenStrategy,
+    CustomerJwtStrategy,
+  ],
   controllers: [AuthController],
 })
 export class AuthModule { }
