@@ -1,38 +1,32 @@
+// src/infrastructure/database/models/attribute-value.model.ts
 import {
   Table,
   Column,
   Model,
   PrimaryKey,
   AutoIncrement,
+  AllowNull,
+  DataType,
   ForeignKey,
   BelongsTo,
-  DataType,
   Default,
-  AllowNull,
-  HasMany,
   CreatedAt,
   UpdatedAt,
-  DeletedAt,
 } from 'sequelize-typescript';
 import { AttributeModel } from './attribute.model';
-import { ProductVariantAttributeValueModel } from './product-variant-attribute-values.model';
 
 @Table({
-  tableName: 'attribute_values',
   timestamps: true,
   underscored: true,
-  paranoid: true, // soft-delete: preserves variant→value links
+  tableName: 'attribute_values',
   indexes: [
-    // Prevents duplicate values under the same attribute
+    { fields: ['attribute_id'], name: 'attr_values_attribute_idx' },
     {
-      name: 'attribute_values_attr_value_uidx',
       unique: true,
       fields: ['attribute_id', 'value'],
+      name: 'attr_values_attr_value_unique',
     },
-    // UI ordering & admin listings
-    { fields: ['attribute_id', 'sort_order'], name: 'attribute_values_sort_idx' },
-    // Reverse lookup for "which attributes use this value" (rare but useful)
-    { fields: ['attribute_id'], name: 'attribute_values_attribute_id_idx' },
+    { fields: ['attribute_id', 'sort_order'], name: 'attr_values_sort_idx' },
   ],
 })
 export class AttributeValueModel extends Model<AttributeValueModel> {
@@ -43,58 +37,43 @@ export class AttributeValueModel extends Model<AttributeValueModel> {
 
   @ForeignKey(() => AttributeModel)
   @AllowNull(false)
-  @Column
+  @Column({ onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   attribute_id: number;
 
   @BelongsTo(() => AttributeModel, {
-    foreignKey: 'attribute_id',
-    as: 'attribute',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   attribute: AttributeModel;
 
-  // ============ VALUE ============
+  // Internal value used for filtering / lookups (e.g. "red", "xl")
   @AllowNull(false)
   @Column({ type: DataType.STRING(100) })
-  value: string; // "Red", "42", "XL" — canonical, used in matching
+  value: string;
 
-  @Column({ type: DataType.STRING(100) })
-  display_value: string; // "Crimson Red" — pretty label for UI
+  // What the user sees ("Red", "Extra Large")
+  @AllowNull(false)
+  @Column({ type: DataType.STRING(150) })
+  display_value: string;
 
-  // Hex color — supports #RGB, #RRGGBB, #RRGGBBAA
-  @Column({ type: DataType.STRING(9) })
-  color_code: string;
+  // Optional hex color (only for color-type attributes)
+  @AllowNull(true)
+  @Column({ type: DataType.STRING(20) })
+  code: string | null;
 
-  @Column({ type: DataType.STRING(255) })
-  image_url: string; // Swatch image (UI-only, not a catalog asset)
+  //Optional swatch image (patterns, product photos as swatches)
+  @AllowNull(true)
+  @Column({ type: DataType.STRING(500) })
+  image_url: string | null;
 
-  // ============ DISPLAY ============
   @Default(0)
+  @AllowNull(false)
   @Column({ type: DataType.INTEGER })
   sort_order: number;
 
-  // ============ RELATIONS ============
-  @HasMany(() => ProductVariantAttributeValueModel, {
-    foreignKey: 'attribute_value_id',
-    as: 'variant_attribute_values',
-  })
-  variant_attribute_values: ProductVariantAttributeValueModel[];
+  @Default(true)
+  @AllowNull(false)
+  @Column({ type: DataType.BOOLEAN })
+  is_active: boolean;
 
-  // ============ TIMESTAMPS ============
-  @CreatedAt
-  @Column
-  created_at: Date;
-
-  @UpdatedAt
-  @Column
-  updated_at: Date;
-
-  @DeletedAt
-  @Column
-  deleted_at: Date;
-
-  // ============ VIRTUALS ============
-
-  get label(): string {
-    return this.display_value || this.value;
-  }
 }

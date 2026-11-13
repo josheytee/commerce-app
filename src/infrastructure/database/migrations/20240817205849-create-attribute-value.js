@@ -29,7 +29,7 @@ module.exports = {
         type: Sequelize.STRING(100),
         allowNull: true,
       },
-      color_code: {
+      code: {
         type: Sequelize.STRING(7),
         allowNull: true,
       },

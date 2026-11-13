@@ -1,48 +1,40 @@
+// src/infrastructure/database/models/attribute.model.ts
 import {
   Table,
   Column,
   Model,
   PrimaryKey,
   AutoIncrement,
-  ForeignKey,
-  BelongsTo,
-  DataType,
-  Default,
   AllowNull,
+  DataType,
   HasMany,
+  Default,
   CreatedAt,
   UpdatedAt,
-  DeletedAt,
+  Unique,
+  Index,
+  BelongsTo,
+  ForeignKey,
 } from 'sequelize-typescript';
 import { AttributeValueModel } from './attribute-value.model';
+import { ProductVariantAttributeValueModel } from './product-variant-attribute-values.model';
 import { VendorModel } from './vendor.model';
-import { AttributeTypeEnum } from 'src/shared';
+
+export enum AttributeTypeEnum {
+  TEXT = 'text',        // free-form text input
+  SELECT = 'select',    // single choice from a list
+  COLOR = 'color',      // color swatch (requires color_code on values)
+  NUMBER = 'number',    // numeric input
+  BOOLEAN = 'boolean',  // yes/no
+}
 
 @Table({
-  tableName: 'attributes',
   timestamps: true,
   underscored: true,
-  paranoid: true, // soft-delete: preserves variant→attribute links
+  tableName: 'attributes',
   indexes: [
-    // Vendor-scoped uniqueness (also covers platform rows when vendor_id is set)
-    {
-      name: 'attributes_vendor_code_uidx',
-      unique: true,
-      fields: ['vendor_id', 'code'],
-    },
-    // Platform-scoped uniqueness — Postgres partial index
-    // (NULL vendor_id would otherwise bypass the composite unique above)
-    {
-      name: 'attributes_platform_code_uidx',
-      unique: true,
-      fields: ['code'],
-      where: { vendor_id: null },
-    },
-    // Fast lookup: "all platform attributes" or "all attributes for vendor X"
-    { fields: ['vendor_id'], name: 'attributes_vendor_id_idx' },
-    // UI filtering
-    { fields: ['is_filterable'], name: 'attributes_filterable_idx' },
-    { fields: ['is_variant_attribute'], name: 'attributes_variant_attr_idx' },
+    { fields: ['slug'], name: 'attributes_slug_idx' },
+    { fields: ['name'], name: 'attributes_name_idx' },
   ],
 })
 export class AttributeModel extends Model<AttributeModel> {
@@ -65,20 +57,16 @@ export class AttributeModel extends Model<AttributeModel> {
   })
   vendor: VendorModel;
 
-  // ============ IDENTITY ============
   @AllowNull(false)
+  @Unique
   @Column({ type: DataType.STRING(100) })
-  name: string; // "Color"
+  name: string;
 
-  // Unique per vendor; unique globally when vendor_id IS NULL
   @AllowNull(false)
-  @Column({ type: DataType.STRING(100) })
-  code: string; // "color" (URL-safe, lowercase)
+  @Unique
+  @Column({ type: DataType.STRING(120) })
+  slug: string;
 
-  @Column({ type: DataType.TEXT })
-  description: string;
-
-  // ============ BEHAVIOR ============
   @Default(AttributeTypeEnum.SELECT)
   @AllowNull(false)
   @Column({
@@ -86,59 +74,30 @@ export class AttributeModel extends Model<AttributeModel> {
   })
   type: AttributeTypeEnum;
 
+  @AllowNull(true)
+  @Column({ type: DataType.TEXT })
+  description: string | null;
+
   @Default(0)
+  @AllowNull(false)
   @Column({ type: DataType.INTEGER })
   sort_order: number;
 
   @Default(true)
+  @AllowNull(false)
   @Column({ type: DataType.BOOLEAN })
-  is_filterable: boolean;
+  is_active: boolean;
 
-  @Default(true)
-  @Column({ type: DataType.BOOLEAN })
-  is_visible: boolean;
-
-  @Default(false)
-  @Column({ type: DataType.BOOLEAN })
-  is_variant_attribute: boolean;
-
-  @Default(false)
-  @Column({ type: DataType.BOOLEAN })
-  is_required: boolean;
-
-  // Platform can lock a vendor attribute to prevent vendor edits
-  // (e.g., an admin-defined "Color" that vendors must use as-is)
-  @Default(false)
-  @Column({ type: DataType.BOOLEAN })
-  is_locked: boolean;
-
-  // ============ RELATIONS ============
   @HasMany(() => AttributeValueModel, {
     foreignKey: 'attribute_id',
     as: 'values',
+    onDelete: 'CASCADE',
   })
   values: AttributeValueModel[];
 
-  // ============ TIMESTAMPS ============
-  @CreatedAt
-  @Column
-  created_at: Date;
-
-  @UpdatedAt
-  @Column
-  updated_at: Date;
-
-  @DeletedAt
-  @Column
-  deleted_at: Date;
-
-  // ============ VIRTUALS ============
-
-  get is_platform(): boolean {
-    return this.vendor_id === null;
-  }
-
-  get is_vendor_owned(): boolean {
-    return this.vendor_id !== null;
-  }
+  @HasMany(() => ProductVariantAttributeValueModel, {
+    foreignKey: 'attribute_id',
+    as: 'variant_assignments',
+  })
+  variant_assignments: ProductVariantAttributeValueModel[];
 }

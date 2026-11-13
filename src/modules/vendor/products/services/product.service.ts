@@ -154,6 +154,7 @@ export class ProductService extends ProductFormat {
         },
         t,
       );
+      console.log('Created variant:', created.id, attribute_values);
 
       if (attribute_values?.length) {
         await this.linkAttributeValues(
@@ -459,7 +460,7 @@ export class ProductService extends ProductFormat {
         );
       if (attr.vendor_id !== null && attr.vendor_id !== vendorId) {
         throw new ForbiddenException(
-          `Attribute ${attr.code} belongs to another vendor`,
+          `Attribute ${attr.name} belongs to another vendor`,
         );
       }
       if (val.attribute_id !== attr.id) {

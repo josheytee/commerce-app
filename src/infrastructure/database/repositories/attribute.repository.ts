@@ -22,17 +22,17 @@ export class AttributeRepository extends BaseRepository<AttributeModel> {
         });
     }
 
-    async listForVendor(
-        vendorId: number,
-        t?: Transaction,
-    ): Promise<AttributeModel[]> {
-        return this.attributeModel.findAll({
-            where: {
-                [Op.or]: [{ vendor_id: null }, { vendor_id: vendorId }],
-            },
-            transaction: t,
-        });
-    }
+    // async listForVendor(
+    //     vendorId: number,
+    //     t?: Transaction,
+    // ): Promise<AttributeModel[]> {
+    //     return this.attributeModel.findAll({
+    //         where: {
+    //             [Op.or]: [{ vendor_id: null }, { vendor_id: vendorId }],
+    //         },
+    //         transaction: t,
+    //     });
+    // }
 
     async findAndCountAll(options: {
         where?: any;

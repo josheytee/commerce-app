@@ -179,7 +179,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
 
     private buildWhereClause(conditions: any): any {
         const where: any = {
-            deleted_at: null,
+            deletedAt: null,
             status: ProductStatusEnum.PUBLISHED,
             is_active: true,
         };
@@ -241,7 +241,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
 
         // New Arrivals
         if (conditions.newArrivals) {
-            where.created_at = { [Op.gte]: conditions.newArrivals.since };
+            where.createdAt = { [Op.gte]: conditions.newArrivals.since };
         }
 
         // Price Range
@@ -317,7 +317,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         if (!fields || fields.length === 0) {
             // Exclude heavy fields by default
             return {
-                exclude: ['deleted_at', 'search_keywords', 'description_full'],
+                exclude: ['deletedAt', 'search_keywords', 'description_full'],
             };
         }
 
@@ -476,7 +476,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                 id,
                 // status: ProductStatusEnum.PUBLISHED,
                 // is_active: true,
-                deleted_at: null,
+                deletedAt: null,
             },
             include,
         });
@@ -497,7 +497,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                 slug,
                 // status: ProductStatusEnum.PUBLISHED,
                 // is_active: true,
-                deleted_at: null,
+                deletedAt: null,
             },
             include,
         });
@@ -533,7 +533,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         const { where, include, order, limit, offset } = options || {};
 
         return this.productModel.findAndCountAll({
-            where: { ...where, deleted_at: null },
+            where: { ...where, deletedAt: null },
             include: include || [
                 {
                     model: SectionModel,
@@ -644,7 +644,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                             WHERE v.product_id = "ProductModel"."id"
                             AND v.compare_at_price IS NOT NULL
                             AND v.compare_at_price > v.price
-                            AND v.deleted_at IS NULL
+                            AND v.deletedAt IS NULL
                         )`,
                     ),
                     'DESC',
@@ -745,7 +745,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
             where: {
                 status: ProductStatusEnum.PUBLISHED,
                 is_active: true,
-                created_at: { [Op.gte]: thirtyDaysAgo },
+                createdAt: { [Op.gte]: thirtyDaysAgo },
             },
             include: [
                 {
@@ -759,7 +759,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     attributes: ['id', 'business_name', 'total_ratings', 'is_verified'],
                 },
             ],
-            order: [['created_at', 'DESC']],
+            order: [['createdAt', 'DESC']],
             limit,
         });
     }
@@ -783,7 +783,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     attributes: ['id', 'business_name', 'total_ratings', 'is_verified'],
                 },
             ],
-            order: [['created_at', 'ASC']],
+            order: [['createdAt', 'ASC']],
             limit,
         });
     }
@@ -810,13 +810,13 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                 order = [['rating', 'DESC']];
                 break;
             case 'newest':
-                order = [['created_at', 'DESC']];
+                order = [['createdAt', 'DESC']];
                 break;
             case 'popular':
                 order = [['sales_count', 'DESC']];
                 break;
             default:
-                order = [['created_at', 'DESC']];
+                order = [['createdAt', 'DESC']];
         }
 
         return this.productModel.findAndCountAll({
@@ -854,7 +854,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     { name: { [Op.iLike]: `%${query}%` } },
                     { description: { [Op.iLike]: `%${query}%` } },
                     { short_description: { [Op.iLike]: `%${query}%` } },
-                    { meta_keywords: { [Op.iLike]: `%${query}%` } },
                 ],
                 status: ProductStatusEnum.PUBLISHED,
                 is_active: true,

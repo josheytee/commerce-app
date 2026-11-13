@@ -1,60 +1,38 @@
-// src/modules/vendor/products/attribute/dto/create-attribute.dto.ts
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+// src/modules/attribute/dto/create-attribute-value.dto.ts
 import {
-  IsBoolean,
-  IsEnum,
-  IsInt,
-  IsOptional,
   IsString,
+  IsOptional,
+  IsInt,
+  IsBoolean,
   MaxLength,
   Min,
 } from 'class-validator';
-import { AttributeTypeEnum } from 'src/shared';
 
-export class CreateAttributeDto {
-  @ApiProperty({ example: 'Color' })
+export class CreateAttributeValueDto {
   @IsString()
   @MaxLength(100)
-  name: string;
+  value: string;
 
-  @ApiProperty({ example: 'color', description: 'URL-safe, unique per vendor' })
   @IsString()
-  @MaxLength(100)
-  code: string;
+  @MaxLength(150)
+  display_value: string;
 
-  @ApiPropertyOptional({ example: 'Product color' })
   @IsOptional()
   @IsString()
-  description?: string;
+  @MaxLength(20)
+  color_code?: string;
 
-  @ApiPropertyOptional({ enum: AttributeTypeEnum, default: AttributeTypeEnum.SELECT })
   @IsOptional()
-  @IsEnum(AttributeTypeEnum)
-  type?: AttributeTypeEnum;
+  @IsString()
+  @MaxLength(500)
+  swatch_image_url?: string;
 
-  @ApiPropertyOptional({ example: 0 })
   @IsOptional()
   @IsInt()
   @Min(0)
   sort_order?: number;
 
-  @ApiPropertyOptional({ example: true, default: true })
   @IsOptional()
   @IsBoolean()
-  is_filterable?: boolean;
-
-  @ApiPropertyOptional({ example: true, default: true })
-  @IsOptional()
-  @IsBoolean()
-  is_visible?: boolean;
-
-  @ApiPropertyOptional({ example: false, default: false })
-  @IsOptional()
-  @IsBoolean()
-  is_variant_attribute?: boolean;
-
-  @ApiPropertyOptional({ example: false, default: false })
-  @IsOptional()
-  @IsBoolean()
-  is_required?: boolean;
+  is_active?: boolean;
 }

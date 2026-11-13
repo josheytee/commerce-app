@@ -402,11 +402,11 @@ export class ProductResponseDto {
         example: '2024-01-10T08:00:00Z',
         description: 'Creation timestamp',
     })
-    created_at: Date;
+    created_at?: Date;
 
     @ApiProperty({
         example: '2024-01-15T14:30:00Z',
         description: 'Last update timestamp',
     })
-    updated_at: Date;
+    updated_at?: Date;
 }

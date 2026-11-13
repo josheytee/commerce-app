@@ -99,10 +99,10 @@ export class MediaUploadService {
         const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
 
         return {
-            url: `${baseUrl}/uploads/${entityType}/${filename}`,
+            url: `${baseUrl}/uploads/${entityType}/${entityId}/${filename}`,
             key: filename,
-            thumbnailUrl: `${baseUrl}/uploads/${entityType}/thumb_${filename}`,
-            mediumUrl: `${baseUrl}/uploads/${entityType}/med_${filename}`,
+            thumbnailUrl: `${baseUrl}/uploads/${entityType}/${entityId}/thumb_${filename}`,
+            mediumUrl: `${baseUrl}/uploads/${entityType}/${entityId}/med_${filename}`,
         };
     }
 }

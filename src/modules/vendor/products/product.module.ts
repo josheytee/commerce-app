@@ -26,11 +26,13 @@ import { InventoryModule } from '../inventory/inventory.module';
 import { PricingService } from './services/pricing.service';
 import { ProductMediaController } from './product-media.controller';
 import { MediaUploadService } from '../media/services';
+import { AttributeModule } from './attribute/attribute.module';
 
 @Module({
   imports: [
     InventoryModule,
     UserVendorRoleModule,
+    AttributeModule,
     SequelizeModule.forFeature([
       ProductModel,
       MediaModel,

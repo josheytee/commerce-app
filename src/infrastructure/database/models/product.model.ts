@@ -11,10 +11,6 @@ import {
   DataType,
   Default,
   AllowNull,
-  CreatedAt,
-  UpdatedAt,
-  DeletedAt,
-  BelongsToMany,
 } from 'sequelize-typescript';
 import { SectionModel } from './section.model';
 import { StoreModel } from './store.model';
@@ -93,11 +89,6 @@ export class ProductModel extends Model<ProductModel> {
   @Column({ type: DataType.DECIMAL(12, 2) })
   max_variant_price: number;
 
-  // Currency for this product (multi-currency support)
-  @Default('USD')
-  @AllowNull(false)
-  @Column({ type: DataType.STRING(3) })
-  currency: string;
 
   // Tax
   @Default(false)
@@ -113,9 +104,6 @@ export class ProductModel extends Model<ProductModel> {
 
   @Column({ type: DataType.TEXT })
   meta_description: string;
-
-  @Column({ type: DataType.STRING(255) })
-  meta_keywords: string;
 
   // ============ STATUS & FLAGS ============
   @Default(ProductStatusEnum.DRAFT)
@@ -133,10 +121,6 @@ export class ProductModel extends Model<ProductModel> {
   @Default(true)
   @Column({ type: DataType.BOOLEAN })
   is_active: boolean;
-
-  @Default(true)
-  @Column({ type: DataType.BOOLEAN })
-  review_able: boolean;
 
   @Default(false)
   @Column({ type: DataType.BOOLEAN })
@@ -261,19 +245,6 @@ export class ProductModel extends Model<ProductModel> {
   })
   search_document: SearchDocumentModel;
 
-  // ============ TIMESTAMPS ============
-  @CreatedAt
-  @Column
-  created_at: Date;
-
-  @UpdatedAt
-  @Column
-  updated_at: Date;
-
-  @DeletedAt
-  @Column
-  deleted_at: Date;
-
   // ============ VIRTUAL FIELDS ============
 
   get is_configurable(): boolean {
@@ -289,18 +260,5 @@ export class ProductModel extends Model<ProductModel> {
       this.is_configurable &&
       Number(this.min_variant_price) !== Number(this.max_variant_price)
     );
-  }
-
-  get formatted_price_range(): string {
-    const fmt = (v: number) =>
-      new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: this.currency || 'USD',
-      }).format(v);
-
-    if (this.has_price_range) {
-      return `${fmt(this.min_variant_price)} – ${fmt(this.max_variant_price)}`;
-    }
-    return fmt(this.min_variant_price);
   }
 }

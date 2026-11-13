@@ -11,7 +11,6 @@ export interface PriceResult {
     max_price: number;
     compare_at_price: number | null;
     discount_percentage: number;
-    currency: string;
     variant_prices: Record<number, number>; // variant_id → final price
 }
 
@@ -40,7 +39,6 @@ export class PricingService {
                 max_price: 0,
                 compare_at_price: null,
                 discount_percentage: 0,
-                currency: product.currency,
                 variant_prices: {},
             };
         }
@@ -99,7 +97,6 @@ export class PricingService {
             max_price: maxPrice,
             compare_at_price: bestCompareAt,
             discount_percentage: Math.round(discountPercentage * 100) / 100,
-            currency: product.currency,
             variant_prices: variantPrices,
         };
     }

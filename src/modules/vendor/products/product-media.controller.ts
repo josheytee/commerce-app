@@ -153,7 +153,7 @@ export class ProductMediaController {
                 file,
                 'product',
                 +id,
-                MediaTypeEnum.PRODUCT_GALLERY,
+                MediaTypeEnum.PRODUCT_IMAGE,
                 req.user.id,
             ),
         );

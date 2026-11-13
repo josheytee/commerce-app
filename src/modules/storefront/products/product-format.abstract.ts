@@ -62,7 +62,6 @@ export abstract class ProductFormat {
                 reviews.length
                 : 0;
 
-        const currency = product.currency || 'USD';
 
         return {
             id: product.id,
@@ -80,7 +79,7 @@ export abstract class ProductFormat {
             //     is_range: minPrice !== maxPrice,
             // },
             compare_at_price: bestCompareAt,
-            formatted_price: this.formatPriceRange(minPrice, maxPrice, currency),
+            formatted_price: this.formatPriceRange(minPrice, maxPrice),
             discount_percentage: discountPercentage,
 
             // Status
@@ -99,17 +98,13 @@ export abstract class ProductFormat {
             // Media
             featured_image: featuredImage,
             gallery_images: galleryImages,
-
-            // Timestamps
-            created_at: product.created_at,
-            updated_at: product.updated_at,
             // published_at: product.published_at,
 
             // Relations
             section: this.formatSection(product.section),
             store: this.formatStore(product.store),
             vendor: this.formatVendor(product.vendor),
-            variants: this.formatVariants(variants, currency),
+            variants: this.formatVariants(variants),
         };
     }
 
@@ -119,7 +114,6 @@ export abstract class ProductFormat {
 
     protected formatVariants(
         variants: ProductVariantModel[] | null | undefined,
-        currency: string,
     ): ProductVariantResponseDto[] {
         if (!variants?.length) return [];
 
@@ -160,7 +154,6 @@ export abstract class ProductFormat {
                 price,
                 compare_at_price: compareAt,
                 cost_price: cost,
-                formatted_price: this.formatCurrency(price, currency),
                 discount_percentage: discountPercentage,
 
                 // Stock (aggregated from inventories)
@@ -250,7 +243,7 @@ export abstract class ProductFormat {
         return Number.isNaN(num) ? undefined : num;
     }
 
-    private formatCurrency(amount: number, currency: string): string {
+    private formatCurrency(amount: number, currency: string = 'USD'): string {
         try {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
@@ -262,9 +255,9 @@ export abstract class ProductFormat {
         }
     }
 
-    private formatPriceRange(min: number, max: number, currency: string): string {
-        if (min === max) return this.formatCurrency(min, currency);
-        return `${this.formatCurrency(min, currency)} – ${this.formatCurrency(max, currency)}`;
+    private formatPriceRange(min: number, max: number): string {
+        if (min === max) return this.formatCurrency(min, 'USD');
+        return `${this.formatCurrency(min, 'USD')} – ${this.formatCurrency(max, 'USD')}`;
     }
 
     private roundToOneDecimal(num: number): number {
