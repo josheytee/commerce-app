@@ -1,6 +1,4 @@
-// src/modules/vendor/products/dto/create-variant.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
 import {
   IsArray,
   IsInt,
@@ -10,7 +8,9 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { VariantAttributeValueDto } from './variant-attribute-value.dto';
+import { CreateInventoryDto } from './inventory.dto';
 
 export class CreateVariantDto {
   @ApiPropertyOptional({
@@ -69,13 +69,31 @@ export class CreateVariantDto {
   height?: number;
 
   @ApiPropertyOptional({
-    example: 50,
-    description: 'Initial stock at the product\'s store',
+    example: true,
+    description: 'Whether this variant needs a shipping address',
+    default: true,
   })
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  initial_stock?: number;
+  requires_shipping?: boolean;
+
+  @ApiPropertyOptional({
+    example: 'standard',
+    description: 'Shipping class (standard, express, free, local_pickup)',
+    default: 'standard',
+  })
+  @IsOptional()
+  @IsString()
+  shipping_class?: string;
+
+  @ApiPropertyOptional({
+    type: () => CreateInventoryDto,
+    description:
+      'Initial inventory for this variant. Omit to initialize with quantity 0.',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateInventoryDto)
+  inventory?: CreateInventoryDto;
 
   @ApiPropertyOptional({
     type: [VariantAttributeValueDto],

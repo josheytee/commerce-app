@@ -5,3 +5,4 @@ export * from './create-product-with-variants.dto';
 // export * from './product-detail-response.dto';
 export * from './product-variant-response.dto';
 export * from './product-response.dto';
+export * from './variant-attribute-value.dto';

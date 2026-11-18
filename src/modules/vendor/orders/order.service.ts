@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Transaction, Op, WhereOptions } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
+import { nanoid } from 'nanoid';
 
 import { PaymentService } from 'src/infrastructure/payment/payment.service';
 import { CustomerService } from 'src/modules/user/customer/customer.service';
@@ -61,6 +62,7 @@ import {
 
 import { CreateOrderDto, OrderItemDto } from './dto/create-order.dto';
 import { AddressSnapshot } from './dto/address-snapshot.dto';
+import { InventoryReservationService } from '../inventory/inventory-reservation.service';
 
 // ============================================================
 // ORDER SERVICE
@@ -69,13 +71,13 @@ import { AddressSnapshot } from './dto/address-snapshot.dto';
 //   - CheckoutSession = payment shell (1 per attempt, 1 payment)
 //   - Order           = fulfillment unit (1 per vendor+store)
 //   - OrderItem       = belongs to Order only
-//   - Inventory holds live in InventoryReservation
+//   - Inventory       = one row per variant; stock + reserved counters
+//   - Reservations    = HELD → COMMITTED | RELEASED
 //   - Money is DECIMAL in DB. Sequelize returns strings. We only convert
-//     via toMoney()/sumMoney() at the boundary and store strings back.
+//     via toMoney() at the boundary and store strings back.
 //   - Snapshots are immutable after creation
 // ============================================================
 
-const RESERVATION_TTL_MS = 15 * 60 * 1000;
 const CHECKOUT_TTL_MS = 30 * 60 * 1000;
 const TAX_RATE = 0.075;
 const PLATFORM_FEE_RATE = 0.1;
@@ -101,6 +103,7 @@ export class OrderService {
     private readonly paymentService: PaymentService,
     private readonly customerService: CustomerService,
     private readonly addressService: AddressService,
+    private readonly reservationService: InventoryReservationService,
     private readonly sequelize: Sequelize,
 
     private readonly checkoutSessionRepo: CheckoutSessionRepository,
@@ -132,7 +135,6 @@ export class OrderService {
     orders: OrderModel[];
     payment_url: string | null;
   }> {
-    // ---------- Idempotency short-circuit ----------
     const existing = await this.checkoutSessionRepo.findOne({
       where: { idempotency_key: idempotencyKey },
       include: [
@@ -148,7 +150,7 @@ export class OrderService {
       return {
         checkout_session: existing,
         orders: existing.orders ?? [],
-        payment_url: existing.payment_reference ? null : null, // caller should call retryPayment if they need a new URL
+        payment_url: null,
       };
     }
 
@@ -156,7 +158,6 @@ export class OrderService {
       await this.addressService.getSnapshotOrThrow(shippingAddressId);
     const billingAddress = shippingAddress;
 
-    // ---------- Create session + orders + items atomically ----------
     const { sessionId } = await this.sequelize.transaction(
       { isolationLevel: Transaction.ISOLATION_LEVELS.REPEATABLE_READ },
       async (t) => {
@@ -219,11 +220,24 @@ export class OrderService {
       },
     );
 
-    // ---------- Reload, then initialize payment (external API call) ----------
     const session = await this.checkoutSessionRepo.findById(sessionId);
     if (!session) throw new NotFoundException('Checkout session vanished');
 
-    const paymentUrl = await this.initializePayment(session, shippingAddress);
+    // If payment init fails, release reservations so inventory is not stuck.
+    let paymentUrl: string;
+    try {
+      paymentUrl = await this.initializePayment(session, shippingAddress);
+    } catch (err) {
+      this.logger.error(
+        `Payment init failed for session ${session.id}: ${(err as Error).message}`,
+      );
+      await this.failCheckoutSafely(
+        session.id,
+        `Payment initialization failed: ${(err as Error).message}`,
+      );
+      throw err;
+    }
+
     const orders = await this.orderRepo.findAll({
       where: { checkout_session_id: sessionId },
       order: [['id', 'ASC']],
@@ -263,8 +277,11 @@ export class OrderService {
     const { sessionId } = await this.sequelize.transaction(
       { isolationLevel: Transaction.ISOLATION_LEVELS.REPEATABLE_READ },
       async (t) => {
-        const reservationByKey = await this.reserveItemsForDirectCheckout(
-          dto.items,
+        const reservationByVariantId = await this.reservationService.reserveItems(
+          dto.items.map((i) => ({
+            variant_id: i.variant_id,
+            quantity: i.quantity,
+          })),
           t,
         );
 
@@ -305,7 +322,7 @@ export class OrderService {
 
           await this.linkReservationsToOrderItems(
             order.id,
-            reservationByKey,
+            reservationByVariantId,
             t,
           );
         }
@@ -330,7 +347,20 @@ export class OrderService {
     const session = await this.checkoutSessionRepo.findById(sessionId);
     if (!session) throw new NotFoundException('Checkout session vanished');
 
-    const paymentUrl = await this.initializePayment(session, shippingAddress);
+    let paymentUrl: string;
+    try {
+      paymentUrl = await this.initializePayment(session, shippingAddress);
+    } catch (err) {
+      this.logger.error(
+        `Payment init failed for session ${session.id}: ${(err as Error).message}`,
+      );
+      await this.failCheckoutSafely(
+        session.id,
+        `Payment initialization failed: ${(err as Error).message}`,
+      );
+      throw err;
+    }
+
     const orders = await this.orderRepo.findAll({
       where: { checkout_session_id: sessionId },
       order: [['id', 'ASC']],
@@ -350,7 +380,7 @@ export class OrderService {
     providerPayload?: Record<string, unknown>,
   ): Promise<void> {
     await this.sequelize.transaction(
-      { isolationLevel: Transaction.ISOLATION_LEVELS.SERIALIZABLE },
+      { isolationLevel: Transaction.ISOLATION_LEVELS.REPEATABLE_READ },
       async (t) => {
         const session = await this.checkoutSessionRepo.findById(
           checkoutSessionId,
@@ -365,13 +395,6 @@ export class OrderService {
                   {
                     model: OrderItemModel,
                     as: 'items',
-                    include: [
-                      {
-                        model: InventoryReservationModel,
-                        as: 'inventory_reservation',
-                      },
-                      { model: ServiceBookingModel, as: 'service_booking' },
-                    ],
                   },
                   { model: VendorModel, as: 'vendor' },
                   { model: StoreModel, as: 'store' },
@@ -389,15 +412,32 @@ export class OrderService {
         }
         if (
           session.payment_status === PaymentStatusEnum.FAILED ||
-          session.payment_status === PaymentStatusEnum.CANCELLED
+          session.payment_status === PaymentStatusEnum.CANCELLED ||
+          session.payment_status === PaymentStatusEnum.REFUNDED ||
+          session.payment_status === PaymentStatusEnum.PARTIALLY_REFUNDED ||
+          session.payment_status === PaymentStatusEnum.EXPIRED
         ) {
           throw new BadRequestException(
-            `Cannot confirm ${session.payment_status} payment`,
+            `Cannot confirm payment for session in state ${session.payment_status}`,
+          );
+        }
+
+        // ---- Sanity: sum of orders must equal session total ----
+        const ordersTotal = (session.orders ?? []).reduce(
+          (sum, o) => sum + toMoney(o.total_amount),
+          0,
+        );
+        const sessionTotal = toMoney(session.total_amount);
+        if (Math.abs(ordersTotal - sessionTotal) > 0.01) {
+          this.logger.error(
+            `Session ${session.id} total mismatch: session=${sessionTotal} orders=${ordersTotal}`,
+          );
+          throw new Error(
+            `Session ${session.id} total mismatch: session=${sessionTotal} orders=${ordersTotal}`,
           );
         }
 
         const now = new Date();
-
         await session.update(
           {
             payment_status: PaymentStatusEnum.PAID,
@@ -482,7 +522,18 @@ export class OrderService {
       );
 
       if (!session) return;
-      if (session.payment_status === PaymentStatusEnum.PAID) return;
+
+      if (
+        session.payment_status === PaymentStatusEnum.PAID ||
+        session.payment_status === PaymentStatusEnum.REFUNDED ||
+        session.payment_status === PaymentStatusEnum.PARTIALLY_REFUNDED ||
+        session.payment_status === PaymentStatusEnum.EXPIRED
+      ) {
+        this.logger.warn(
+          `Ignoring payment failure for session ${checkoutSessionId} in state ${session.payment_status}`,
+        );
+        return;
+      }
 
       const now = new Date();
       await session.update(
@@ -497,22 +548,15 @@ export class OrderService {
 
       for (const order of session.orders ?? []) {
         for (const item of order.items ?? []) {
-          if (
-            item.fulfillment_type === FulfillmentTypeEnum.PHYSICAL &&
-            item.inventory_reservation
-          ) {
-            await this.releaseInventoryReservation(
-              item.inventory_reservation,
-              t,
-            );
-          } else if (
-            item.fulfillment_type === FulfillmentTypeEnum.SERVICE &&
-            item.service_booking
-          ) {
-            await item.service_booking.update(
-              { status: BookingStatusEnum.CANCELLED },
-              { transaction: t },
-            );
+          if (item.fulfillment_type === FulfillmentTypeEnum.PHYSICAL) {
+            if (item.inventory_reservation) {
+              await this.reservationService.releaseReservation(
+                item.inventory_reservation.id,
+                t,
+              );
+            }
+          } else if (item.fulfillment_type === FulfillmentTypeEnum.SERVICE) {
+            await this.cancelServiceBooking(item, t);
           }
         }
 
@@ -588,7 +632,7 @@ export class OrderService {
   }
 
   // ============================================================
-  // REFUNDS (order-level)
+  // REFUNDS
   // ============================================================
 
   async refundOrder(
@@ -879,19 +923,15 @@ export class OrderService {
       if (order.status === OrderStatusEnum.CANCELLED) return;
 
       for (const item of order.items ?? []) {
-        if (
-          item.fulfillment_type === FulfillmentTypeEnum.PHYSICAL &&
-          item.inventory_reservation
-        ) {
-          await this.releaseInventoryReservation(item.inventory_reservation, t);
-        } else if (
-          item.fulfillment_type === FulfillmentTypeEnum.SERVICE &&
-          item.service_booking
-        ) {
-          await item.service_booking.update(
-            { status: BookingStatusEnum.CANCELLED },
-            { transaction: t },
-          );
+        if (item.fulfillment_type === FulfillmentTypeEnum.PHYSICAL) {
+          if (item.inventory_reservation) {
+            await this.reservationService.releaseReservation(
+              item.inventory_reservation.id,
+              t,
+            );
+          }
+        } else if (item.fulfillment_type === FulfillmentTypeEnum.SERVICE) {
+          await this.cancelServiceBooking(item, t);
         }
       }
 
@@ -976,8 +1016,6 @@ export class OrderService {
     };
 
     await order.update({ metadata });
-    // TODO: emit 'order.cancellation_requested' → NotificationService
-
     return {
       message: 'Cancellation request submitted successfully',
       request_id: requestId,
@@ -1040,10 +1078,7 @@ export class OrderService {
             {
               model: OrderItemModel,
               as: 'items',
-              include: [
-                { model: ProductVariantModel, as: 'variant' },
-                { model: StoreModel, as: 'store' },
-              ],
+              include: [{ model: ProductVariantModel, as: 'variant' }],
             },
             { model: VendorModel, as: 'vendor' },
             { model: StoreModel, as: 'store' },
@@ -1062,15 +1097,12 @@ export class OrderService {
         {
           model: OrderItemModel,
           as: 'items',
-          include: [
-            { model: ProductVariantModel, as: 'variant' },
-            { model: StoreModel, as: 'store' },
-          ],
+          include: [{ model: ProductVariantModel, as: 'variant' }],
         },
         { model: VendorModel, as: 'vendor' },
         { model: StoreModel, as: 'store' },
-        { model: OrderStatusHistoryModel, as: 'status_history' },
-        { model: ShipmentModel, as: 'shipments' },
+        // { model: OrderStatusHistoryModel, as: 'status_history' },
+        // { model: ShipmentModel, as: 'shipments' },
       ],
     });
     if (!order) throw new NotFoundException(`Order ${orderId} not found`);
@@ -1091,7 +1123,6 @@ export class OrderService {
       order: [['created_at', 'DESC']],
       limit,
       offset: (page - 1) * limit,
-      // distinct: true,
       include: [
         {
           model: OrderItemModel,
@@ -1165,18 +1196,18 @@ export class OrderService {
         quantity: item.quantity,
         status: item.status,
       })),
-      shipments: (order.shipments ?? []).map((s) => ({
-        tracking_number: s.tracking_number,
-        carrier: s.carrier,
-        status: s.status,
-        estimated_delivery: s.estimated_delivery,
-        events: (s.events ?? []).map((e) => ({
-          timestamp: e.created_at,
-          status: e.status,
-          location: e.location,
-          description: e.description,
-        })),
-      })),
+      // shipments: (order.shipments ?? []).map((s) => ({
+      //   tracking_number: s.tracking_number,
+      //   carrier: s.carrier,
+      //   status: s.status,
+      //   estimated_delivery: s.estimated_delivery,
+      //   events: (s.events ?? []).map((e) => ({
+      //     timestamp: e.created_at,
+      //     status: e.status,
+      //     location: e.location,
+      //     description: e.description,
+      //   })),
+      // })),
     };
   }
 
@@ -1247,32 +1278,15 @@ export class OrderService {
 
     for (const order of orders) {
       switch (order.status) {
-        case OrderStatusEnum.PENDING_PAYMENT:
-          stats.pending_payment += 1;
-          break;
-        case OrderStatusEnum.CONFIRMED:
-          stats.confirmed += 1;
-          break;
-        case OrderStatusEnum.PROCESSING:
-          stats.processing += 1;
-          break;
-        case OrderStatusEnum.OUT_FOR_DELIVERY:
-          stats.out_for_delivery += 1;
-          break;
-        case OrderStatusEnum.DELIVERED:
-          stats.delivered += 1;
-          break;
-        case OrderStatusEnum.COMPLETED:
-          stats.completed += 1;
-          break;
-        case OrderStatusEnum.CANCELLED:
-          stats.cancelled += 1;
-          break;
-        case OrderStatusEnum.PAYMENT_FAILED:
-          stats.payment_failed += 1;
-          break;
-        default:
-          break;
+        case OrderStatusEnum.PENDING_PAYMENT: stats.pending_payment++; break;
+        case OrderStatusEnum.CONFIRMED: stats.confirmed++; break;
+        case OrderStatusEnum.PROCESSING: stats.processing++; break;
+        case OrderStatusEnum.OUT_FOR_DELIVERY: stats.out_for_delivery++; break;
+        case OrderStatusEnum.DELIVERED: stats.delivered++; break;
+        case OrderStatusEnum.COMPLETED: stats.completed++; break;
+        case OrderStatusEnum.CANCELLED: stats.cancelled++; break;
+        case OrderStatusEnum.PAYMENT_FAILED: stats.payment_failed++; break;
+        default: break;
       }
 
       const subtotal = toMoney(order.subtotal);
@@ -1326,36 +1340,18 @@ export class OrderService {
 
     for (const order of orders) {
       switch (order.status) {
-        case OrderStatusEnum.PENDING_PAYMENT:
-          summary.pending_payment += 1;
-          break;
-        case OrderStatusEnum.CONFIRMED:
-          summary.confirmed += 1;
-          break;
-        case OrderStatusEnum.PROCESSING:
-          summary.processing += 1;
-          break;
-        case OrderStatusEnum.OUT_FOR_DELIVERY:
-          summary.out_for_delivery += 1;
-          break;
-        case OrderStatusEnum.DELIVERED:
-          summary.delivered += 1;
-          break;
-        case OrderStatusEnum.COMPLETED:
-          summary.completed += 1;
-          break;
-        case OrderStatusEnum.CANCELLED:
-          summary.cancelled += 1;
-          break;
-        default:
-          break;
+        case OrderStatusEnum.PENDING_PAYMENT: summary.pending_payment++; break;
+        case OrderStatusEnum.CONFIRMED: summary.confirmed++; break;
+        case OrderStatusEnum.PROCESSING: summary.processing++; break;
+        case OrderStatusEnum.OUT_FOR_DELIVERY: summary.out_for_delivery++; break;
+        case OrderStatusEnum.DELIVERED: summary.delivered++; break;
+        case OrderStatusEnum.COMPLETED: summary.completed++; break;
+        case OrderStatusEnum.CANCELLED: summary.cancelled++; break;
+        default: break;
       }
 
       summary.total_spent += toMoney(order.total_amount);
-      if (
-        !summary.last_order_date ||
-        order.created_at > summary.last_order_date
-      ) {
+      if (!summary.last_order_date || order.created_at > summary.last_order_date) {
         summary.last_order_date = order.created_at;
       }
     }
@@ -1433,6 +1429,7 @@ export class OrderService {
         `Store ${storeId} does not belong to vendor ${vendorId}`,
       );
     }
+
     const variantIds = items.map((i) => i.variant_id);
     const variants = await this.variantRepo.findAll({
       where: { id: variantIds },
@@ -1486,7 +1483,6 @@ export class OrderService {
         order_id: null,
         variant_id: variant.id,
         store_id: storeId,
-        // product_name_snapshot: variant.product?.name ?? '',
         product_variant_snapshot: variant,
         attributes_snapshot: variant.metadata ?? {},
         sku_snapshot: variant.sku ?? '',
@@ -1512,14 +1508,13 @@ export class OrderService {
       store,
     );
 
-    // Snapshots for vendor/store name — must exist for audit trail
     const order = await this.orderRepo.createWithTransaction(
       {
         checkout_session_id: checkoutSessionId,
         customer_id: customerId,
         vendor_id: vendorId,
         store_id: storeId,
-        order_reference: this.generateOrderReference(customerId),
+        order_reference: this.generateOrderReference(),
         status: OrderStatusEnum.PENDING_PAYMENT,
         subtotal: moneyStr(subtotal),
         tax_amount: moneyStr(taxAmount),
@@ -1567,7 +1562,12 @@ export class OrderService {
   ): Promise<void> {
     switch (item.fulfillment_type) {
       case FulfillmentTypeEnum.PHYSICAL:
-        await this.commitInventoryReservation(item, t);
+        if (item.inventory_reservation_id) {
+          await this.reservationService.commitReservation(
+            item.inventory_reservation_id,
+            t,
+          );
+        }
         return;
       case FulfillmentTypeEnum.SERVICE:
         await this.confirmServiceBooking(item, t);
@@ -1578,60 +1578,41 @@ export class OrderService {
     }
   }
 
-  private async commitInventoryReservation(
-    item: OrderItemModel,
-    t: Transaction,
-  ): Promise<void> {
-    if (!item.inventory_reservation_id) return;
-
-    const reservation = await this.inventoryReservationRepo.findById(
-      item.inventory_reservation_id,
-      { transaction: t, lock: t.LOCK.UPDATE },
-    );
-    if (!reservation || reservation.status !== ReservationStatusEnum.HELD)
-      return;
-
-    await this.inventoryRepo.decrementQuantity(reservation, t);
-
-    await reservation.update(
-      { status: ReservationStatusEnum.COMMITTED },
-      { transaction: t },
-    );
-  }
-
-  private async releaseInventoryReservation(
-    reservation: InventoryReservationModel,
-    t: Transaction,
-  ): Promise<void> {
-    if (reservation.status === ReservationStatusEnum.RELEASED) return;
-    if (reservation.status === ReservationStatusEnum.COMMITTED) return;
-
-    await this.inventoryRepo.decrement(
-      { reserved_quantity: reservation.quantity } as any,
-      {
-        where: {
-          variant_id: reservation.variant_id,
-          store_id: reservation.store_id,
-        },
-        transaction: t,
-      },
-    );
-
-    await reservation.update(
-      { status: ReservationStatusEnum.RELEASED },
-      { transaction: t },
-    );
-  }
-
   private async confirmServiceBooking(
     item: OrderItemModel,
     t: Transaction,
   ): Promise<void> {
     if (!item.service_booking_id) return;
-    await this.serviceBookingRepo.updateWithTransaction(
+    const booking = await this.serviceBookingRepo.findById(
       item.service_booking_id,
+      { transaction: t, lock: t.LOCK.UPDATE },
+    );
+    if (!booking) {
+      throw new Error(
+        `Order item ${item.id}: service booking ${item.service_booking_id} not found`,
+      );
+    }
+    if (booking.status === BookingStatusEnum.CONFIRMED) return;
+    await booking.update(
       { status: BookingStatusEnum.CONFIRMED },
-      t,
+      { transaction: t },
+    );
+  }
+
+  private async cancelServiceBooking(
+    item: OrderItemModel,
+    t: Transaction,
+  ): Promise<void> {
+    if (!item.service_booking_id) return;
+    const booking = await this.serviceBookingRepo.findById(
+      item.service_booking_id,
+      { transaction: t, lock: t.LOCK.UPDATE },
+    );
+    if (!booking) return;
+    if (booking.status !== BookingStatusEnum.HELD) return;
+    await booking.update(
+      { status: BookingStatusEnum.CANCELLED },
+      { transaction: t },
     );
   }
 
@@ -1646,76 +1627,12 @@ export class OrderService {
   }
 
   // ============================================================
-  // PRIVATE — RESERVATIONS
+  // PRIVATE — RESERVATION LINKING
   // ============================================================
-
-  private async reserveItemsForDirectCheckout(
-    items: OrderItemDto[],
-    t: Transaction,
-  ): Promise<Map<string, InventoryReservationModel>> {
-    const result = new Map<string, InventoryReservationModel>();
-
-    for (const item of items) {
-      const variant = await this.variantRepo.findById(item.variant_id, {
-        include: [{ model: ProductModel, as: 'product' }],
-        transaction: t,
-      });
-      if (!variant)
-        throw new NotFoundException(`Variant ${item.variant_id} not found`);
-
-      const fType = this.resolveFulfillmentType(variant);
-      if (fType !== FulfillmentTypeEnum.PHYSICAL) continue;
-
-      const inventory = await this.inventoryRepo.findOne({
-        where: { variant_id: item.variant_id, store_id: item.store_id },
-        lock: t.LOCK.UPDATE,
-        transaction: t,
-      });
-
-      if (!inventory) {
-        throw new BadRequestException(
-          `No inventory row for variant ${item.variant_id} at store ${item.store_id}`,
-        );
-      }
-      if (Number(inventory.available_quantity) < item.quantity) {
-        throw new BadRequestException(
-          `Insufficient stock for variant ${item.variant_id} at store ${item.store_id}`,
-        );
-      }
-
-      await inventory.update(
-        {
-          reserved_quantity:
-            Number(inventory.reserved_quantity) + item.quantity,
-        },
-        { transaction: t },
-      );
-
-      const reservation =
-        await this.inventoryReservationRepo.createWithTransaction(
-          {
-            variant_id: item.variant_id,
-            store_id: item.store_id,
-            cart_item_id: null,
-            quantity: item.quantity,
-            status: ReservationStatusEnum.HELD,
-            expires_at: new Date(Date.now() + RESERVATION_TTL_MS),
-          } as any,
-          t,
-        );
-
-      result.set(
-        this.variantStoreKey(item.variant_id, item.store_id),
-        reservation,
-      );
-    }
-
-    return result;
-  }
 
   private async linkReservationsToOrderItems(
     orderId: number,
-    reservationByKey: Map<string, InventoryReservationModel>,
+    reservationByVariantId: Map<number, InventoryReservationModel>,
     t: Transaction,
   ): Promise<void> {
     const items = await this.orderItemRepo.findAll({
@@ -1724,13 +1641,12 @@ export class OrderService {
     });
 
     for (const item of items) {
-      const reservation = reservationByKey.get(
-        this.variantStoreKey(item.variant_id, (item as any).store_id),
-      );
+      const reservation = reservationByVariantId.get(item.variant_id);
       if (reservation && !item.inventory_reservation_id) {
-        await item.update({ inventory_reservation_id: reservation.id } as any, {
-          transaction: t,
-        });
+        await item.update(
+          { inventory_reservation_id: reservation.id } as any,
+          { transaction: t },
+        );
       }
     }
   }
@@ -1760,6 +1676,29 @@ export class OrderService {
   }
 
   // ============================================================
+  // PRIVATE — PAYMENT INIT FAILURE HANDLING
+  // ============================================================
+
+  /**
+   * Called when payment initialization fails AFTER the checkout transaction
+   * has committed. Releases all reservations and marks the session failed so
+   * inventory is not stuck. Client can retry with a fresh idempotency key.
+   */
+  private async failCheckoutSafely(
+    checkoutSessionId: number,
+    reason: string,
+  ): Promise<void> {
+    try {
+      await this.handlePaymentFailure(checkoutSessionId, reason, 'init_failed');
+    } catch (err) {
+      this.logger.error(
+        `Failed to roll back checkout ${checkoutSessionId} after payment init error: ${(err as Error).message}`,
+        (err as Error).stack,
+      );
+    }
+  }
+
+  // ============================================================
   // PRIVATE — CART LOADING / VALIDATION / GROUPING
   // ============================================================
 
@@ -1767,17 +1706,11 @@ export class OrderService {
     customerId: number,
     t: Transaction,
   ): Promise<CartModel> {
-    // ---- Step 1: lock the cart row ----
-    // No includes here — Postgres forbids FOR UPDATE on the nullable side
-    // of LEFT OUTER JOIN. Locking the cart row is enough to serialize
-    // concurrent checkouts on the same cart.
     const cart = await this.cartRepo.lockActiveCart(customerId, t);
     if (!cart) {
       throw new BadRequestException('Cart is empty or already converted');
     }
 
-    // ---- Step 2: load the cart with everything checkout needs ----
-    // Separate query, no lock. This is read-only data we'll act on.
     const hydrated = await this.cartRepo.findById(cart.id, {
       transaction: t,
       include: [
@@ -1796,9 +1729,6 @@ export class OrderService {
           ],
         },
       ],
-      // subQuery: false is critical — with include + limit + hasMany,
-      // Sequelize wraps the parent query in a subquery which breaks locks
-      // AND can drop rows in weird ways. We don't need it here.
       subQuery: false,
     } as any);
 
@@ -1808,6 +1738,7 @@ export class OrderService {
 
     return hydrated;
   }
+
   private validateCartReservations(cartItems: CartItemModel[]): void {
     const now = new Date();
     for (const item of cartItems) {
@@ -1882,10 +1813,6 @@ export class OrderService {
     });
   }
 
-  private variantStoreKey(variantId: number, storeId: number): string {
-    return `${variantId}:${storeId}`;
-  }
-
   private vendorStoreKey(vendorId: number, storeId: number): string {
     return `${vendorId}:${storeId}`;
   }
@@ -1905,8 +1832,6 @@ export class OrderService {
       Number(session.total_amount),
       session.currency,
       {
-        // Use the customer-facing reference as the gateway reference.
-        // `idempotency_key` is internal and must not leak to the gateway.
         reference: session.checkout_reference,
         redirectUrl: `${process.env.APP_URL}/checkout/callback`,
         customer: {
@@ -1955,17 +1880,6 @@ export class OrderService {
     return storeTypes.includes('delivery') ? 'delivery' : 'pickup';
   }
 
-  private buildVariantName(variant: ProductVariantModel): string {
-    if (variant.variant_name) return variant.variant_name;
-    const base = (variant as any).product?.name ?? '';
-    const attributes = (variant as any).attributes;
-    if (!attributes || !Object.keys(attributes).length) return base;
-    const attrs = Object.entries(attributes)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(' / ');
-    return base ? `${base} (${attrs})` : attrs;
-  }
-
   private calculateShipping(totalWeightKg: number, itemCount: number): number {
     let cost = 5;
     if (totalWeightKg > 5) cost += Math.ceil(totalWeightKg / 5) * 2;
@@ -1973,31 +1887,22 @@ export class OrderService {
     return round2(cost);
   }
 
-  generateOrderReference(customerId: number | string): string {
-    // Step 1: Define a static prefix
-    const prefix = 'ORD';
-
-    // Step 2: Get the current date in YYYYMMDD format
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = ('0' + (date.getMonth() + 1)).slice(-2); // Ensure two digits
-    const day = ('0' + date.getDate()).slice(-2); // Ensure two digits
-    const dateString = `${year}${month}${day}`;
-
-    // Step 3: Generate a random alphanumeric string
-    const randomString = Math.random().toString(36).substr(2, 6).toUpperCase();
-
-    // Step 4: Concatenate all parts to form the order reference
-    const orderReference = `${prefix}|${customerId}|${dateString}|${randomString}`;
-
-    return orderReference;
+  private generateOrderReference(): string {
+    const now = new Date();
+    const datePart =
+      `${now.getFullYear()}` +
+      `${String(now.getMonth() + 1).padStart(2, '0')}` +
+      `${String(now.getDate()).padStart(2, '0')}`;
+    return `ORD-${datePart}-${nanoid(8).toUpperCase()}`;
   }
 
   private generateCheckoutReference(): string {
     const now = new Date();
-    const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-    const rand = Math.random().toString(36).slice(2, 10).toUpperCase();
-    return `MKT-${datePart}-${rand}`;
+    const datePart =
+      `${now.getFullYear()}` +
+      `${String(now.getMonth() + 1).padStart(2, '0')}` +
+      `${String(now.getDate()).padStart(2, '0')}`;
+    return `MKT-${datePart}-${nanoid(8).toUpperCase()}`;
   }
 
   private isEligibleForFulfillment(status: OrderStatusEnum): boolean {
@@ -2036,7 +1941,7 @@ export class OrderService {
   }
 
   // ============================================================
-  // REVIEWS (stub — wire to ReviewService)
+  // REVIEWS (stub)
   // ============================================================
 
   async addOrderItemReview(
@@ -2060,7 +1965,6 @@ export class OrderService {
       throw new NotFoundException(`Order item ${itemId} not found`);
     }
 
-    // TODO: call ReviewService.create(...)
     this.logger.log(
       `Review received for item ${itemId} by customer ${customerId}: ${JSON.stringify(review)}`,
     );

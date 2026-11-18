@@ -43,7 +43,7 @@ export class VariantStoreModel extends Model {
     // ============ STOCK ============
     @Default(0)
     @Column({ type: DataType.INTEGER })
-    stock_quantity: number;
+    quantity: number;
 
     @Default(0)
     @Column({ type: DataType.INTEGER })
@@ -113,7 +113,7 @@ export class VariantStoreModel extends Model {
     // ============ VIRTUAL PROPERTIES ============
 
     get available_stock(): number {
-        return this.stock_quantity - this.reserved_stock;
+        return this.quantity - this.reserved_stock;
     }
 
     get is_in_stock(): boolean {
@@ -143,13 +143,13 @@ export class VariantStoreModel extends Model {
 
     confirmStock(quantity: number): boolean {
         if (this.available_stock < quantity) return false;
-        this.stock_quantity -= quantity;
+        this.quantity -= quantity;
         this.reserved_stock = Math.max(0, this.reserved_stock - quantity);
         return true;
     }
 
     addStock(quantity: number): void {
-        this.stock_quantity += quantity;
+        this.quantity += quantity;
     }
 
     shouldNotifyLowStock(): boolean {

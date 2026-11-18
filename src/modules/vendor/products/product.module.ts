@@ -10,6 +10,7 @@ import {
   AttributeValueModel,
   DiscountModel,
   ProductVariantAttributeValueModel,
+  OrderItemModel,
 } from 'src/infrastructure';
 import { ProductService } from './services/product.service';
 import { ProductController } from './product.controller';
@@ -21,6 +22,7 @@ import {
   InventoryRepository,
   AttributeValueRepository,
   ProductVariantAttributeValueRepository,
+  OrderItemRepository,
 } from 'src/infrastructure/database/repositories';
 import { InventoryModule } from '../inventory/inventory.module';
 import { PricingService } from './services/pricing.service';
@@ -39,6 +41,7 @@ import { AttributeModule } from './attribute/attribute.module';
       DiscountModel,
       InventoryModel,
       AttributeModel,
+      OrderItemModel,
       InventoryModel,
       AttributeValueModel,
       ProductVariantModel,
@@ -49,11 +52,12 @@ import { AttributeModule } from './attribute/attribute.module';
   providers: [
     PricingService,
     ProductService,
-    ProductRepository,
-    VariantRepository,
     PricingService,
+    VariantRepository,
+    ProductRepository,
     MediaUploadService,
     InventoryRepository,
+    OrderItemRepository,
     AttributeRepository,
     AttributeValueRepository,
     ProductVariantAttributeValueRepository,

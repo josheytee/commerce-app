@@ -237,17 +237,17 @@ export class OrderModel extends Model<OrderModel> {
   @HasMany(() => OrderItemModel, { foreignKey: 'order_id', as: 'items' })
   items: OrderItemModel[];
 
-  @HasMany(() => ShipmentModel, { foreignKey: 'order_id', as: 'shipments' })
-  shipments: ShipmentModel[];
+  // @HasMany(() => ShipmentModel, { foreignKey: 'order_id', as: 'shipments' })
+  // shipments: ShipmentModel[];
 
-  @HasMany(() => RefundModel, { foreignKey: 'order_id', as: 'refunds' })
-  refunds: RefundModel[];
+  // @HasMany(() => RefundModel, { foreignKey: 'order_id', as: 'refunds' })
+  // refunds: RefundModel[];
 
-  @HasMany(() => OrderStatusHistoryModel, {
-    foreignKey: 'order_id',
-    as: 'status_history',
-  })
-  status_history: OrderStatusHistoryModel[];
+  // @HasMany(() => OrderStatusHistoryModel, {
+  //   foreignKey: 'order_id',
+  //   as: 'status_history',
+  // })
+  // status_history: OrderStatusHistoryModel[];
 
   @CreatedAt @Column({ field: 'created_at' }) created_at: Date;
   @UpdatedAt @Column({ field: 'updated_at' }) updated_at: Date;

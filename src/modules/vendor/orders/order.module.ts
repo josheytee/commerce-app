@@ -50,6 +50,7 @@ import { InventoryModule } from '../inventory/inventory.module';
 import { CustomerOrderController, VendorOrderController } from './controllers';
 import { CartModule } from 'src/modules/storefront/cart/cart.module';
 import { AddressService } from 'src/modules/user/addresses/address.service';
+import { UserVendorRoleModule } from 'src/modules/user/user-vendor-role/user-vendor-role.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { AddressService } from 'src/modules/user/addresses/address.service';
     forwardRef(() => InventoryModule),
     forwardRef(() => PaymentModule),
     forwardRef(() => CustomerModule),
+    UserVendorRoleModule,
     SequelizeModule.forFeature([
       StoreModel,
       CartModel,

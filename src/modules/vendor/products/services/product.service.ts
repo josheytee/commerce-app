@@ -2,6 +2,8 @@ import {
   Injectable,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { Transaction } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
@@ -13,7 +15,8 @@ import {
   InventoryRepository,
   AttributeRepository,
   AttributeValueRepository,
-  ProductVariantAttributeValueRepository
+  ProductVariantAttributeValueRepository,
+  OrderItemRepository,
 } from 'src/infrastructure/database/repositories';
 
 import {
@@ -21,21 +24,34 @@ import {
   ProductTypeEnum,
   ProductStatusEnum,
   VariantStatusEnum,
+  StockStatusEnum,
 } from 'src/shared';
 import { InventoryService } from '../../inventory/inventory.service';
 import {
   CreateProductWithVariantsDto,
   CreateVariantDto,
   UpdateProductDto,
+  VariantAttributeValueDto,
 } from '../dto';
 import { PricingService } from './pricing.service';
 import { ProductListResponseDto } from 'src/modules/storefront/products/dto/product-query.dto';
 import { ProductFormat } from 'src/modules/storefront/products/product-format.abstract';
 
+interface VariantInventoryPayload {
+  stock_quantity?: number;
+  reserved_quantity?: number;
+  track_quantity?: boolean;
+  allow_backorders?: boolean;
+  low_stock_threshold?: number;
+}
+
 @Injectable()
 export class ProductService extends ProductFormat {
+  private readonly logger = new Logger(ProductService.name);
+
   constructor(
     private readonly productRepo: ProductRepository,
+    private readonly _orderItemRepo: OrderItemRepository,
     private readonly variantRepo: VariantRepository,
     private readonly inventoryRepo: InventoryRepository,
     private readonly attributeRepo: AttributeRepository,
@@ -48,11 +64,13 @@ export class ProductService extends ProductFormat {
     super();
   }
 
-  // ---- READS ----
+  // ============================================================
+  // READS
+  // ============================================================
 
   async getProductDetails(productId: number) {
     const product =
-      await this.productRepo.findWithVariantsAndInventories(productId);
+      await this.productRepo.findWithVariantsAndInventory(productId);
     if (!product) throw new ProductNotFoundException(productId);
 
     const [stock, price] = await Promise.all([
@@ -98,7 +116,10 @@ export class ProductService extends ProductFormat {
   async findAllByStore(storeId: number) {
     return this.productRepo.findByStoreId(storeId);
   }
-  // ---- CREATE ----
+
+  // ============================================================
+  // CREATE
+  // ============================================================
 
   async create(data: CreateProductWithVariantsDto, vendorId: number) {
     const { variants, ...productData } = data;
@@ -108,31 +129,26 @@ export class ProductService extends ProductFormat {
         {
           ...productData,
           vendor_id: vendorId,
-          product_type: variants?.length
-            ? ProductTypeEnum.VARIABLE
-            : ProductTypeEnum.SIMPLE,
+          product_type:
+            variants?.length && variants.length > 1
+              ? ProductTypeEnum.VARIABLE
+              : ProductTypeEnum.SIMPLE,
           status: productData.status ?? ProductStatusEnum.DRAFT,
         },
         t,
       );
 
       if (variants?.length) {
-        await this.createVariableProductVariants(
-          product,
-          variants,
-          vendorId,
-          t,
-        );
+        await this.createVariants(product, variants, vendorId, t);
       } else {
         await this.createDefaultVariant(product, data as any, t);
       }
 
       return this.productRepo.findByIdWithVariants(product.id, t);
     });
-    // recomputePriceRange is now a model hook on ProductVariant
   }
 
-  private async createVariableProductVariants(
+  private async createVariants(
     product: ProductModel,
     variants: CreateVariantDto[],
     vendorId: number,
@@ -141,7 +157,12 @@ export class ProductService extends ProductFormat {
     this.assertUniqueSkus(variants);
 
     for (const v of variants) {
-      const { attribute_values, initial_stock, ...variantData } = v;
+      const {
+        attribute_values,
+        inventory,
+        initial_stock: _ignoredInitialStock,
+        ...variantData
+      } = v as CreateVariantDto & { initial_stock?: number };
 
       const created = await this.variantRepo.createWithTransaction(
         {
@@ -154,7 +175,6 @@ export class ProductService extends ProductFormat {
         },
         t,
       );
-      console.log('Created variant:', created.id, attribute_values);
 
       if (attribute_values?.length) {
         await this.linkAttributeValues(
@@ -165,10 +185,9 @@ export class ProductService extends ProductFormat {
         );
       }
 
-      await this.inventoryRepo.createForVariant(
+      await this.createInventoryForVariant(
         created.id,
-        product.store_id,
-        initial_stock ?? 0,
+        (inventory ?? {}) as VariantInventoryPayload,
         t,
       );
     }
@@ -176,7 +195,10 @@ export class ProductService extends ProductFormat {
 
   private async createDefaultVariant(
     product: ProductModel,
-    data: CreateProductWithVariantsDto & { initial_stock?: number },
+    data: CreateProductWithVariantsDto & {
+      initial_stock?: number;
+      inventory?: VariantInventoryPayload;
+    },
     t: Transaction,
   ) {
     const sku = (data as any).sku ?? `SIMPLE-${product.id}-${Date.now()}`;
@@ -197,38 +219,75 @@ export class ProductService extends ProductFormat {
       t,
     );
 
-    await this.inventoryRepo.createForVariant(
-      variant.id,
-      product.store_id,
-      data.initial_stock ?? 0,
-      t,
-    );
+    const inventory: VariantInventoryPayload = {
+      ...(data.inventory ?? {}),
+      stock_quantity:
+        data.inventory?.stock_quantity ?? data.initial_stock ?? 0,
+    };
+
+    await this.createInventoryForVariant(variant.id, inventory, t);
 
     return variant;
   }
+
+  private async createInventoryForVariant(
+    variantId: number,
+    inv: VariantInventoryPayload,
+    t: Transaction,
+  ) {
+    const stockQuantity = inv.stock_quantity ?? 0;
+    const reserved = inv.reserved_quantity ?? 0;
+    const track = inv.track_quantity ?? true;
+    const allowBackorders = inv.allow_backorders ?? false;
+    const threshold = inv.low_stock_threshold ?? 5;
+
+    if (reserved > stockQuantity) {
+      throw new BadRequestException(
+        `Variant ${variantId}: reserved_quantity (${reserved}) cannot exceed stock_quantity (${stockQuantity})`,
+      );
+    }
+
+    await this.inventoryRepo.createWithTransaction(
+      {
+        variant_id: variantId,
+        stock_quantity: stockQuantity,
+        reserved_quantity: reserved,
+        track_quantity: track,
+        allow_backorders: allowBackorders,
+        low_stock_threshold: threshold,
+        stock_status: this.deriveStockStatus(
+          stockQuantity,
+          reserved,
+          track,
+          allowBackorders,
+          threshold,
+        ),
+      } as any,
+      t,
+    );
+  }
+
+  // ============================================================
+  // PUBLISH / UNPUBLISH
+  // ============================================================
 
   async publishProduct(
     productId: number,
     vendorId: number,
   ): Promise<ProductModel> {
-    // 1. Load with everything publish-validation needs
     const product = await this.productRepo.findForPublish(productId);
     if (!product) throw new ProductNotFoundException(productId);
 
-    // 2. Authorization
     if (product.vendor_id !== vendorId) {
       throw new ForbiddenException('Not your product');
     }
 
-    // 3. Idempotency — already published? No-op.
     if (product.status === ProductStatusEnum.PUBLISHED) {
       return product;
     }
 
-    // 4. Business validation (throws on failure)
     this.validateForPublish(product);
 
-    // 5. State transition + side effects (transactional)
     return this.sequelize.transaction(async (t) => {
       await this.productRepo.updateWithTransaction(
         product.id,
@@ -238,11 +297,6 @@ export class ProductService extends ProductFormat {
         },
         t,
       );
-
-      // Side effect: refresh search index (async, non-blocking)
-      // e.g., queue a job — NOT inline in the transaction
-      //@TODO: Uncomment this when search indexing is implemented
-      // await this.searchIndexQueue.enqueue({ productId: product.id });
 
       return this.productRepo.findByIdWithVariants(product.id, t);
     });
@@ -260,34 +314,16 @@ export class ProductService extends ProductFormat {
       throw new BadRequestException('Product is not published');
     }
 
-    return this.sequelize
-      .transaction(async (t) => {
-        await this.productRepo.updateWithTransaction(
-          product.id,
-          { status: ProductStatusEnum.DRAFT },
-          t,
-        );
-        return this.productRepo.findByIdWithVariants(product.id, t);
-      })
-      .then(async (updated) => {
-        // await this.searchIndexQueue.enqueue({
-        //   productId: updated.id,
-        //   action: 'remove',
-        // });
-        return updated;
-      });
+    return this.sequelize.transaction(async (t) => {
+      await this.productRepo.updateWithTransaction(
+        product.id,
+        { status: ProductStatusEnum.DRAFT },
+        t,
+      );
+      return this.productRepo.findByIdWithVariants(product.id, t);
+    });
   }
 
-  // async archiveProduct(
-  //   productId: number,
-  //   vendorId: number,
-  // ): Promise<ProductModel> {
-  //   // Similar — sets status = ARCHIVED, keeps data, hides from storefront
-  // }
-  /**
-   * Domain rule: what makes a product publishable.
-   * Throws BadRequestException with a clear message on the first failure.
-   */
   private validateForPublish(product: ProductModel): void {
     if (!product.name?.trim()) {
       throw new BadRequestException('Product name is required');
@@ -310,25 +346,36 @@ export class ProductService extends ProductFormat {
       throw new BadRequestException('At least one image is required');
     }
 
-    // If you require at least one stock location with quantity > 0:
-    const hasStock = product.variants.some((v) =>
-      (v.inventories ?? []).some((i) => Number(i.quantity) > 0),
-    );
+    const hasStock = product.variants.some((v) => {
+      const inv = v.inventory;
+      if (!inv) return false;
+      if (inv.track_quantity === false) return true;
+      const available =
+        Number(inv.stock_quantity ?? 0) - Number(inv.reserved_quantity ?? 0);
+      return available > 0 || !!inv.allow_backorders;
+    });
+
     if (!hasStock) {
       throw new BadRequestException(
-        'Product must have stock at least one store',
+        'Product must have at least one variant with stock available',
       );
     }
   }
 
-  // ---- UPDATE ----
+  // ============================================================
+  // UPDATE
+  // ============================================================
 
   async update(vendorId: number, id: number, data: UpdateProductDto) {
     const { variants, ...productData } = data;
     const product = await this.findOneByVendor(vendorId, id);
 
+    const patch = this.compact(productData);
+
     return this.sequelize.transaction(async (t) => {
-      await this.productRepo.updateWithTransaction(product.id, productData, t);
+      if (Object.keys(patch).length) {
+        await this.productRepo.updateWithTransaction(product.id, patch, t);
+      }
       if (variants?.length) {
         await this.syncVariants(product, variants, vendorId, t);
       }
@@ -345,25 +392,49 @@ export class ProductService extends ProductFormat {
     const existing = await this.variantRepo.findByProductId(product.id);
     const existingById = new Map(existing.map((v) => [v.id, v]));
 
-    const keptIds = new Set<number>();
+    const keptIds = new Set<number>(
+      incoming
+        .map((v) => v.id)
+        .filter(
+          (id): id is number => typeof id === 'number' && existingById.has(id),
+        ),
+    );
+    const foreignSkus = existing
+      .filter((v) => !keptIds.has(v.id))
+      .map((v) => v.sku)
+      .filter(Boolean);
+    this.assertUniqueSkus(incoming, foreignSkus);
+
+    const finalKeptIds = new Set<number>();
 
     for (const v of incoming) {
-      const { id, attribute_values, initial_stock, ...variantData } = v;
+      const {
+        id,
+        attribute_values,
+        inventory,
+        initial_stock: _ignoredInitialStock,
+        ...variantData
+      } = v as CreateVariantDto & { initial_stock?: number };
 
       if (id && existingById.has(id)) {
-        keptIds.add(id);
-        await this.variantRepo.updateWithTransaction(id, variantData, t);
+        finalKeptIds.add(id);
 
-        if (attribute_values?.length) {
-          await this.pvavRepo.deleteByVariant(id, t);
-          await this.linkAttributeValues(id, attribute_values, vendorId, t);
+        const variantPatch = this.compact(variantData);
+        if (Object.keys(variantPatch).length) {
+          await this.variantRepo.updateWithTransaction(id, variantPatch, t);
         }
 
-        if (initial_stock !== undefined) {
-          await this.inventoryRepo.findOrCreateForVariant(
+        if (attribute_values !== undefined) {
+          await this.pvavRepo.deleteByVariant(id, t);
+          if (attribute_values.length) {
+            await this.linkAttributeValues(id, attribute_values, vendorId, t);
+          }
+        }
+
+        if (inventory !== undefined) {
+          await this.updateVariantInventory(
             id,
-            product.store_id,
-            initial_stock,
+            inventory as VariantInventoryPayload,
             t,
           );
         }
@@ -375,10 +446,11 @@ export class ProductService extends ProductFormat {
             store_id: product.store_id,
             vendor_id: product.vendor_id,
             is_default: false,
+            status: VariantStatusEnum.ACTIVE,
           },
           t,
         );
-        keptIds.add(created.id);
+        finalKeptIds.add(created.id);
 
         if (attribute_values?.length) {
           await this.linkAttributeValues(
@@ -388,26 +460,92 @@ export class ProductService extends ProductFormat {
             t,
           );
         }
-        await this.inventoryRepo.createForVariant(
+
+        await this.createInventoryForVariant(
           created.id,
-          product.store_id,
-          initial_stock ?? 0,
+          (inventory ?? {}) as VariantInventoryPayload,
           t,
         );
       }
     }
 
-    // Soft-delete variants no longer in the payload
     const toDelete = existing
-      .filter((v) => !keptIds.has(v.id))
+      .filter((v) => !finalKeptIds.has(v.id))
       .map((v) => v.id);
+
     if (toDelete.length) {
+      const openOrderCount = await this._orderItemRepo.countOpenOrderItems(
+        toDelete,
+        t,
+      );
+      if (openOrderCount > 0) {
+        throw new ConflictException(
+          `Cannot remove ${toDelete.length} variant(s): ${openOrderCount} open order(s) reference them`,
+        );
+      }
+
       await this.inventoryRepo.zeroOutByVariants(toDelete, t);
       await this.variantRepo.softDeleteMany(toDelete, t);
+      this.logger.log(
+        `Soft-deleted ${toDelete.length} variant(s) from product ${product.id}`,
+      );
     }
   }
 
-  // ---- DELETE ----
+  private async updateVariantInventory(
+    variantId: number,
+    inv: VariantInventoryPayload,
+    t: Transaction,
+  ) {
+    const row = await this.inventoryRepo.findOne({
+      where: { variant_id: variantId },
+      lock: t.LOCK.UPDATE,
+      transaction: t,
+    });
+
+    if (!row) {
+      this.logger.warn(
+        `Variant ${variantId} had no inventory row — creating one`,
+      );
+      await this.createInventoryForVariant(variantId, inv, t);
+      return;
+    }
+
+    const newStock =
+      inv.stock_quantity ?? Number(row.stock_quantity);
+    const newReserved = Number(row.reserved_quantity);
+    const newTrack = inv.track_quantity ?? row.track_quantity;
+    const newBackorder = inv.allow_backorders ?? row.allow_backorders;
+    const newThreshold = inv.low_stock_threshold ?? row.low_stock_threshold;
+
+    if (newStock < newReserved) {
+      throw new BadRequestException(
+        `Cannot set stock to ${newStock} — ${newReserved} unit(s) currently reserved by in-flight orders`,
+      );
+    }
+
+    await this.inventoryRepo.updateWithTransaction(
+      row.id,
+      {
+        stock_quantity: newStock,
+        track_quantity: newTrack,
+        allow_backorders: newBackorder,
+        low_stock_threshold: newThreshold,
+        stock_status: this.deriveStockStatus(
+          newStock,
+          newReserved,
+          newTrack,
+          newBackorder,
+          newThreshold,
+        ),
+      },
+      t,
+    );
+  }
+
+  // ============================================================
+  // DELETE
+  // ============================================================
 
   async deleteProduct(vendorId: number, id: number) {
     const product = await this.productRepo.findById(id);
@@ -420,6 +558,15 @@ export class ProductService extends ProductFormat {
       const ids = variants.map((v) => v.id);
 
       if (ids.length) {
+        const openOrderCount = await this._orderItemRepo.countOpenOrderItems(
+          ids,
+          t,
+        );
+        if (openOrderCount > 0) {
+          throw new ConflictException(
+            `Cannot delete: ${openOrderCount} order(s) still reference this product`,
+          );
+        }
         await this.inventoryRepo.zeroOutByVariants(ids, t);
         await this.variantRepo.softDeleteMany(ids, t);
       }
@@ -429,62 +576,200 @@ export class ProductService extends ProductFormat {
     });
   }
 
-  // ---- ATTRIBUTE LINKING ----
+  // ============================================================
+  // ATTRIBUTE LINKING (supports multi + free-form)
+  // ============================================================
 
   private async linkAttributeValues(
     variantId: number,
-    values: { attribute_id: number; attribute_value_id: number }[],
+    values: VariantAttributeValueDto[],
     vendorId: number,
     t: Transaction,
-  ) {
-    const attributeIds = [...new Set(values.map((v) => v.attribute_id))];
-    const valueIds = [...new Set(values.map((v) => v.attribute_value_id))];
+  ): Promise<void> {
+    if (!values.length) return;
 
-    const [attributes, attributeValues] = await Promise.all([
+    const attributeIds = [...new Set(values.map((v) => v.attribute_id))];
+    const referencedValueIds = values
+      .map((v) => v.attribute_value_id)
+      .filter((id): id is number => typeof id === 'number');
+    const [attributes, referencedValues] = await Promise.all([
       this.attributeRepo.findByIds(attributeIds, t),
-      this.attributeValueRepo.findByIds(valueIds, t),
+      referencedValueIds.length
+        ? this.attributeValueRepo.findByIds(referencedValueIds, t)
+        : Promise.resolve([] as any[]),
     ]);
 
     const attrMap = new Map(attributes.map((a) => [a.id, a]));
-    const valMap = new Map(attributeValues.map((v) => [v.id, v]));
+    const valueMap = new Map(referencedValues.map((v) => [v.id, v]));
 
-    const rows = values.map((v) => {
-      const attr = attrMap.get(v.attribute_id) as any;
-      const val = valMap.get(v.attribute_value_id) as any;
+    const resolvedRows: Array<{
+      variant_id: number;
+      attribute_id: number;
+      attribute_value_id: number;
+    }> = [];
 
-      if (!attr)
-        throw new BadRequestException(`Attribute ${v.attribute_id} not found`);
-      if (!val)
+    const seen = new Set<string>();
+
+    for (const row of values) {
+      const attr = attrMap.get(row.attribute_id) as any;
+      if (!attr) {
         throw new BadRequestException(
-          `Value ${v.attribute_value_id} not found`,
+          `Attribute ${row.attribute_id} not found`,
         );
+      }
       if (attr.vendor_id !== null && attr.vendor_id !== vendorId) {
         throw new ForbiddenException(
-          `Attribute ${attr.name} belongs to another vendor`,
-        );
-      }
-      if (val.attribute_id !== attr.id) {
-        throw new BadRequestException(
-          `Value ${val.id} does not belong to attribute ${attr.id}`,
+          `Attribute "${attr.name}" belongs to another vendor`,
         );
       }
 
-      return {
+      let attributeValueId: number;
+
+      if (row.attribute_value_id != null) {
+        const val = valueMap.get(row.attribute_value_id) as any;
+        if (!val) {
+          throw new BadRequestException(
+            `Value ${row.attribute_value_id} not found`,
+          );
+        }
+        if (val.attribute_id !== attr.id) {
+          throw new BadRequestException(
+            `Value ${val.id} does not belong to attribute ${attr.id}`,
+          );
+        }
+        attributeValueId = val.id;
+      } else if (row.attribute_value != null) {
+        const normalized = this.normalizeRawValue(attr, row.attribute_value);
+        let existing = await this.attributeValueRepo.findOneByValue(
+          attr.id,
+          normalized,
+          t,
+        );
+        if (!existing) {
+          existing = await this.attributeValueRepo.createWithTransaction(
+            {
+              attribute_id: attr.id,
+              value: normalized,
+              display_value: normalized,
+              code: null,
+              image_url: null,
+              sort_order: 999,
+              is_active: true,
+            } as any,
+            t,
+          );
+        }
+        attributeValueId = existing.id;
+      } else {
+        throw new BadRequestException(
+          `Attribute ${row.attribute_id}: value is required`,
+        );
+      }
+
+      const dedupKey = `${row.attribute_id}:${attributeValueId}`;
+      if (seen.has(dedupKey)) continue;
+      seen.add(dedupKey);
+
+      resolvedRows.push({
         variant_id: variantId,
         attribute_id: attr.id,
-        attribute_value_id: val.id,
-      };
-    });
+        attribute_value_id: attributeValueId,
+      });
+    }
 
-    await this.pvavRepo.bulkAttach(rows, t);
+    if (resolvedRows.length) {
+      await this.pvavRepo.bulkAttach(resolvedRows, t);
+    }
   }
 
-  // ---- HELPERS ----
-
-  private assertUniqueSkus(variants: CreateVariantDto[]) {
-    const skus = variants.map((v) => v.sku).filter(Boolean);
-    if (new Set(skus).size !== skus.length) {
-      throw new BadRequestException('Duplicate SKUs in variant payload');
+  private normalizeRawValue(attr: any, raw: string): string {
+    switch (attr.type) {
+      case 'text': {
+        const trimmed = raw.trim();
+        if (!trimmed) {
+          throw new BadRequestException(
+            `Attribute "${attr.name}" requires a non-empty value`,
+          );
+        }
+        return trimmed;
+      }
+      case 'number': {
+        const n = Number(raw);
+        if (!Number.isFinite(n)) {
+          throw new BadRequestException(
+            `Attribute "${attr.name}" requires a numeric value`,
+          );
+        }
+        return String(n);
+      }
+      case 'boolean': {
+        if (raw !== 'true' && raw !== 'false') {
+          throw new BadRequestException(
+            `Attribute "${attr.name}" requires "true" or "false"`,
+          );
+        }
+        return raw;
+      }
+      default:
+        throw new BadRequestException(
+          `Attribute "${attr.name}" (type: ${attr.type}) does not accept free-form values`,
+        );
     }
+  }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
+
+  private deriveStockStatus(
+    stockQuantity: number,
+    reserved: number,
+    track: boolean,
+    allowBackorders: boolean,
+    threshold: number,
+  ): StockStatusEnum {
+    if (!track) return StockStatusEnum.IN_STOCK;
+    const available = stockQuantity - reserved;
+    if (available <= 0) {
+      return allowBackorders
+        ? StockStatusEnum.BACKORDER
+        : StockStatusEnum.OUT_OF_STOCK;
+    }
+    if (available <= threshold) return StockStatusEnum.LOW_STOCK;
+    return StockStatusEnum.IN_STOCK;
+  }
+
+  private assertUniqueSkus(
+    variants: { sku?: string }[],
+    foreignSkus: string[] = [],
+  ) {
+    const incoming = variants
+      .map((v) => v.sku?.trim())
+      .filter((s): s is string => !!s);
+
+    const incomingSet = new Set<string>();
+    for (const sku of incoming) {
+      if (incomingSet.has(sku)) {
+        throw new BadRequestException(`Duplicate SKU in payload: ${sku}`);
+      }
+      incomingSet.add(sku);
+    }
+
+    const foreign = new Set(foreignSkus.map((s) => s.trim()).filter(Boolean));
+    for (const sku of incomingSet) {
+      if (foreign.has(sku)) {
+        throw new BadRequestException(
+          `SKU "${sku}" is already used by another variant on this product`,
+        );
+      }
+    }
+  }
+
+  private compact<T extends Record<string, unknown>>(obj: T): Partial<T> {
+    const out: Partial<T> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (v !== undefined) (out as any)[k] = v;
+    }
+    return out;
   }
 }

@@ -18,7 +18,7 @@ export class VariantDimensionsDto {
 
 export class VariantInventorySummaryDto {
     @ApiProperty({ example: 150, description: 'Total physical stock quantity' })
-    stock_quantity: number;
+    quantity: number;
 
     @ApiProperty({
         example: 145,
@@ -107,7 +107,7 @@ export class ProductVariantResponseDto {
     discount_percentage: number;
 
     @ApiProperty({ example: 50, description: 'Sum of quantity across all stores' })
-    stock_quantity: number;
+    quantity: number;
 
     @ApiProperty({ example: 3, description: 'Sum of reserved_quantity across all stores' })
     reserved_quantity: number;

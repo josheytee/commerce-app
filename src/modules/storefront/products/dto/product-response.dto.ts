@@ -65,7 +65,7 @@ export class ProductStoreDto {
 
 export class VariantInventorySummaryDto {
     @ApiProperty({ example: 150, description: 'Total physical stock quantity' })
-    stock_quantity: number;
+    quantity: number;
 
     @ApiProperty({
         example: 145,

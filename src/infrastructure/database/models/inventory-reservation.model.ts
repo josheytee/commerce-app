@@ -50,13 +50,13 @@ export class InventoryReservationModel extends Model<InventoryReservationModel> 
   @BelongsTo(() => InventoryModel)
   inventory: InventoryModel;
 
-  @ForeignKey(() => StoreModel)
-  @AllowNull(false)
-  @Column
-  store_id: number;
+  // @ForeignKey(() => StoreModel)
+  // @AllowNull(false)
+  // @Column
+  // store_id: number;
 
-  @BelongsTo(() => StoreModel)
-  store: StoreModel;
+  // @BelongsTo(() => StoreModel)
+  // store: StoreModel;
 
   @ForeignKey(() => CartItemModel)
   @Column

@@ -50,7 +50,7 @@ export class InventoryRepository extends BaseRepository<InventoryModel> {
     async decrementQuantity(reservation: any, transaction?: Transaction) {
         return await this.decrement(
             {
-                quantity: reservation.quantity,
+                stock_quantity: reservation.quantity,
                 reserved_quantity: reservation.quantity,
             },
             {
@@ -84,7 +84,7 @@ export class InventoryRepository extends BaseRepository<InventoryModel> {
 
     async zeroOutByVariant(variantId: number, t?: Transaction) {
         return this.model.update(
-            { quantity: 0, reserved_quantity: 0 },
+            { stock_quantity: 0, reserved_quantity: 0 },
             { where: { variant_id: variantId }, transaction: t },
         );
     }
@@ -104,7 +104,7 @@ export class InventoryRepository extends BaseRepository<InventoryModel> {
             {
                 variant_id: variantId,
                 store_id: storeId,
-                quantity,
+                stock_quantity: quantity,
                 reserved_quantity: 0,
             } as any,
             { transaction: t },
@@ -118,7 +118,7 @@ export class InventoryRepository extends BaseRepository<InventoryModel> {
     async zeroOutByVariants(ids: number[], t?: Transaction): Promise<number> {
         if (!ids.length) return 0;
         const [affected] = await this.model.update(
-            { quantity: 0, reserved_quantity: 0 },
+            { stock_quantity: 0, reserved_quantity: 0 },
             {
                 where: { variant_id: { [Op.in]: ids } },
                 transaction: t,
@@ -133,16 +133,16 @@ export class InventoryRepository extends BaseRepository<InventoryModel> {
      */
     async findOrCreateForVariant(
         variantId: number,
-        storeId: number,
+        // storeId: number,
         quantity: number,
         t?: Transaction,
     ): Promise<[InventoryModel, boolean]> {
         return this.model.findOrCreate({
-            where: { variant_id: variantId, store_id: storeId },
+            where: { variant_id: variantId },
             defaults: {
                 variant_id: variantId,
-                store_id: storeId,
-                quantity,
+                // store_id: storeId,
+                stock_quantity: quantity,
                 reserved_quantity: 0,
             } as any,
             transaction: t,

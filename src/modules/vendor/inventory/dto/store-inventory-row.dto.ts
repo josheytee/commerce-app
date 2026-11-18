@@ -18,7 +18,7 @@ export class StoreInventoryRowDto {
     product_name?: string;
 
     @ApiProperty({ example: 100 })
-    quantity: number;
+    stock_quantity: number;
 
     @ApiProperty({ example: 3 })
     reserved_quantity: number;

@@ -20,7 +20,7 @@ export class CreateInventoryDto {
     @ApiProperty({ example: 100, minimum: 0 })
     @IsInt()
     @Min(0)
-    quantity: number;
+    stock_quantity: number;
 
     @ApiPropertyOptional({ example: 0, minimum: 0 })
     @IsOptional()

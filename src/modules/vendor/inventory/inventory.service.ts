@@ -21,9 +21,9 @@ import { StockStatusEnum } from 'src/shared';
 // INVENTORY SERVICE
 // ============================================================
 // Source of truth: InventoryModel
-//   - quantity          = physically on hand at a store
+//   - stock_quantity          = physically on hand at a store
 //   - reserved_quantity = soft hold for pending carts/orders
-//   - available_quantity = quantity - reserved_quantity (DB-generated)
+//   - available_quantity = stock_quantity - reserved_quantity (DB-generated)
 //   - stock_status      = derived by @BeforeSave hook on the model
 //
 // "Store" is the fulfillment location for now. When LocationModel is
@@ -60,7 +60,7 @@ export class InventoryService {
 
     if (!inventory) {
       return {
-        quantity: 0,
+        stock_quantity: 0,
         reserved: 0,
         available: 0,
         status: StockStatusEnum.OUT_OF_STOCK,
@@ -70,12 +70,12 @@ export class InventoryService {
     }
 
     return {
-      quantity: Number(inventory.quantity),
+      stock_quantity: Number(inventory.stock_quantity),
       reserved: Number(inventory.reserved_quantity),
       available: Number(inventory.available_quantity),
       status: inventory.stock_status,
-      store_id: inventory.store_id,
-      store_name: (inventory as any).store?.name,
+      // store_id: inventory.store_id,
+      // store_name: (inventory as any).store?.name,
       variant_id: inventory.variant_id,
       low_stock_threshold: Number(inventory.low_stock_threshold),
       allow_backorders: inventory.allow_backorders,
@@ -104,16 +104,16 @@ export class InventoryService {
     }
 
     const stores = rows.map((row) => ({
-      store_id: row.store_id,
-      store_name: (row as any).store?.name,
-      quantity: Number(row.quantity),
+      // store_id: row.store_id,
+      // store_name: (row as any).store?.name,
+      stock_quantity: Number(row.stock_quantity),
       reserved: Number(row.reserved_quantity),
       available: Number(row.available_quantity),
       stock_status: row.stock_status,
       allow_backorders: row.allow_backorders,
     }));
 
-    const totalQuantity = rows.reduce((sum, r) => sum + Number(r.quantity), 0);
+    const totalQuantity = rows.reduce((sum, r) => sum + Number(r.stock_quantity), 0);
     const totalReserved = rows.reduce(
       (sum, r) => sum + Number(r.reserved_quantity),
       0,
@@ -165,7 +165,7 @@ export class InventoryService {
     const variantData = variants.map((variant) => {
       const invs = (variant as any).inventories ?? [];
       const totalQuantity = invs.reduce(
-        (sum: number, i: any) => sum + Number(i.quantity),
+        (sum: number, i: any) => sum + Number(i.stock_quantity),
         0,
       );
       const totalReserved = invs.reduce(
@@ -187,7 +187,7 @@ export class InventoryService {
         stores: invs.map((i: any) => ({
           store_id: i.store_id,
           store_name: i.store?.name,
-          quantity: Number(i.quantity),
+          stock_quantity: Number(i.stock_quantity),
           reserved: Number(i.reserved_quantity),
           available: Number(i.available_quantity),
           stock_status: i.stock_status,
@@ -203,10 +203,10 @@ export class InventoryService {
       (sum, v) => sum + v.total_available,
       0,
     );
-    const allowAnyBackorder = variantData.some((v) =>
-      variants
-        .find((x) => x.id === v.variant_id)
-        ?.inventories?.some((i: any) => i.allow_backorders),
+    const allowAnyBackorder = variantData.some(
+      (v) =>
+        variants.find((x) => x.id === v.variant_id)?.inventory
+          ?.allow_backorders,
     );
 
     return {
@@ -243,12 +243,12 @@ export class InventoryService {
   }
 
   /**
-   * Is the variant in stock at a store, for a given quantity?
+   * Is the variant in stock at a store, for a given stock_quantity?
    */
   async isInStock(
     variantId: number,
     storeId: number,
-    quantity: number = 1,
+    stock_quantity: number = 1,
   ): Promise<boolean> {
     const inv = await this.inventoryRepo.findOne({
       where: { variant_id: variantId, store_id: storeId },
@@ -257,12 +257,12 @@ export class InventoryService {
     if (!inv) return false;
 
     const available = Number(inv.available_quantity);
-    if (available >= quantity) return true;
+    if (available >= stock_quantity) return true;
     return inv.allow_backorders === true;
   }
 
   /**
-   * Pick the best store to fulfill a variant for a given quantity.
+   * Pick the best store to fulfill a variant for a given stock_quantity.
    *
    * Current heuristic:
    *   1. Stores with sufficient available stock
@@ -274,10 +274,10 @@ export class InventoryService {
    */
   async getBestFulfillmentStore(
     variantId: number,
-    quantity: number,
+    stock_quantity: number,
     _customerLat?: number,
     _customerLng?: number,
-  ): Promise<{ store_id: number; available: number } | null> {
+  ): Promise<{ available: number } | null> {
     const rows = await this.inventoryRepo.findAll({
       where: { variant_id: variantId },
       include: ['store'],
@@ -287,18 +287,18 @@ export class InventoryService {
 
     const candidates = rows
       .map((r) => ({
-        store_id: r.store_id,
+        // store_id: r.store_id,
         available: Number(r.available_quantity),
         allow_backorders: r.allow_backorders,
         // `is_primary` doesn't exist on InventoryModel today; if you add it,
         // wire it here. For now, prefer stores with sufficient stock.
       }))
-      .filter((c) => c.available >= quantity)
+      .filter((c) => c.available >= stock_quantity)
       .sort((a, b) => b.available - a.available);
 
     if (candidates.length) {
       return {
-        store_id: candidates[0].store_id,
+        // store_id: candidates[0].store_id,
         available: candidates[0].available,
       };
     }
@@ -307,7 +307,7 @@ export class InventoryService {
     const backorderStore = rows.find((r) => r.allow_backorders === true);
     if (backorderStore) {
       return {
-        store_id: backorderStore.store_id,
+        // store_id: backorderStore.store_id,
         available: Number(backorderStore.available_quantity),
       };
     }
@@ -329,34 +329,35 @@ export class InventoryService {
    */
   async reserve(
     variantId: number,
-    storeId: number,
-    quantity: number,
+    // storeId: number,
+    stock_quantity: number,
     transaction?: Transaction,
   ): Promise<InventoryModel> {
-    if (quantity <= 0) throw new BadRequestException('Quantity must be positive');
+    if (stock_quantity <= 0)
+      throw new BadRequestException('Quantity must be positive');
 
     const inv = await this.inventoryRepo.findOne({
-      where: { variant_id: variantId, store_id: storeId },
+      where: { variant_id: variantId },
       lock: transaction ? Transaction.LOCK.UPDATE : undefined,
       transaction,
     });
 
     if (!inv) {
       throw new BadRequestException(
-        `No inventory row for variant ${variantId} at store ${storeId}`,
+        `No inventory row for variant ${variantId}`,
       );
     }
 
     const available = Number(inv.available_quantity);
 
-    if (available < quantity && !inv.allow_backorders) {
+    if (available < stock_quantity && !inv.allow_backorders) {
       throw new BadRequestException(
-        `Insufficient stock. Available: ${available}, Requested: ${quantity}`,
+        `Insufficient stock. Available: ${available}, Requested: ${stock_quantity}`,
       );
     }
 
     await inv.update(
-      { reserved_quantity: Number(inv.reserved_quantity) + quantity },
+      { reserved_quantity: Number(inv.reserved_quantity) + stock_quantity },
       { transaction },
     );
 
@@ -366,38 +367,38 @@ export class InventoryService {
   /**
    * Confirm a reservation — after payment succeeds.
    *
-   * Decrements `quantity` and `reserved_quantity` together, so
+   * Decrements `stock_quantity` and `reserved_quantity` together, so
    * `available_quantity` stays the same (the hold becomes a real deduction).
    */
   async confirm(
     variantId: number,
-    storeId: number,
-    quantity: number,
+    // storeId: number,
+    stock_quantity: number,
     transaction?: Transaction,
   ): Promise<void> {
-    if (quantity <= 0) {
+    if (stock_quantity <= 0) {
       throw new BadRequestException('Quantity must be positive');
     }
 
     const inv = await this.inventoryRepo.findOne({
-      where: { variant_id: variantId, store_id: storeId },
+      where: { variant_id: variantId },
       lock: transaction ? Transaction.LOCK.UPDATE : undefined,
       transaction,
     });
 
     if (!inv) {
       throw new NotFoundException(
-        `No inventory row for variant ${variantId} at store ${storeId}`,
+        `No inventory row for variant ${variantId}`,
       );
     }
 
-    if (Number(inv.reserved_quantity) < quantity) {
+    if (Number(inv.reserved_quantity) < stock_quantity) {
       throw new BadRequestException(
-        `Cannot confirm ${quantity} units. Only ${inv.reserved_quantity} reserved.`,
+        `Cannot confirm ${stock_quantity} units. Only ${inv.reserved_quantity} reserved.`,
       );
     }
 
-    const newQuantity = Number(inv.quantity) - quantity;
+    const newQuantity = Number(inv.stock_quantity) - stock_quantity;
     if (newQuantity < 0) {
       throw new BadRequestException(
         `Stock would go negative for variant ${variantId}`,
@@ -406,8 +407,8 @@ export class InventoryService {
 
     await inv.update(
       {
-        quantity: newQuantity,
-        reserved_quantity: Number(inv.reserved_quantity) - quantity,
+        stock_quantity: newQuantity,
+        reserved_quantity: Number(inv.reserved_quantity) - stock_quantity,
       },
       { transaction },
     );
@@ -416,40 +417,38 @@ export class InventoryService {
   /**
    * Release a reservation — payment failed, order cancelled, or TTL expired.
    *
-   * Decrements `reserved_quantity` only; `quantity` is untouched.
+   * Decrements `reserved_quantity` only; `stock_quantity` is untouched.
    */
   async release(
-    variantId: number,
-    storeId: number,
-    quantity: number,
+    variantId: number, stock_quantity: number,
     transaction?: Transaction,
   ): Promise<void> {
-    if (quantity <= 0) return;
+    if (stock_quantity <= 0) return;
 
     const inv = await this.inventoryRepo.findOne({
-      where: { variant_id: variantId, store_id: storeId },
+      where: { variant_id: variantId },
       lock: transaction ? Transaction.LOCK.UPDATE : undefined,
       transaction,
     });
 
     if (!inv) {
       throw new NotFoundException(
-        `No inventory row for variant ${variantId} at store ${storeId}`,
+        `No inventory row for variant ${variantId} }`,
       );
     }
 
     const reserved = Number(inv.reserved_quantity);
-    if (reserved < quantity) {
+    if (reserved < stock_quantity) {
       // Be forgiving — sometimes a confirm already consumed the hold
       this.logger.warn(
-        `Release called for ${quantity} but only ${reserved} reserved for variant ${variantId} at store ${storeId}`,
+        `Release called for ${stock_quantity} but only ${reserved} reserved for variant ${variantId}`,
       );
       await inv.update({ reserved_quantity: 0 }, { transaction });
       return;
     }
 
     await inv.update(
-      { reserved_quantity: reserved - quantity },
+      { reserved_quantity: reserved - stock_quantity },
       { transaction },
     );
   }
@@ -458,11 +457,11 @@ export class InventoryService {
    * Bulk reserve. Runs all reservations in one transaction.
    */
   async bulkReserve(
-    items: Array<{ variantId: number; storeId: number; quantity: number }>,
+    items: Array<{ variantId: number; storeId: number; stock_quantity: number }>,
   ): Promise<void> {
     await this.sequelize.transaction(async (t) => {
       for (const item of items) {
-        await this.reserve(item.variantId, item.storeId, item.quantity, t);
+        await this.reserve(item.variantId, item.stock_quantity, t);
       }
     });
   }
@@ -471,11 +470,11 @@ export class InventoryService {
    * Bulk confirm. Runs all confirmations in one transaction.
    */
   async bulkConfirm(
-    items: Array<{ variantId: number; storeId: number; quantity: number }>,
+    items: Array<{ variantId: number; storeId: number; stock_quantity: number }>,
   ): Promise<void> {
     await this.sequelize.transaction(async (t) => {
       for (const item of items) {
-        await this.confirm(item.variantId, item.storeId, item.quantity, t);
+        await this.confirm(item.variantId, item.stock_quantity, t);
       }
     });
   }
@@ -485,19 +484,18 @@ export class InventoryService {
    */
   async addStock(
     variantId: number,
-    storeId: number,
-    quantity: number,
+    stock_quantity: number,
     metadata?: Record<string, any>,
     transaction?: Transaction,
   ): Promise<InventoryModel> {
-    if (quantity <= 0) {
+    if (stock_quantity <= 0) {
       throw new BadRequestException('Quantity must be positive');
     }
 
-    // findOrCreate already creates the row if missing (with quantity = 0)
+    // findOrCreate already creates the row if missing (with stock_quantity = 0)
     const [inv, created] = await this.inventoryRepo.findOrCreateForVariant(
       variantId,
-      storeId,
+      // storeId,
       0,
       transaction,
     );
@@ -511,14 +509,14 @@ export class InventoryService {
     // ✅ update() writes fields + fires the @BeforeSave hook (recomputes stock_status)
     await inv.update(
       {
-        quantity: Number(inv.quantity) + quantity,
+        stock_quantity: Number(inv.stock_quantity) + stock_quantity,
         ...(metadata !== undefined ? { metadata: mergedMetadata } : {}),
       },
       { transaction },
     );
 
     this.logger.log(
-      `Added ${quantity} to variant ${variantId} at store ${storeId} (created=${created}, new_qty=${inv.quantity})`,
+      `Added ${stock_quantity} to variant ${variantId} (created=${created}, new_qty=${inv.stock_quantity})`,
     );
 
     return inv;
@@ -528,22 +526,20 @@ export class InventoryService {
    */
   async setStockLevel(
     variantId: number,
-    storeId: number,
-    quantity: number,
+    stock_quantity: number,
     transaction?: Transaction,
   ): Promise<InventoryModel> {
-    if (quantity < 0) {
+    if (stock_quantity < 0) {
       throw new BadRequestException('Quantity cannot be negative');
     }
 
     const [inv] = await this.inventoryRepo.findOrCreateForVariant(
       variantId,
-      storeId,
       0,
       transaction,
     );
 
-    await inv.update({ quantity }, { transaction });
+    await inv.update({ stock_quantity }, { transaction });
     return inv;
   }
 
@@ -556,7 +552,7 @@ export class InventoryService {
    */
   async getStoresWithStock(
     variantId: number,
-    quantity: number = 1,
+    stock_quantity: number = 1,
   ): Promise<any[]> {
     const rows = await this.inventoryRepo.findAll({
       where: { variant_id: variantId },
@@ -564,11 +560,11 @@ export class InventoryService {
     });
 
     return rows
-      .filter((r) => Number(r.available_quantity) >= quantity)
+      .filter((r) => Number(r.available_quantity) >= stock_quantity)
       .map((r) => ({
-        store_id: r.store_id,
-        store_name: (r as any).store?.name,
-        quantity: Number(r.quantity),
+        // store_id: r.store_id,
+        // store_name: (r as any).store?.name,
+        stock_quantity: Number(r.stock_quantity),
         reserved_quantity: Number(r.reserved_quantity),
         available: Number(r.available_quantity),
         stock_status: r.stock_status,
@@ -605,7 +601,7 @@ export class InventoryService {
     });
     if (!inv) return;
 
-    const available = Number(inv.quantity) - Number(inv.reserved_quantity);
+    const available = Number(inv.stock_quantity) - Number(inv.reserved_quantity);
     let status: StockStatusEnum;
 
     if (!inv.track_quantity) {
@@ -676,7 +672,7 @@ export class InventoryService {
       variant_name?: string;
       sku: string;
       product_name?: string;
-      quantity: number;
+      stock_quantity: number;
       reserved_quantity: number;
       available_quantity: number;
       stock_status: StockStatusEnum;
@@ -731,7 +727,7 @@ export class InventoryService {
         variant_name: variant?.variant_name,
         sku: variant?.sku,
         product_name: product?.name,
-        quantity: Number(row.quantity),
+        stock_quantity: Number(row.stock_quantity),
         reserved_quantity: Number(row.reserved_quantity),
         available_quantity: Number(row.available_quantity),
         stock_status: row.stock_status,

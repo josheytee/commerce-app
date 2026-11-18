@@ -86,11 +86,11 @@ export class CreateProductWithVariantsDto {
   @IsNumber()
   cost_price?: number;
 
-  @ApiPropertyOptional({ example: 50, description: 'Initial stock for simple products' })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  initial_stock?: number;
+  // @ApiPropertyOptional({ example: 50, description: 'Initial stock for simple products' })
+  // @IsOptional()
+  // @IsInt()
+  // @Min(0)
+  // initial_stock?: number;
 
   @ApiPropertyOptional({ example: 'SIMPLE-1-1700000000000' })
   @IsOptional()

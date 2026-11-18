@@ -24,4 +24,15 @@ export class AttributeValueRepository extends BaseRepository<AttributeValueModel
             transaction: t,
         });
     }
+
+    async findOneByValue(
+        attributeId: number,
+        value: string,
+        t?: Transaction,
+    ): Promise<AttributeValueModel | null> {
+        return this.model.findOne({
+            where: { attribute_id: attributeId, value },
+            transaction: t,
+        });
+    }
 }

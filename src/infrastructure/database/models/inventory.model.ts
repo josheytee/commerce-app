@@ -25,11 +25,11 @@ import { StockStatusEnum } from 'src/shared';
   tableName: 'inventories',
   indexes: [
     {
-      fields: ['variant_id', 'store_id'],
+      fields: ['variant_id'],
       unique: true,
       name: 'inv_variant_store_uidx',
     },
-    { fields: ['store_id', 'stock_status'], name: 'inv_store_status_idx' },
+    { fields: ['stock_status'], name: 'inv_store_status_idx' },
   ],
 })
 export class InventoryModel extends Model<InventoryModel> {
@@ -49,22 +49,11 @@ export class InventoryModel extends Model<InventoryModel> {
   })
   variant: ProductVariantModel;
 
-  @ForeignKey(() => StoreModel)
-  @AllowNull(false)
-  @Column
-  store_id: number;
-
-  @BelongsTo(() => StoreModel, {
-    foreignKey: 'store_id',
-    as: 'store',
-  })
-  store: StoreModel;
-
   // ============ STOCK LEVELS ============
   @Default(0)
   @AllowNull(false)
   @Column({ type: DataType.INTEGER })
-  quantity: number;
+  stock_quantity: number;
 
   @Default(0)
   @AllowNull(false)
@@ -103,7 +92,7 @@ export class InventoryModel extends Model<InventoryModel> {
     }
 
     const available =
-      Number(instance.quantity) - Number(instance.reserved_quantity);
+      Number(instance.stock_quantity) - Number(instance.reserved_quantity);
 
     if (available > instance.low_stock_threshold) {
       instance.stock_status = StockStatusEnum.IN_STOCK;

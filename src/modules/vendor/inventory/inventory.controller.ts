@@ -89,34 +89,31 @@ export class InventoryController {
   // STOCK OPERATIONS
   // ============================================================
 
-  @Post(':variantId/:storeId/add')
+  @Post(':variantId/add')
   @ApiOperation({ summary: 'Add stock to a variant at a store' })
   @ApiOkResponse({ type: InventoryResponseDto })
   async addStock(
     @Param('variantId', ParseIntPipe) variantId: number,
-    @Param('storeId', ParseIntPipe) storeId: number,
     @Body() dto: AddStockDto,
   ): Promise<InventoryModel> {
     return this.inventoryService.addStock(
       variantId,
-      storeId,
       dto.quantity,
       dto.metadata,
     );
   }
 
-  @Post(':variantId/:storeId/set')
+  @Post(':variantId/set')
   @ApiOperation({ summary: 'Overwrite stock level for a variant at a store' })
   @ApiOkResponse({ type: InventoryResponseDto })
   async setStock(
     @Param('variantId', ParseIntPipe) variantId: number,
-    @Param('storeId', ParseIntPipe) storeId: number,
     @Body() dto: SetStockDto,
   ): Promise<InventoryModel> {
-    return this.inventoryService.setStockLevel(variantId, storeId, dto.quantity);
+    return this.inventoryService.setStockLevel(variantId, dto.quantity);
   }
 
-  @Post(':variantId/:storeId/recompute-status')
+  @Post(':variantId/recompute-status')
   @ApiOperation({ summary: 'Recompute the denormalized stock_status column' })
   @ApiOkResponse({ schema: { example: { ok: true } } })
   async recompute(

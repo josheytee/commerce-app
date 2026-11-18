@@ -17,6 +17,7 @@ import {
     AfterCreate,
     AfterUpdate,
     AfterDestroy,
+    HasOne,
 } from 'sequelize-typescript';
 import { ProductModel } from './product.model';
 import { InventoryModel } from './inventory.model';
@@ -161,11 +162,17 @@ export class ProductVariantModel extends Model<ProductVariantModel> {
     store: StoreModel;
 
     // Stock lives HERE and only here
-    @HasMany(() => InventoryModel, {
+    // @HasMany(() => InventoryModel, {
+    //     foreignKey: 'variant_id',
+    //     as: 'inventories',
+    // })
+    // inventories: InventoryModel[];
+
+    @HasOne(() => InventoryModel, {
         foreignKey: 'variant_id',
-        as: 'inventories',
+        as: 'inventory',
     })
-    inventories: InventoryModel[];
+    inventory: InventoryModel | null;
 
     @HasMany(() => ProductVariantAttributeValueModel, {
         foreignKey: 'variant_id',
@@ -221,22 +228,11 @@ export class ProductVariantModel extends Model<ProductVariantModel> {
 
     // Sum across all inventory locations
     get total_stock(): number {
-        return (
-            this.inventories?.reduce(
-                (sum, inv) => sum + Number(inv.quantity ?? 0),
-                0,
-            ) ?? 0
-        );
+        return Number(this.inventory?.stock_quantity ?? 0);
     }
 
     get available_stock(): number {
-        return (
-            this.inventories?.reduce(
-                (sum, inv) =>
-                    sum + (Number(inv.quantity ?? 0) - Number(inv.reserved_quantity ?? 0)),
-                0,
-            ) ?? 0
-        );
+        return this.inventory?.available_quantity ?? 0;
     }
 
     get is_in_stock(): boolean {

@@ -128,8 +128,8 @@ export abstract class ProductFormat {
                 : 0;
 
             const inventories = (variant as any).inventories ?? [];
-            const stockQuantity = inventories.reduce(
-                (sum: number, inv: any) => sum + (this.toNumber(inv.quantity) ?? 0),
+            const quantity = inventories.reduce(
+                (sum: number, inv: any) => sum + (this.toNumber(inv.stock_quantity) ?? 0),
                 0,
             );
             const reservedQuantity = inventories.reduce(
@@ -157,10 +157,10 @@ export abstract class ProductFormat {
                 discount_percentage: discountPercentage,
 
                 // Stock (aggregated from inventories)
-                stock_quantity: stockQuantity,
+                stock_quantity: quantity,
                 reserved_quantity: reservedQuantity,
-                available_quantity: stockQuantity - reservedQuantity,
-                is_in_stock: stockQuantity - reservedQuantity > 0,
+                available_quantity: quantity - reservedQuantity,
+                is_in_stock: quantity - reservedQuantity > 0,
 
                 // Shipping
                 weight: this.toNumber(variant.weight),

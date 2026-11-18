@@ -96,8 +96,8 @@ export class StoreModel extends Model<StoreModel> {
   @HasMany(() => SectionModel)
   sections: SectionModel[];
 
-  @HasMany(() => InventoryModel)
-  inventories: InventoryModel[];
+  // @HasMany(() => InventoryModel)
+  // inventories: InventoryModel[];
 
   @BelongsToMany(() => RoleModel, () => UserStoreRoleModel)
   roles: RoleModel[];

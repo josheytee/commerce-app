@@ -110,7 +110,9 @@ export class CartService {
       // 2. Resolve store
       const storeId = dto.store_id ?? variant.store_id;
       if (!storeId) {
-        throw new BadRequestException('Cannot determine store for this variant');
+        throw new BadRequestException(
+          'Cannot determine store for this variant',
+        );
       }
 
       // 3. Get or create the active cart
@@ -125,7 +127,7 @@ export class CartService {
       // 5. Reserve stock — ONCE, capturing the inventory row
       const inventoryRow = await this.inventoryService.reserve(
         dto.product_variant_id,
-        storeId,
+        // storeId,
         dto.quantity,
         t,
       );
@@ -263,7 +265,6 @@ export class CartService {
         // Growing the line — reserve more stock
         const inventoryRow = await this.inventoryService.reserve(
           item.variant_id,
-          item.store_id,
           diff,
           t,
         );
@@ -288,12 +289,7 @@ export class CartService {
         }
       } else if (diff < 0) {
         // Shrinking — release the delta
-        await this.inventoryService.release(
-          item.variant_id,
-          item.store_id,
-          -diff,
-          t,
-        );
+        await this.inventoryService.release(item.variant_id, -diff, t);
 
         const reservation = await this.reservationRepo.findOne({
           where: {
@@ -468,7 +464,7 @@ export class CartService {
 
     await this.inventoryService.release(
       reservation.variant_id,
-      reservation.store_id,
+      // reservation.store_id,
       Number(reservation.quantity),
       t,
     );

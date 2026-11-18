@@ -67,12 +67,12 @@ export class OrderRepository extends BaseRepository<OrderModel> {
             },
             { model: VendorModel, as: 'vendor' },
             { model: StoreModel, as: 'store' },
-            { model: OrderStatusHistoryModel, as: 'status_history' },
-            {
-                model: ShipmentModel,
-                as: 'shipments',
-                include: [{ association: 'events' }],
-            },
+            // { model: OrderStatusHistoryModel, as: 'status_history' },
+            // {
+            //     model: ShipmentModel,
+            //     as: 'shipments',
+            //     include: [{ association: 'events' }],
+            // },
         ];
     }
 

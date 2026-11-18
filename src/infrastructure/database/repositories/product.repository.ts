@@ -50,19 +50,34 @@ export class ProductRepository extends BaseRepository<ProductModel> {
         super(productModel);
     }
 
+    // likely somewhere in product.repository.ts
     async findByIdWithVariants(id: number, t?: Transaction) {
-        return this.productModel.findByPk(id, {
+        return this.model.findByPk(id, {
             include: [
-                { association: 'variants', include: [{ association: 'inventories' }] },
+                {
+                    model: ProductVariantModel,
+                    as: 'variants',
+                    include: [
+                        {
+                            model: ProductVariantAttributeValueModel,
+                            as: 'attribute_values',
+                            include: [
+                                { model: AttributeModel, as: 'attribute' },
+                                { model: AttributeValueModel, as: 'attribute_value' },
+                            ],
+                        },
+                        { model: InventoryModel, as: 'inventory' },
+                    ],
+                },
             ],
             transaction: t,
         });
     }
 
-    async findWithVariantsAndInventories(id: number) {
+    async findWithVariantsAndInventory(id: number) {
         return this.productModel.findByPk(id, {
             include: [
-                { association: 'variants', include: [{ association: 'inventories' }] },
+                { association: 'variants', include: [{ association: 'inventory' }] },
                 { association: 'featured_image' },
             ],
         });
@@ -73,7 +88,7 @@ export class ProductRepository extends BaseRepository<ProductModel> {
             include: [
                 {
                     association: 'variants',
-                    include: [{ association: 'inventories' }],
+                    include: [{ association: 'inventory' }],
                 },
                 { association: 'featured_image' },
             ],
@@ -421,7 +436,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                         model: InventoryModel,
                         attributes: [
                             'stock_quantity',
-                            'quantity',
                             'reserved_quantity',
                             'stock_status',
                         ],
@@ -959,7 +973,6 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                     model: InventoryModel,
                     attributes: [
                         'stock_quantity',
-                        'quantity',
                         'reserved_quantity',
                         'stock_status',
                         'allow_backorders',
@@ -1018,9 +1031,9 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                                 { model: AttributeValueModel, as: 'attribute_value' },
                             ],
                         },
+                        { model: InventoryModel },
                     ],
                 },
-                // { model: InventoryModel },
                 // {
                 //     model: MediaModel,
                 //     as: 'gallery_images',
@@ -1069,9 +1082,9 @@ export class ProductRepository extends BaseRepository<ProductModel> {
                                 { model: AttributeValueModel, as: 'attribute_value' },
                             ],
                         },
+                        { model: InventoryModel },
                     ],
                 },
-                { model: InventoryModel },
                 {
                     model: MediaModel,
                     as: 'gallery_images',

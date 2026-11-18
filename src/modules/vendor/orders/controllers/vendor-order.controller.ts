@@ -38,6 +38,8 @@ import {
 } from '../dto';
 import { assertUserOwnsVendor, AuthenticatedRequest } from 'src/modules/auth';
 import { VendorJwtGuard } from 'src/shared/guards';
+import { PermissionsGuard } from 'src/modules/user/permission/permissions.guard';
+import { TokenAuthGuard } from 'src/modules/auth/token-auth.guard';
 
 // ============================================================
 // VENDOR ORDER CONTROLLER
@@ -51,7 +53,8 @@ import { VendorJwtGuard } from 'src/shared/guards';
 
 @ApiTags('Vendor · Orders')
 @ApiBearerAuth()
-@UseGuards(VendorJwtGuard)
+// @UseGuards(VendorJwtGuard)
+@UseGuards(TokenAuthGuard, PermissionsGuard)
 @ApiParam({
   name: 'vendorId',
   type: Number,
@@ -91,13 +94,7 @@ export class VendorOrderController {
     @Req() req: AuthenticatedRequest,
     @Param('vendorId', ParseIntPipe) vendorId: number,
     @Query() query: VendorOrdersQueryDto,
-  ): Promise<{
-    orders: OrderModel[];
-    total: number;
-    page: number;
-    limit: number;
-    total_pages: number;
-  }> {
+  ) {
     await assertUserOwnsVendor(req, vendorId, this.vendorRepo);
 
     const page = query.page ?? 1;
@@ -109,14 +106,20 @@ export class VendorOrderController {
       page,
       limit,
     );
-
     return {
-      orders: result.rows,
-      total: result.count,
-      page,
-      limit,
-      total_pages: Math.ceil(result.count / limit),
+      items: result.rows,
+
+      meta: {
+        count: result.count,
+      },
     };
+    // return {
+    //   orders: result.rows,
+    //   total: result.count,
+    //   page,
+    //   limit,
+    //   total_pages: Math.ceil(result.count / limit),
+    // };
   }
 
   @Get(':orderId')
@@ -314,14 +317,14 @@ export class VendorOrderController {
     this.assertOrderBelongsToVendor(order, vendorId);
 
     // Ensure the shipment belongs to this order
-    const shipment = order.shipments?.find((s) => s.id === shipmentId);
-    if (!shipment) {
-      throw new NotFoundException(
-        `Shipment ${shipmentId} not found in order ${orderId}`,
-      );
-    }
+    // const shipment = order.shipments?.find((s) => s.id === shipmentId);
+    // if (!shipment) {
+    //   throw new NotFoundException(
+    //     `Shipment ${shipmentId} not found in order ${orderId}`,
+    //   );
+    // }
 
-    return this.orderService.addShipmentEvent(shipmentId, dto);
+    // return this.orderService.addShipmentEvent(shipmentId, dto);
   }
 
   // ============================================================
